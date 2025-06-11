@@ -38,10 +38,12 @@ function splitImages(urls) {
   return { main, prev, full };
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 function getImageUrl(url) {
   if (!url) return null;
   if (url.startsWith("http")) return url;
-  if (url.startsWith("/")) return "http://localhost:8000" + url;
+  if (url.startsWith("/")) return API_BASE + url;
   return url;
 }
 

@@ -2,6 +2,13 @@ import React, { useEffect, useState } from "react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
+function getImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return API_BASE + url;
+  return url;
+}
+
 export default function BannerAdmin() {
   const [banners, setBanners] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -59,7 +66,11 @@ export default function BannerAdmin() {
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         {banners.map(b => (
           <div key={b.id} style={{ border: '1px solid #ccc', borderRadius: 6, padding: 8, minWidth: 280 }}>
-            <img src={b.image_url} alt={b.alt || ""} style={{ width: 250, maxHeight: 120, objectFit: 'cover', borderRadius: 4, marginBottom: 8 }} />
+            <img
+              src={getImageUrl(b.image_url)}
+              alt={b.alt || ""}
+              style={{ width: 250, maxHeight: 120, objectFit: 'cover', borderRadius: 4, marginBottom: 8 }}
+            />
             <div style={{ fontSize: 13 }}>Alt: {b.alt || "—"}</div>
             <div style={{ fontSize: 13, wordBreak: 'break-all' }}>Link: {b.link || "—"}</div>
             <button style={{ color: '#c00', marginTop: 8 }} onClick={() => handleDelete(b.id)}>Удалить</button>
