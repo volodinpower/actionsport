@@ -5,10 +5,15 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 
+function apiUrl(path) {
+  const base = import.meta.env.VITE_API_URL || "";
+  return `${base}${path.startsWith("/") ? path : "/" + path}`;
+}
+
 function makeImageUrl(url) {
   if (!url) return "/no-image.jpg";
   if (url.startsWith("http")) return url;
-  if (url.startsWith("/")) return "http://localhost:8000" + url;
+  if (url.startsWith("/")) return apiUrl(url);  // заменили на apiUrl
   return url;
 }
 function normalize(val) {
@@ -212,7 +217,7 @@ if (colorVariants.length <= 1) {
               .find(url => url && url.toLowerCase().includes("_main"));
           }
           const imgSrc = mainImg
-            ? (mainImg.startsWith("http") ? mainImg : "http://localhost:8000" + mainImg)
+            ? (mainImg.startsWith("http") ? mainImg : apiUrl(mainImg))
             : "/no-image.jpg";
           const isCurrent = String(item.id) === String(product.id);
 

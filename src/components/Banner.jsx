@@ -5,12 +5,13 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-const API_BANNERS = "/banners"; // Эндпоинт FastAPI
+const API_BANNERS = (import.meta.env.VITE_API_URL || "") + "/banners";
 
 function getImageUrl(url) {
   if (!url) return "/no-image.jpg";
   if (url.startsWith("http")) return url;
-  return "http://localhost:8000" + url;
+  const base = import.meta.env.VITE_API_URL || "";
+  return base + (url.startsWith("/") ? url : "/" + url);
 }
 
 const Banner = () => {

@@ -28,8 +28,10 @@ export default function ProductCard({ product, onClick }) {
   function makeAbsUrl(url) {
     if (!url) return "/no-image.jpg";
     if (/^https?:\/\//.test(url)) return url;
-    return `http://localhost:8000${url.startsWith("/") ? "" : "/"}${url}`;
+    const base = import.meta.env.VITE_API_URL || "http://localhost:8000";
+    return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
   }
+
 
   // Итоговый src в зависимости от наведения
   const image = isHovered ? makeAbsUrl(prevImg) : makeAbsUrl(mainImg);

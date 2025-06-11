@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from "react";
+
+// Вспомогательная функция формирования полного URL для API
+function apiUrl(path) {
+  const base = import.meta.env.VITE_API_URL || "";
+  return `${base}${path.startsWith("/") ? path : "/" + path}`;
+}
+
 import RealAdmin from "./RealAdmin";
 
 export default function Admin() {
@@ -11,7 +18,7 @@ export default function Admin() {
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
     if (!token) return;
-    fetch("/admin/check_token", {
+    fetch(apiUrl("/admin/check_token"), {
       headers: { Authorization: "Bearer " + token }
     })
       .then((res) => {
@@ -35,7 +42,7 @@ export default function Admin() {
       formData.append("username", "admin");
       formData.append("password", input);
 
-      const res = await fetch("/token", {
+      const res = await fetch(apiUrl("/token"), {
         method: "POST",
         body: formData,
       });
