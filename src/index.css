@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f5f5f5;
+}
+
+.product-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 20px;
+  justify-content: center;
+}
+
+.product {
+  width: 220px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.product img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  margin-bottom: 10px;
+}
+
+.product h3 {
+  font-size: 14px;
+  text-align: center;
+}
+
+.product p {
+  font-size: 12px;
+  margin: 2px 0;
+}
+.swiper-button-next,
+.swiper-button-prev {
+  color: #fff;
+  background: rgba(0,0,0,0.4);
+  padding: 12px;
+  transition: background 0.2s;
+}
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: rgba(0,0,0,0.85);
+  color: #e53935;
+}
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 1.7rem;
+  font-weight: bold;
+}
+.swiper-pagination-bullet {
+  background: #fff !important;
+  opacity: 0.4;
+}
+.swiper-pagination-bullet-active {
+  background: #e53935 !important;
+  opacity: 1;
+}
+
+/* Фильтр-панель и кнопки сортировки */
+.filter-bar {
+  display: flex;
+  gap: 20px;
+  align-items: start;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+  margin-left: 8px;
+}
+
+/* react-select — основной стиль без скруглений */
+.react-select__control {
+  min-width: 170px;
+  min-height: 38px;
+  height: 38px;
+  border-radius: 0 !important;
+  border: 2px solid #222 !important;
+  font-size: 15px;
+  box-shadow: none !important;
+  background: #fff;
+  color: #111;
+  font-family: 'Montserrat', 'Inter', 'Arial', sans-serif;
+}
+.react-select__control--is-focused {
+  border-color: #0070f3 !important;
+  box-shadow: 0 0 0 2px #aad8ff44 !important;
+}
+.react-select__menu {
+  border-radius: 0 !important;
+  font-size: 15px;
+  font-family: 'Montserrat', 'Inter', 'Arial', sans-serif;
+  box-shadow: 0 8px 24px 0 rgba(0,0,0,0.12) !important;
+  z-index: 20;
+}
+.react-select__option {
+  font-size: 15px;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  padding: 9px 18px;
+}
+.react-select__option--is-focused {
+  background: #e7f3ff !important;
+  color: #111;
+}
+.react-select__single-value {
+  color: #111;
+}
+.react-select__placeholder {
+  color: #888;
+}
+
+/* Кнопки сортировки — строгий стиль */
+.sort-bar {
+  display: flex;
+  gap: 20px;
+  align-items: start;
+  width:100%;
+  margin-left: 8px;
+
+;
+}
+.sort-btn {
+  min-width: 90px;
+  height: 30px;
+  border-radius: 0;
+  border: 2px ;
+  background: #fff;
+  color: #222;
+  font-size: 13px;
+  font-family: 'Montserrat', 'Inter', 'Arial', sans-serif;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.1s;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+}
+.sort-btn.active,
+.sort-btn:focus {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+  outline: none;
+  transform: translateY(-1px) scale(1.03);
+}
+.sort-btn:not(.active):hover {
+  background: #f5f5f7;
+  color: #111;
+  border-color: #111;
+  transform: translateY(-1px);
+}
+.sort-btn:active {
+  transform: scale(0.97);
+}
