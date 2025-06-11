@@ -3,10 +3,10 @@ import React, { useEffect, useState } from "react";
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 function getImageUrl(url) {
-  if (!url) return null;
+  if (!url) return "/no-image.jpg";
   if (url.startsWith("http")) return url;
-  if (url.startsWith("/")) return API_BASE + url;
-  return url;
+  const base = import.meta.env.VITE_API_URL || "";
+  return base + (url.startsWith("/") ? url : "/" + url);
 }
 
 export default function BannerAdmin() {
