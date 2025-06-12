@@ -15,10 +15,15 @@ export default function AdminPanel() {
     }
   }, [navigate]);
 
-  // --- Авто-logout при уходе со страницы ---
+  // --- Авто-logout при уходе со страницы/обновлении/закрытии ---
   useEffect(() => {
+    const handleLogout = () => {
+      localStorage.removeItem("admin_token");
+    };
+    window.addEventListener("beforeunload", handleLogout);
     return () => {
       localStorage.removeItem("admin_token");
+      window.removeEventListener("beforeunload", handleLogout);
     };
   }, []);
 
@@ -50,6 +55,24 @@ export default function AdminPanel() {
           }}
         >
           Баннеры
+        </button>
+        <button
+          onClick={() => {
+            localStorage.removeItem("admin_token");
+            navigate("/admin");
+          }}
+          style={{
+            marginLeft: "auto",
+            padding: "8px 16px",
+            cursor: "pointer",
+            background: "#eee",
+            border: "1px solid #ccc",
+            borderRadius: 6,
+            fontWeight: "bold",
+            color: "#d00"
+          }}
+        >
+          Выйти
         </button>
       </nav>
 
