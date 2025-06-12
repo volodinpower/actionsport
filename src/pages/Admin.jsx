@@ -27,7 +27,7 @@ export default function Admin() {
       const data = await res.json();
       if (!data.access_token) throw new Error("Нет токена в ответе");
       localStorage.setItem("admin_token", data.access_token);
-      navigate("/realadmin");
+      navigate("/admin/panel");  // <-- вот здесь правильный путь!
     } catch (err) {
       setError(err.message);
     }
