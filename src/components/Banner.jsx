@@ -29,14 +29,25 @@ const Banner = () => {
   }, []);
 
   if (loading) {
-    return <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center">Загрузка баннеров...</div>;
+    return (
+      <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center">
+        Загрузка баннеров...
+      </div>
+    );
   }
+
   if (!banners.length) {
-    return <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center text-gray-500">Нет баннеров</div>;
+    return (
+      <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center text-gray-500">
+        Нет баннеров
+      </div>
+    );
   }
 
   return (
-    <div className="w-full aspect-[25/9] overflow-hidden shadow-lg">
+    // Используем классы Tailwind для адаптивного aspect-ratio
+    // aspect-[25/9] для больших экранов, aspect-[16/9] для мобилок
+    <div className="w-full overflow-hidden shadow-lg aspect-[25/9] sm:aspect-[16/9]">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         loop={true}
@@ -47,7 +58,11 @@ const Banner = () => {
       >
         {banners.map((b, idx) => (
           <SwiperSlide key={b.id || idx}>
-            <a href={b.link || "#"} target={b.link ? "_blank" : "_self"} rel="noopener noreferrer">
+            <a
+              href={b.link || "#"}
+              target={b.link ? "_blank" : "_self"}
+              rel="noopener noreferrer"
+            >
               <img
                 src={getImageUrl(b.image_url)}
                 alt={b.alt || b.title || `Banner ${idx + 1}`}

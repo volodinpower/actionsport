@@ -52,13 +52,20 @@ export default function ProductCard({ product, onClick }) {
   }
 
   return (
-    <div
-      className="w-full aspect-[5/6] bg-white shadow-md overflow-hidden flex flex-col transition-all duration-200 hover:shadow-2xl cursor-pointer"
-      onClick={onClick}
-      title={product.sitename}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+        <div
+          className="
+            w-full 
+            aspect-[5/6]       /* по умолчанию */
+            sm:aspect-[4/5]    /* чуть меньше высота на больших экранах */
+            md:aspect-[5/6]    /* возвращаем обратно на средних и выше */
+            bg-white shadow-md overflow-hidden flex flex-col 
+            transition-all duration-200 hover:shadow-2xl cursor-pointer
+          "
+          onClick={onClick}
+          title={product.sitename}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
       {imgError ? (
         <div className="flex items-center justify-center w-full h-3/5 bg-gray-100 text-gray-400 text-sm">
           no image
