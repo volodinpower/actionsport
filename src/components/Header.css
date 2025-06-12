@@ -46,16 +46,15 @@
 }
 
 /* Логотип по умолчанию — для десктопа */
-.logo {
+.header img {
   height: 56px; /* например, 56px */
   transition: height 0.3s ease;
 }
 
 /* Для мобильных устройств (ширина экрана <= 768px) */
 @media (max-width: 768px) {
-  .logo {
+  .header img {
     height: 32px; /* меньше, чем для десктопа */
-    filter: invert(1);
   }
 }
 
