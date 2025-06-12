@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import RealAdmin from "./RealAdmin";
+import RealAdmin from "../pages/RealAdmin";
 import BannerAdmin from "./BannerAdmin";
 
 export default function AdminPanel() {
