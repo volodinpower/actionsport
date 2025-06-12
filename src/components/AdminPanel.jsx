@@ -15,7 +15,7 @@ export default function AdminPanel() {
     }
   }, [navigate]);
 
-  // --- Авто-logout при уходе со страницы/обновлении/закрытии ---
+  // Авто-logout при уходе со страницы/обновлении/закрытии вкладки
   useEffect(() => {
     const handleLogout = () => {
       localStorage.removeItem("admin_token");
@@ -26,6 +26,11 @@ export default function AdminPanel() {
       window.removeEventListener("beforeunload", handleLogout);
     };
   }, []);
+
+  const handleLogoutClick = () => {
+    localStorage.removeItem("admin_token");
+    navigate("/"); // возвращаем на главную
+  };
 
   return (
     <div style={{ padding: 20, maxWidth: 1200, margin: "auto" }}>
@@ -57,10 +62,7 @@ export default function AdminPanel() {
           Баннеры
         </button>
         <button
-          onClick={() => {
-            localStorage.removeItem("admin_token");
-            navigate("/admin");
-          }}
+          onClick={handleLogoutClick}
           style={{
             marginLeft: "auto",
             padding: "8px 16px",

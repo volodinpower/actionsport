@@ -261,10 +261,6 @@ const showGenderOption = uniqueGenders.length > 1;
 
       {isHome && <Banner />}
 
-      <div style={{ padding: 8 }}>
-        <Link to="/admin" style={{ color: "#0070f3" }}>Админка</Link>
-      </div>
-
       {!isHome && (
         <div>
           <FilterBar
