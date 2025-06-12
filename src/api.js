@@ -115,9 +115,15 @@ export async function uploadProductImage(id, file, name = "") {
 
 // --- Удалить картинку у товара (отправлять FormData, иначе FastAPI не примет)
 export async function deleteProductImage(productId, imageUrl) {
+  // Обрезаем абсолютный путь до относительного, если нужно
+  let relativeUrl = imageUrl;
+  if (relativeUrl.startsWith("http")) {
+    const idx = relativeUrl.indexOf("/static/");
+    if (idx > -1) relativeUrl = relativeUrl.slice(idx);
+  }
   const formData = new FormData();
-  formData.append("url", imageUrl); // <-- здесь ключ "url", как в FastAPI принимается
-  const token = getAdminToken();
+  formData.append("url", relativeUrl);
+  const token = localStorage.getItem("admin_token");
   const res = await fetch(apiUrl(`/admin/product/${productId}/delete_image`), {
     method: "POST",
     body: formData,
@@ -125,12 +131,13 @@ export async function deleteProductImage(productId, imageUrl) {
   });
   if (res.status === 401) {
     localStorage.removeItem("admin_token");
-    window.location.reload();
+    window.location.href = "/admin";
     throw new Error("Авторизация истекла, войдите заново");
   }
   if (!res.ok) throw new Error("Ошибка удаления");
   return await res.json();
 }
+
 
 // --- Получить отчёт после загрузки XLSX (по сути дублирует uploadXlsx, оставь если хочешь как алиас)
 export async function getXlsxImportReport(file) {
