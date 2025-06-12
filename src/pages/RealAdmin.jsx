@@ -10,7 +10,17 @@ import {
   syncImagesForGroup,
 } from "../api";
 
-import BannerAdmin from "../components/BannerAdmin"; // импорт компонента баннеров
+function formatDate(date) {
+  if (!date) return "";
+  return date.toLocaleString("ru-RU", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
 
 const PRODUCTS_LIMIT = 30;
 const IMAGE_CARD_SIZE = 72;
@@ -47,7 +57,6 @@ function getImageUrl(url) {
 }
 
 const RealAdmin = () => {
-  // --- Товары ---
   const [products, setProducts] = useState([]);
   const [totalCount, setTotalCount] = useState(null);
   const [search, setSearch] = useState("");
@@ -66,16 +75,16 @@ const RealAdmin = () => {
 
   const listRef = useRef(null);
 
-  // Загрузка количества товаров
   useEffect(() => {
     fetchProductsCount()
       .then(data => setTotalCount(data.count))
       .catch(() => setTotalCount(null));
   }, [xlsxResult]);
 
-  useEffect(() => { setOffset(0); }, [search, xlsxResult, onlyWithoutImages]);
+  useEffect(() => {
+    setOffset(0);
+  }, [search, xlsxResult, onlyWithoutImages]);
 
-  // Загрузка товаров (infinite scroll)
   useEffect(() => {
     fetchProductsRaw(search, PRODUCTS_LIMIT, offset, onlyWithoutImages)
       .then((data) => {
@@ -107,7 +116,7 @@ const RealAdmin = () => {
     return () => el.removeEventListener("scroll", handleScroll);
   }, [hasMore, xlsxUploading, imgUploading, offset]);
 
-  // --- XLSX upload ---
+  // XLSX загрузка
   const handleXlsxUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -132,8 +141,7 @@ const RealAdmin = () => {
     }
   };
 
-  // === Картинки ===
-
+  // Обновить данные редактируемого товара
   const reloadEditingProduct = async (id) => {
     try {
       const updated = await fetchProductById(id);
@@ -143,6 +151,7 @@ const RealAdmin = () => {
     }
   };
 
+  // Сохранение или замена картинки товара
   const saveReplaceImage = async (type, file, idx = null) => {
     if (!editingProduct || !file) return;
     setImgUploading(true);
@@ -162,6 +171,7 @@ const RealAdmin = () => {
     }
   };
 
+  // Удаление картинки
   const handleDeleteImage = async (url) => {
     if (!editingProduct) return;
     if (!window.confirm("Удалить картинку?")) return;
@@ -178,7 +188,7 @@ const RealAdmin = () => {
     }
   };
 
-  // Массовая загрузка full-изображений с синхронизацией после
+  // Массовая загрузка full изображений с синхронизацией
   useEffect(() => {
     const uploadFullImages = async () => {
       if (!editingProduct || !addingFullFiles.length) return;
@@ -203,7 +213,6 @@ const RealAdmin = () => {
       }
     };
     if (addingFullFiles.length > 0) uploadFullImages();
-    // eslint-disable-next-line
   }, [addingFullFiles]);
 
   const handleFileChange = (type, idx, file) => {
@@ -218,10 +227,6 @@ const RealAdmin = () => {
     setAddingFullFiles((prev) => [...prev, ...Array.from(files)]);
   };
 
-  const removeAddFullFile = (idx) => {
-    setAddingFullFiles((prev) => prev.filter((_, i) => i !== idx));
-  };
-
   const handleSetNormalMode = () => {
     setOnlyWithoutImages(false);
     setOffset(0);
@@ -231,13 +236,16 @@ const RealAdmin = () => {
     setOffset(0);
   };
 
-  // --- Рендер ---
+  const openEditImages = (product) => {
+    setEditingProduct(product);
+    setAddingFullFiles([]);
+  };
 
   return (
     <div style={{ width: "100vw", margin: 0, padding: 12 }}>
       <h2 style={{ marginBottom: 24 }}>Админка: загрузка каталога и картинок товаров</h2>
 
-      {/* -------- ЗАГРУЗКА XLSX -------- */}
+      {/* XLSX загрузка */}
       <div style={{ marginBottom: 16, fontSize: 17 }}>
         Всего товаров в базе: <b>{totalCount !== null ? totalCount : "..."}</b>
       </div>
@@ -316,7 +324,8 @@ const RealAdmin = () => {
           Только без картинок
         </button>
       </div>
-      {/* -------- ТАБЛИЦА ТОВАРОВ -------- */}
+
+      {/* Таблица товаров */}
       <section style={{ marginBottom: 32, width: "100%" }}>
         <h3>Товары (на странице: {products.length})</h3>
         <input
@@ -329,21 +338,27 @@ const RealAdmin = () => {
         <div
           ref={listRef}
           style={{
-            maxHeight: 500, overflow: "auto", border: "1px solid #eee", padding: 0,
-            background: "#fff", width: "100%",
+            maxHeight: 500,
+            overflow: "auto",
+            border: "1px solid #eee",
+            padding: 0,
+            background: "#fff",
+            width: "100%",
           }}
         >
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 0.1fr 0.1fr 0.4fr 0.3fr 2fr 120px",
-            padding: 8,
-            background: "#f9f9f9",
-            borderBottom: "1px solid #eee",
-            fontWeight: "bold",
-            position: "sticky",
-            top: 0,
-            zIndex: 1,
-          }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 0.1fr 0.1fr 0.4fr 0.3fr 2fr 120px",
+              padding: 8,
+              background: "#f9f9f9",
+              borderBottom: "1px solid #eee",
+              fontWeight: "bold",
+              position: "sticky",
+              top: 0,
+              zIndex: 1,
+            }}
+          >
             <div>Наименование</div>
             <div>Кол-во</div>
             <div>Резерв</div>
@@ -355,7 +370,8 @@ const RealAdmin = () => {
           {products.map((p) => {
             const { main, prev, full } = splitImages(p.image_url);
             return (
-              <div key={p.id}
+              <div
+                key={p.id}
                 style={{
                   display: "grid",
                   gridTemplateColumns: "1fr 0.1fr 0.1fr 0.4fr 0.3fr 2fr 120px",
@@ -363,9 +379,12 @@ const RealAdmin = () => {
                   borderBottom: "1px solid #eee",
                   padding: 8,
                   gap: 10,
-                }}>
-                <div><b>{p.name}</b></div>
-                <div >{p.quantity}</div>
+                }}
+              >
+                <div>
+                  <b>{p.name}</b>
+                </div>
+                <div>{p.quantity}</div>
                 <div>
                   <input
                     type="checkbox"
@@ -374,8 +393,8 @@ const RealAdmin = () => {
                       const checked = e.target.checked;
                       try {
                         await setProductReserved(p.id, checked);
-                        setProducts(products =>
-                          products.map(prod =>
+                        setProducts((products) =>
+                          products.map((prod) =>
                             prod.id === p.id ? { ...prod, reserved: checked } : prod
                           )
                         );
@@ -388,14 +407,62 @@ const RealAdmin = () => {
                   />
                 </div>
                 <div>{p.color}</div>
-                <div>{Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes.join(", ") : (p.size || "—")}</div>
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", overflow: "hidden" }}>
-                  {main && <img src={getImageUrl(main)} alt="main" style={{ width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, borderRadius: 8, border: "1px solid #ccc", objectFit: "cover" }} />}
-                  {prev && <img src={getImageUrl(prev)} alt="prev" style={{ width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, borderRadius: 8, border: "1px solid #ccc", objectFit: "cover" }} />}
+                <div>
+                  {Array.isArray(p.sizes) && p.sizes.length > 0
+                    ? p.sizes.join(", ")
+                    : p.size || "—"}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 4,
+                    flexWrap: "wrap",
+                    overflow: "hidden",
+                  }}
+                >
+                  {main && (
+                    <img
+                      src={getImageUrl(main)}
+                      alt="main"
+                      style={{
+                        width: IMAGE_CARD_SIZE,
+                        height: IMAGE_CARD_SIZE,
+                        borderRadius: 8,
+                        border: "1px solid #ccc",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+                  {prev && (
+                    <img
+                      src={getImageUrl(prev)}
+                      alt="prev"
+                      style={{
+                        width: IMAGE_CARD_SIZE,
+                        height: IMAGE_CARD_SIZE,
+                        borderRadius: 8,
+                        border: "1px solid #ccc",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
                   {full.map((url, idx) => (
-                    <img key={url} src={getImageUrl(url)} alt={`full${idx + 1}`} style={{ width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, borderRadius: 8, border: "1px solid #ccc", objectFit: "cover" }} />
+                    <img
+                      key={url}
+                      src={getImageUrl(url)}
+                      alt={`full${idx + 1}`}
+                      style={{
+                        width: IMAGE_CARD_SIZE,
+                        height: IMAGE_CARD_SIZE,
+                        borderRadius: 8,
+                        border: "1px solid #ccc",
+                        objectFit: "cover",
+                      }}
+                    />
                   ))}
-                  {(!main && !prev && full.length === 0) && <span style={{ color: "#aaa" }}>Нет</span>}
+                  {!main && !prev && full.length === 0 && (
+                    <span style={{ color: "#aaa" }}>Нет</span>
+                  )}
                 </div>
                 <div>
                   <button onClick={() => openEditImages(p)}>
@@ -412,90 +479,240 @@ const RealAdmin = () => {
           )}
         </div>
       </section>
-      {/* -------- МОДАЛКА КАРТИНОК ТОВАРА -------- */}
+
+      {/* Модалка для редактирования картинок */}
       {editingProduct && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.35)", display: "flex",
-          alignItems: "center", justifyContent: "center", zIndex: 1000,
-        }} onClick={() => setEditingProduct(null)}>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setEditingProduct(null)}
+        >
           <div
             style={{
-              background: "#fff", padding: 32, borderRadius: 10,
-              minWidth: 540, maxWidth: 820, position: "relative"
+              background: "#fff",
+              padding: 32,
+              borderRadius: 10,
+              minWidth: 540,
+              maxWidth: 820,
+              position: "relative",
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <h3>Картинки товара: {editingProduct.name}</h3>
+
             <div style={{ display: "flex", gap: 18, marginBottom: 32 }}>
               {["main", "prev"].map((type) => {
                 const url = splitImages(editingProduct.image_url)[type];
                 return (
-                  <div key={type} style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-                    <span style={{ fontWeight: 500, marginBottom: 5 }}>{type === "main" ? "Main" : "Preview"}</span>
-                    <label style={{
-                      width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, display: "flex", alignItems: "center", justifyContent: "center",
-                      background: url ? "none" : "#f4f4f4", border: "1px dashed #bbb", borderRadius: 10, color: "#aaa", cursor: "pointer", position: "relative"
-                    }}>
-                      {url
-                        ? <img src={getImageUrl(url)} alt={type} style={{
-                          width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, borderRadius: 10, objectFit: "cover", border: "1px solid #aaa"
-                        }} />
-                        : <span style={{ fontSize: 36 }}>+</span>
-                      }
+                  <div
+                    key={type}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      position: "relative",
+                    }}
+                  >
+                    <span style={{ fontWeight: 500, marginBottom: 5 }}>
+                      {type === "main" ? "Main" : "Preview"}
+                    </span>
+                    <label
+                      style={{
+                        width: IMAGE_CARD_SIZE,
+                        height: IMAGE_CARD_SIZE,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: url ? "none" : "#f4f4f4",
+                        border: "1px dashed #bbb",
+                        borderRadius: 10,
+                        color: "#aaa",
+                        cursor: "pointer",
+                        position: "relative",
+                      }}
+                    >
+                      {url ? (
+                        <img
+                          src={getImageUrl(url)}
+                          alt={type}
+                          style={{
+                            width: IMAGE_CARD_SIZE,
+                            height: IMAGE_CARD_SIZE,
+                            borderRadius: 10,
+                            objectFit: "cover",
+                            border: "1px solid #aaa",
+                          }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: 36 }}>+</span>
+                      )}
                       <input
                         type="file"
                         accept="image/*"
                         style={{
-                          opacity: 0, width: "100%", height: "100%", position: "absolute", left: 0, top: 0, cursor: "pointer",
+                          opacity: 0,
+                          width: "100%",
+                          height: "100%",
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          cursor: "pointer",
                         }}
-                        onChange={e => handleFileChange(type, 0, e.target.files[0])}
+                        onChange={(e) =>
+                          handleFileChange(type, 0, e.target.files[0])
+                        }
                         title=""
                       />
                     </label>
-                    {url && <button style={{ marginTop: 5, color: "#d00" }} onClick={() => handleDeleteImage(url)}>Удалить</button>}
+                    {url && (
+                      <button
+                        style={{ marginTop: 5, color: "#d00" }}
+                        onClick={() => handleDeleteImage(url)}
+                      >
+                        Удалить
+                      </button>
+                    )}
                   </div>
                 );
               })}
             </div>
 
             <h3 style={{ marginTop: 24 }}>Другие картинки</h3>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", minHeight: IMAGE_CARD_SIZE }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                minHeight: IMAGE_CARD_SIZE,
+              }}
+            >
               {(() => {
                 const { full } = splitImages(editingProduct.image_url);
                 let fullBlocks = full.map((url, idx) => (
-                  <div key={url} style={{ display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-                    <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>{`full${String(idx + 1).padStart(2, "0")}`}</span>
-                    <label style={{
-                      width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, borderRadius: 8, border: "1px solid #bbb", display: "flex",
-                      alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative"
-                    }}>
-                      <img src={getImageUrl(url)} alt={`full${idx + 1}`} style={{ width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, borderRadius: 8, objectFit: "cover" }} />
+                  <div
+                    key={url}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      position: "relative",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        fontSize: 14,
+                        marginBottom: 2,
+                      }}
+                    >{`full${String(idx + 1).padStart(2, "0")}`}</span>
+                    <label
+                      style={{
+                        width: IMAGE_CARD_SIZE,
+                        height: IMAGE_CARD_SIZE,
+                        borderRadius: 8,
+                        border: "1px solid #bbb",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        position: "relative",
+                      }}
+                    >
+                      <img
+                        src={getImageUrl(url)}
+                        alt={`full${idx + 1}`}
+                        style={{
+                          width: IMAGE_CARD_SIZE,
+                          height: IMAGE_CARD_SIZE,
+                          borderRadius: 8,
+                          objectFit: "cover",
+                        }}
+                      />
                       <input
                         type="file"
                         accept="image/*"
                         style={{
-                          opacity: 0, width: "100%", height: "100%", position: "absolute", left: 0, top: 0, cursor: "pointer",
+                          opacity: 0,
+                          width: "100%",
+                          height: "100%",
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          cursor: "pointer",
                         }}
-                        onChange={e => handleFileChange("full", idx, e.target.files[0])}
+                        onChange={(e) =>
+                          handleFileChange("full", idx, e.target.files[0])
+                        }
                         title=""
                       />
                     </label>
-                    <button style={{ marginTop: 3, color: "#d00", fontSize: 13 }} onClick={() => handleDeleteImage(url)}>Удалить</button>
+                    <button
+                      style={{ marginTop: 3, color: "#d00", fontSize: 13 }}
+                      onClick={() => handleDeleteImage(url)}
+                    >
+                      Удалить
+                    </button>
                   </div>
                 ));
                 if (full.length < 12) {
                   fullBlocks.push(
-                    <div key="add" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2, color: "#888" }}>{`+ Добавить full${String(full.length + 1).padStart(2, "0")}`}</span>
-                      <label style={{
-                        width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, border: "1px dashed #888", borderRadius: 8, color: "#aaa",
-                        display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative"
-                      }}>
+                    <div
+                      key="add"
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontWeight: 500,
+                          fontSize: 14,
+                          marginBottom: 2,
+                          color: "#888",
+                        }}
+                      >{`+ Добавить full${String(full.length + 1).padStart(2, "0")}`}</span>
+                      <label
+                        style={{
+                          width: IMAGE_CARD_SIZE,
+                          height: IMAGE_CARD_SIZE,
+                          border: "1px dashed #888",
+                          borderRadius: 8,
+                          color: "#aaa",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: "pointer",
+                          position: "relative",
+                        }}
+                      >
                         +
-                        <input type="file" accept="image/*" multiple style={{
-                          opacity: 0, width: "100%", height: "100%", position: "absolute", left: 0, top: 0, cursor: "pointer"
-                        }} onChange={handleAddFullFile} title="" />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          style={{
+                            opacity: 0,
+                            width: "100%",
+                            height: "100%",
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            cursor: "pointer",
+                          }}
+                          onChange={handleAddFullFile}
+                          title=""
+                        />
                       </label>
                     </div>
                   );
@@ -503,7 +720,22 @@ const RealAdmin = () => {
                 return fullBlocks;
               })()}
             </div>
-            <button onClick={() => setEditingProduct(null)} style={{ position: "absolute", top: 8, right: 8, fontSize: 22, background: "none", border: "none" }}>✕</button>
+
+            <button
+              onClick={() => setEditingProduct(null)}
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                fontSize: 22,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}
