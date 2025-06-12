@@ -15,7 +15,7 @@ export default function AdminPanel() {
     }
   }, [navigate]);
 
-  // ОЧИСТКА токена при уходе со страницы (авто-logout)
+  // --- Авто-logout при уходе со страницы ---
   useEffect(() => {
     return () => {
       localStorage.removeItem("admin_token");
