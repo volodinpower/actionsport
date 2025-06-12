@@ -135,7 +135,7 @@ export async function uploadProductImage(id, file, name = "") {
 // --- Удалить картинку у товара (отправлять FormData, иначе FastAPI не примет)
 export async function deleteProductImage(productId, imageUrl) {
   const formData = new FormData();
-  formData.append("image_url", imageUrl);
+  formData.append("url", imageUrl);  // <-- вот здесь
   const token = getAdminToken();
   const res = await fetch(apiUrl(`/admin/product/${productId}/delete_image`), {
     method: "POST",
@@ -150,6 +150,7 @@ export async function deleteProductImage(productId, imageUrl) {
   if (!res.ok) throw new Error("Ошибка удаления");
   return await res.json();
 }
+
 
 // --- Получить отчёт после загрузки XLSX (по сути дублирует uploadXlsx, оставь если хочешь как алиас)
 export async function getXlsxImportReport(file) {
