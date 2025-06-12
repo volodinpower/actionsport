@@ -4,15 +4,23 @@ import RealAdmin from "../pages/RealAdmin";
 import BannerAdmin from "./BannerAdmin";
 
 export default function AdminPanel() {
-  const [activeTab, setActiveTab] = useState("products"); // "products" или "banners"
+  const [activeTab, setActiveTab] = useState("products");
   const navigate = useNavigate();
 
+  // Проверка токена при входе
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
     if (!token) {
       navigate("/admin");
     }
   }, [navigate]);
+
+  // ОЧИСТКА токена при уходе со страницы (авто-logout)
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem("admin_token");
+    };
+  }, []);
 
   return (
     <div style={{ padding: 20, maxWidth: 1200, margin: "auto" }}>
