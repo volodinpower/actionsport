@@ -6,12 +6,11 @@ import {
   uploadProductImage,
   deleteProductImage,
   fetchProductById,
-  fetchBanners,
-  uploadBanner,
-  deleteBanner,
   setProductReserved,
   syncImagesForGroup,
 } from "../api";
+
+import BannerAdmin from "./BannerAdmin"; // импорт компонента баннеров
 
 const PRODUCTS_LIMIT = 30;
 const IMAGE_CARD_SIZE = 72;
@@ -48,14 +47,7 @@ function getImageUrl(url) {
 }
 
 const RealAdmin = () => {
-  // Баннеры
-  const [banners, setBanners] = useState([]);
-  const [bannerUploading, setBannerUploading] = useState(false);
-  const [bannerFile, setBannerFile] = useState(null);
-  const [bannerLink, setBannerLink] = useState("");
-  const [bannerAlt, setBannerAlt] = useState("");
-
-  // Товары
+  // --- Товары ---
   const [products, setProducts] = useState([]);
   const [totalCount, setTotalCount] = useState(null);
   const [search, setSearch] = useState("");
@@ -73,13 +65,6 @@ const RealAdmin = () => {
   });
 
   const listRef = useRef(null);
-
-  // Загрузка баннеров
-  useEffect(() => {
-    fetchBanners()
-      .then(setBanners)
-      .catch(() => setBanners([]));
-  }, []);
 
   // Загрузка количества товаров
   useEffect(() => {
@@ -122,46 +107,7 @@ const RealAdmin = () => {
     return () => el.removeEventListener("scroll", handleScroll);
   }, [hasMore, xlsxUploading, imgUploading, offset]);
 
-  // --- Баннеры: загрузка и удаление ---
-  const handleBannerUpload = async (e) => {
-    e.preventDefault();
-    if (!bannerFile) return alert("Выберите файл баннера");
-    setBannerUploading(true);
-    try {
-      await uploadBanner(bannerFile, bannerLink, bannerAlt);
-      setBannerFile(null);
-      setBannerLink("");
-      setBannerAlt("");
-      fetchBanners().then(setBanners);
-      alert("Баннер добавлен");
-    } catch (err) {
-      alert("Ошибка загрузки баннера: " + err.message);
-    }
-    setBannerUploading(false);
-  };
-
-  const handleBannerDelete = async (id) => {
-    if (!window.confirm("Удалить баннер?")) return;
-    setBannerUploading(true);
-    try {
-      await deleteBanner(id);
-      fetchBanners().then(setBanners);
-    } catch (err) {
-      alert("Ошибка удаления баннера: " + err.message);
-    }
-    setBannerUploading(false);
-  };
-
-  // --- Товары: загрузка, картинки, XLSX ---
-  const reloadEditingProduct = async (id) => {
-    try {
-      const updated = await fetchProductById(id);
-      setEditingProduct(updated);
-    } catch {
-      setEditingProduct(null);
-    }
-  };
-
+  // --- XLSX upload ---
   const handleXlsxUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -186,24 +132,16 @@ const RealAdmin = () => {
     }
   };
 
-  const formatDate = (date) => {
-    if (!date) return "";
-    return date.toLocaleString("ru-RU", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+  // === Картинки ===
 
-  const openEditImages = (product) => {
-    setEditingProduct(product);
-    setAddingFullFiles([]);
+  const reloadEditingProduct = async (id) => {
+    try {
+      const updated = await fetchProductById(id);
+      setEditingProduct(updated);
+    } catch {
+      setEditingProduct(null);
+    }
   };
-
-  // >>> ИЗМЕНЁННЫЕ МЕТОДЫ (с синхронизацией группы) <<<
 
   const saveReplaceImage = async (type, file, idx = null) => {
     if (!editingProduct || !file) return;
@@ -214,7 +152,7 @@ const RealAdmin = () => {
     else if (type === "full" && idx !== null) name = `${barcode}_${idx + 1}`;
     try {
       await uploadProductImage(editingProduct.id, file, name);
-      await syncImagesForGroup(editingProduct.id); // <<< ДОБАВЛЕНО
+      await syncImagesForGroup(editingProduct.id);
       setXlsxResult({});
       await reloadEditingProduct(editingProduct.id);
     } catch (err) {
@@ -230,7 +168,7 @@ const RealAdmin = () => {
     setImgUploading(true);
     try {
       await deleteProductImage(editingProduct.id, url);
-      await syncImagesForGroup(editingProduct.id); // <<< ДОБАВЛЕНО
+      await syncImagesForGroup(editingProduct.id);
       setXlsxResult({});
       await reloadEditingProduct(editingProduct.id);
     } catch (err) {
@@ -254,7 +192,7 @@ const RealAdmin = () => {
           await uploadProductImage(editingProduct.id, addingFullFiles[i], name);
           idx++;
         }
-        await syncImagesForGroup(editingProduct.id); // <<< ДОБАВЛЕНО
+        await syncImagesForGroup(editingProduct.id);
         setXlsxResult({});
         setAddingFullFiles([]);
         await reloadEditingProduct(editingProduct.id);
@@ -293,61 +231,11 @@ const RealAdmin = () => {
     setOffset(0);
   };
 
-  // --- РЕНДЕР ---
+  // --- Рендер ---
+
   return (
     <div style={{ width: "100vw", margin: 0, padding: 12 }}>
-      <h2 style={{ marginBottom: 24 }}>Админка: загрузка каталога, картинок и баннеров</h2>
-
-      {/* -------- БАННЕРЫ -------- */}
-      <section style={{ marginBottom: 32 }}>
-        <h3>Баннеры для главной страницы</h3>
-        <form onSubmit={handleBannerUpload} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={e => setBannerFile(e.target.files[0])}
-            disabled={bannerUploading}
-          />
-          <input
-            type="text"
-            placeholder="Ссылка (опционально)"
-            value={bannerLink}
-            onChange={e => setBannerLink(e.target.value)}
-            style={{ width: 200 }}
-            disabled={bannerUploading}
-          />
-          <input
-            type="text"
-            placeholder="Alt-текст (опционально)"
-            value={bannerAlt}
-            onChange={e => setBannerAlt(e.target.value)}
-            style={{ width: 200 }}
-            disabled={bannerUploading}
-          />
-          <button type="submit" disabled={bannerUploading || !bannerFile}>Добавить баннер</button>
-        </form>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {banners.length === 0 && <span style={{ color: "#888" }}>Нет баннеров</span>}
-          {banners.map(b => (
-            <div key={b.id} style={{ border: "1px solid #ccc", borderRadius: 8, padding: 8, position: "relative", width: 320 }}>
-              <img
-                src={getImageUrl(b.image_url)}
-                alt={b.alt || ""}
-                style={{ width: 300, height: 108, objectFit: "cover", borderRadius: 6 }}
-              />
-              {b.link && <a href={b.link} target="_blank" rel="noopener noreferrer" style={{ display: "block", fontSize: 12, marginTop: 4 }}>{b.link}</a>}
-              {b.alt && <div style={{ fontSize: 12, color: "#777" }}>{b.alt}</div>}
-              <button
-                style={{ position: "absolute", top: 6, right: 6, color: "#d00", background: "none", border: "none", fontSize: 18, cursor: "pointer" }}
-                onClick={() => handleBannerDelete(b.id)}
-                title="Удалить"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
+      <h2 style={{ marginBottom: 24 }}>Админка: загрузка каталога и картинок товаров</h2>
 
       {/* -------- ЗАГРУЗКА XLSX -------- */}
       <div style={{ marginBottom: 16, fontSize: 17 }}>
@@ -538,7 +426,7 @@ const RealAdmin = () => {
             }}
             onClick={e => e.stopPropagation()}
           >
-            <h3>ProductCard</h3>
+            <h3>Картинки товара: {editingProduct.name}</h3>
             <div style={{ display: "flex", gap: 18, marginBottom: 32 }}>
               {["main", "prev"].map((type) => {
                 const url = splitImages(editingProduct.image_url)[type];
@@ -571,7 +459,7 @@ const RealAdmin = () => {
               })}
             </div>
 
-            <h3 style={{ marginTop: 24 }}>ProductDetails</h3>
+            <h3 style={{ marginTop: 24 }}>Другие картинки</h3>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap", minHeight: IMAGE_CARD_SIZE }}>
               {(() => {
                 const { full } = splitImages(editingProduct.image_url);
@@ -599,7 +487,7 @@ const RealAdmin = () => {
                 if (full.length < 12) {
                   fullBlocks.push(
                     <div key="add" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2, color: "#888" }}>{`+ Add full${String(full.length + 1).padStart(2, "0")}`}</span>
+                      <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2, color: "#888" }}>{`+ Добавить full${String(full.length + 1).padStart(2, "0")}`}</span>
                       <label style={{
                         width: IMAGE_CARD_SIZE, height: IMAGE_CARD_SIZE, border: "1px dashed #888", borderRadius: 8, color: "#aaa",
                         display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative"

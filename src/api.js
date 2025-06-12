@@ -47,25 +47,6 @@ export async function fetchRandomProducts(limit = 20) {
   return await res.json();
 }
 
-// --- Загрузить CSV (используется для теста или отладки, основной импорт — XLSX)
-export async function uploadCsv(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-  const token = getAdminToken();
-  const res = await fetch(apiUrl("/admin/upload_csv"), {
-    method: "POST",
-    body: formData,
-    headers: token ? { Authorization: "Bearer " + token } : {},
-  });
-  if (res.status === 401) {
-    localStorage.removeItem("admin_token");
-    window.location.reload();
-    throw new Error("Авторизация истекла, войдите заново");
-  }
-  if (!res.ok) throw new Error("Failed to upload CSV");
-  return await res.json();
-}
-
 // --- Загрузить XLSX (основной импорт каталога)
 export async function uploadXlsx(file) {
   const formData = new FormData();
@@ -135,7 +116,7 @@ export async function uploadProductImage(id, file, name = "") {
 // --- Удалить картинку у товара (отправлять FormData, иначе FastAPI не примет)
 export async function deleteProductImage(productId, imageUrl) {
   const formData = new FormData();
-  formData.append("url", imageUrl);  // <-- вот здесь
+  formData.append("url", imageUrl); // <-- здесь ключ "url", как в FastAPI принимается
   const token = getAdminToken();
   const res = await fetch(apiUrl(`/admin/product/${productId}/delete_image`), {
     method: "POST",
@@ -150,7 +131,6 @@ export async function deleteProductImage(productId, imageUrl) {
   if (!res.ok) throw new Error("Ошибка удаления");
   return await res.json();
 }
-
 
 // --- Получить отчёт после загрузки XLSX (по сути дублирует uploadXlsx, оставь если хочешь как алиас)
 export async function getXlsxImportReport(file) {
@@ -295,7 +275,6 @@ export async function incrementProductView(id) {
 export default {
   fetchProducts,
   fetchRandomProducts,
-  uploadCsv,
   uploadXlsx,
   fetchProductById,
   setProductImageUrl,

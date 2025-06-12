@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
+import AdminPanel from "../components/AdminPanel"; // поправь путь при необходимости
 
 // Вспомогательная функция формирования полного URL для API
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
   return `${base}${path.startsWith("/") ? path : "/" + path}`;
 }
-
-import RealAdmin from "./RealAdmin";
 
 export default function Admin() {
   const [input, setInput] = useState("");
@@ -89,5 +88,6 @@ export default function Admin() {
     );
   }
 
-  return <RealAdmin />;
+  // При успешном входе показываем админ-панель с табами
+  return <AdminPanel />;
 }
