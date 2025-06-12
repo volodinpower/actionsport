@@ -45,19 +45,11 @@
   cursor: pointer;
 }
 
-/* Логотип по умолчанию — для десктопа */
-.header img {
-  height: 56px; /* например, 56px */
-  transition: height 0.3s ease;
+.logo {
+  height: 64px;
+  object-fit: contain;
+  margin: 0 auto;
 }
-
-/* Для мобильных устройств (ширина экрана <= 768px) */
-@media (max-width: 768px) {
-  .header img {
-    height: 32px; /* меньше, чем для десктопа */
-  }
-}
-
 
 .header-logo {
   display: flex;
@@ -65,7 +57,7 @@
   padding: 16px 0;
 }
 @media (max-width: 768px) {
-  .header img {
+  .logo {
     height: 32px; /* меньше, чем для десктопа */
   }
 }
