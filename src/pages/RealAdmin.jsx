@@ -10,7 +10,7 @@ import {
   syncImagesForGroup,
 } from "../api";
 
-import BannerAdmin from "./BannerAdmin"; // импорт компонента баннеров
+import BannerAdmin from "../components/BannerAdmin"; // импорт компонента баннеров
 
 const PRODUCTS_LIMIT = 30;
 const IMAGE_CARD_SIZE = 72;
