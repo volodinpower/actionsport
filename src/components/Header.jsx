@@ -28,7 +28,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
         <div className="w-full bg-white border-b border-gray-200">
           <div className="max-w-[1128px] mx-auto py-2 flex justify-center">
             <a href="/">
-              <img src="/logo.png" alt="Logo" className="h-14 object-contain" />
+              <img src="/logo.png" alt="Logo" className="logo" />
             </a>
           </div>
         </div>
