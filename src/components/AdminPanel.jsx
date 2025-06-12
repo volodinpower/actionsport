@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import RealAdmin from "../pages/RealAdmin";
 import BannerAdmin from "./BannerAdmin";
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("products"); // "products" или "banners"
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
     if (!token) {
-      navigate("/admin/login"); // путь к странице логина
+      navigate("/admin");
     }
   }, [navigate]);
 

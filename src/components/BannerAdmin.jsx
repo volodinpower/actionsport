@@ -38,10 +38,18 @@ export default function BannerAdmin() {
       form.append("link", newLink);
       form.append("alt", newAlt);
 
+      const token = localStorage.getItem("admin_token");
       const res = await fetch(API_BASE + "/admin/banner/upload", {
         method: "POST",
         body: form,
+        headers: token ? { Authorization: "Bearer " + token } : {},
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("admin_token");
+        window.location.href = "/admin";
+        return;
+      }
 
       if (!res.ok) throw new Error("Ошибка загрузки баннера");
       await loadBanners();
@@ -63,10 +71,18 @@ export default function BannerAdmin() {
       const form = new FormData();
       form.append("banner_id", id);
 
+      const token = localStorage.getItem("admin_token");
       const res = await fetch(API_BASE + "/admin/banner/delete", {
         method: "POST",
         body: form,
+        headers: token ? { Authorization: "Bearer " + token } : {},
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("admin_token");
+        window.location.href = "/admin";
+        return;
+      }
 
       if (!res.ok) throw new Error("Ошибка удаления баннера");
       await loadBanners();

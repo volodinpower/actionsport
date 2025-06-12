@@ -14,7 +14,6 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/panel" element={<AdminPanel />} />
       </Routes>
     </Router>
