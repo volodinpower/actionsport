@@ -99,16 +99,32 @@ export default function ProductDetails() {
     });
   }, [product]);
 
-  let rawImages = [];
-  if (typeof product?.image_url === "string" && product.image_url.trim()) {
-    rawImages = product.image_url
-      .split(",")
-      .map(url => url && url.trim())
-      .filter(Boolean)
-      .filter(url => !url.toLowerCase().includes("_main") && !url.toLowerCase().includes("_prev"))
+let rawImages = [];
+if (typeof product?.image_url === "string" && product.image_url.trim()) {
+  // Разбиваем на отдельные адреса и чистим
+  const urls = product.image_url
+    .split(",")
+    .map(url => url && url.trim())
+    .filter(Boolean);
+
+  // Находим картинки с _1, _2, _3 и т.д.
+  const numberedImages = urls.filter(url => /_\d+\./.test(url));
+  // Если такие картинки есть — показываем только их
+  if (numberedImages.length > 0) {
+    rawImages = numberedImages.map(makeImageUrl);
+  } else {
+    // Иначе показываем _main и _prev (если есть)
+    rawImages = urls
+      .filter(url => /_(main|prev)\./i.test(url))
       .map(makeImageUrl);
+
+    // Если _main и _prev нет — показываем всё что есть (на всякий случай)
+    if (rawImages.length === 0) {
+      rawImages = urls.map(makeImageUrl);
+    }
   }
-  if (rawImages.length === 0) rawImages = ["/no-image.jpg"];
+}
+if (rawImages.length === 0) rawImages = ["/no-image.jpg"];
 
   useEffect(() => {
     setMainIndex(0);
