@@ -1,93 +1,52 @@
-import React, { useState, useEffect } from "react";
-import AdminPanel from "../components/AdminPanel"; // поправь путь при необходимости
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-// Вспомогательная функция формирования полного URL для API
+// Исправь путь если у тебя apiUrl в другом месте
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
   return `${base}${path.startsWith("/") ? path : "/" + path}`;
 }
 
-export default function Admin() {
+export default function AdminLogin() {
   const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [ok, setOk] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  // Проверка токена при открытии страницы
-  useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) return;
-    fetch(apiUrl("/admin/check_token"), {
-      headers: { Authorization: "Bearer " + token }
-    })
-      .then((res) => {
-        if (res.ok) setOk(true);
-        else {
-          localStorage.removeItem("admin_token");
-          setOk(false);
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem("admin_token");
-        setOk(false);
-      });
-  }, []);
-
-  async function handleLogin() {
-    setLoading(true);
+  async function handleLogin(e) {
+    e.preventDefault();
     setError("");
     try {
+      // отправляем form-data, как требует FastAPI
       const formData = new FormData();
-      formData.append("username", "admin");
+      formData.append("username", "admin"); // или поле, если нужен логин, или просто "admin"
       formData.append("password", input);
 
       const res = await fetch(apiUrl("/token"), {
         method: "POST",
-        body: formData,
+        body: formData
       });
-      if (!res.ok) {
-        setError("Неверный пароль");
-        setLoading(false);
-        return;
-      }
+      if (!res.ok) throw new Error("Неверный пароль");
       const data = await res.json();
+      if (!data.access_token) throw new Error("Нет токена в ответе");
       localStorage.setItem("admin_token", data.access_token);
-      setOk(true);
-    } catch (e) {
-      setError("Ошибка входа");
+      navigate("/admin/panel"); // или куда у тебя главная админка
+    } catch (err) {
+      setError(err.message);
     }
-    setLoading(false);
   }
 
-  if (!ok) {
-    return (
-      <div style={{ padding: 50, textAlign: "center" }}>
-        <h2>Вход в админку</h2>
-        <input
-          type="password"
-          value={input}
-          placeholder="Введите пароль"
-          disabled={loading}
-          onChange={e => setInput(e.target.value)}
-          style={{ fontSize: 18, padding: 8, width: 220 }}
-          onKeyDown={e => {
-            if (e.key === "Enter") handleLogin();
-          }}
-        />
-        <button
-          onClick={handleLogin}
-          style={{ marginLeft: 12, padding: "8px 18px", fontSize: 18 }}
-          disabled={loading}
-        >
-          Войти
-        </button>
-        {error && (
-          <div style={{ color: "red", marginTop: 8 }}>{error}</div>
-        )}
-      </div>
-    );
-  }
-
-  // При успешном входе показываем админ-панель с табами
-  return <AdminPanel />;
+  return (
+    <form onSubmit={handleLogin}>
+      <input
+        type="password"
+        placeholder="Пароль администратора"
+        value={input}
+        onChange={e => setInput(e.target.value)}
+        required
+        autoFocus
+      />
+      <button type="submit">Войти</button>
+      {error && <div style={{ color: "red" }}>{error}</div>}
+    </form>
+  );
 }

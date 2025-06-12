@@ -5,6 +5,13 @@ import BannerAdmin from "./BannerAdmin";
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("products"); // "products" или "banners"
 
+  useEffect(() => {
+    const token = localStorage.getItem("admin_token");
+    if (!token) {
+      navigate("/admin/login"); // путь к странице логина
+    }
+  }, [navigate]);
+
   return (
     <div style={{ padding: 20, maxWidth: 1200, margin: "auto" }}>
       <nav style={{ marginBottom: 20, display: "flex", gap: 20 }}>
