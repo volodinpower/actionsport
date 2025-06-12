@@ -46,7 +46,7 @@
 }
 
 /* Логотип по умолчанию — для десктопа */
-.header img {
+.logo {
   height: 56px; /* например, 56px */
   transition: height 0.3s ease;
 }
@@ -55,6 +55,7 @@
 @media (max-width: 768px) {
   .logo {
     height: 32px; /* меньше, чем для десктопа */
+    filter: invert(1);
   }
 }
 
