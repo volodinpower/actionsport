@@ -76,6 +76,16 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
             mobileView={true}
           />
         )}
+        {showSearch && (
+          <div className="search-flyout search-flyout-mobile">
+            <SearchBar
+              onSearch={runSearch}
+              autoFocus
+              onClose={() => setShowSearch(false)}
+              fullWidth={true}
+            />
+          </div>
+          )}
       </header>
     );
   }
