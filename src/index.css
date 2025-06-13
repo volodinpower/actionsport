@@ -213,3 +213,14 @@ body {
   padding: 0;
   color: #333;
 }
+@media (max-width: 640px) {
+  .swiper-button-next, .swiper-button-prev {
+    width: 28px !important;
+    height: 28px !important;
+    background: rgba(0,0,0,0.13);
+  }
+  .swiper-button-next:after, .swiper-button-prev:after {
+    font-size: 15px !important;
+    font-weight: 400 !important;
+  }
+}
