@@ -86,9 +86,9 @@ export default function NavMenu({
   const isMobile = useIsMobile();
   const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState(null);
 
-  // --- Только мобильное меню ---
+  // --- Мобильное меню ---
   if (isMobile && mobileMenuOpen) {
-    // Субменю открывается вместо основного меню
+    // SUBMENU
     if (mobileOpenSubmenu) {
       return (
         <div className="mobile-menu-modal">
@@ -137,7 +137,7 @@ export default function NavMenu({
       );
     }
 
-    // Основное меню
+    // MAIN MENU
     return (
       <div className="mobile-menu-modal">
         <button
@@ -153,42 +153,45 @@ export default function NavMenu({
         </button>
         <ul className="mobile-menu-list">
           {menuList.map(menu => (
-            <li key={menu.name} className="mobile-menu-li">
-              <button
-                className={
-                  "mobile-menu-item" +
-                  (menu.isSale ? " sale" : "")
-                }
-                onClick={() => {
-                  if (submenus[menu.name]) {
-                    setMobileOpenSubmenu(menu.name);
-                  } else {
-                    onMenuSearch(
-                      menu.query,
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
-                      ],
-                      menu.exclude || ""
-                    );
-                    setMobileMenuOpen(false);
-                    setMobileActiveMenu?.(null);
-                    setMobileOpenSubmenu(null);
-                  }
-                }}
-              >
-                {menu.label}
-              </button>
-              {submenus[menu.name] && (
+            <li key={menu.name} className="mobile-menu-li" style={{padding: 0}}>
+              <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
                 <button
-                  className="mobile-menu-plus"
-                  onClick={e => {
-                    e.stopPropagation();
-                    setMobileOpenSubmenu(menu.name);
+                  className={
+                    "mobile-menu-item" +
+                    (menu.isSale ? " sale" : "")
+                  }
+                  style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-start'}}
+                  onClick={() => {
+                    if (submenus[menu.name]) {
+                      setMobileOpenSubmenu(menu.name);
+                    } else {
+                      onMenuSearch(
+                        menu.query,
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                        ],
+                        menu.exclude || ""
+                      );
+                      setMobileMenuOpen(false);
+                      setMobileActiveMenu?.(null);
+                      setMobileOpenSubmenu(null);
+                    }
                   }}
-                  aria-label="Open submenu"
-                >+</button>
-              )}
+                >
+                  {menu.label}
+                  {submenus[menu.name] && (
+                    <span
+                      className="mobile-menu-plus"
+                      style={{marginLeft: 4, fontSize: '1.2em'}}
+                      onClick={e => {
+                        e.stopPropagation();
+                        setMobileOpenSubmenu(menu.name);
+                      }}
+                    >+</span>
+                  )}
+                </button>
+              </div>
             </li>
           ))}
         </ul>
@@ -208,39 +211,36 @@ export default function NavMenu({
     return (
       <>
         <nav>
-         <ul className="mobile-menu-list">
-  {menuList.map(menu => (
-    <li key={menu.name} className="mobile-menu-li">
-      <button
-        className={
-          "mobile-menu-item" +
-          (menu.isSale ? " sale" : "")
-        }
-        onClick={() => {
-          if (submenus[menu.name]) {
-            setMobileOpenSubmenu(menu.name);
-          } else {
-            onMenuSearch(...);
-            setMobileMenuOpen(false);
-            setMobileActiveMenu?.(null);
-            setMobileOpenSubmenu(null);
-          }
-        }}
-      >
-        {menu.label}
-        {submenus[menu.name] && (
-          <span
-            className="mobile-menu-plus"
-            onClick={e => {
-              e.stopPropagation();
-              setMobileOpenSubmenu(menu.name);
-            }}
-          >+</span>
-        )}
-      </button>
-    </li>
-  ))}
-</ul>
+          <ul className="flex gap-6 items-center text-base font-medium nav-menu-wrap">
+            {menuList.map((menu) => (
+              <li
+                key={menu.name}
+                className={
+                  menu.isSale
+                    ? "nav-menu-sale cursor-pointer h-10 flex items-center"
+                    : "cursor-pointer h-10 flex items-center"
+                }
+                style={!menu.isSale ? { color: "#fff" } : {}}
+                onMouseEnter={() =>
+                  submenus[menu.name]
+                    ? setActiveMenu(menu.name)
+                    : setActiveMenu(null)
+                }
+                onClick={() => {
+                  onMenuSearch(
+                    menu.query,
+                    [
+                      { label: "Main", query: "", exclude: "" },
+                      { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                    ],
+                    menu.exclude || ""
+                  );
+                }}
+              >
+                {menu.label}
+              </li>
+            ))}
+          </ul>
         </nav>
         {activeMenu && (
           <div
