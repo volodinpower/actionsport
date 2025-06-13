@@ -10,6 +10,7 @@ import {
   syncImagesForGroup,
 } from "../api";
 
+
 function formatDate(date) {
   if (!date) return "";
   return date.toLocaleString("ru-RU", {
