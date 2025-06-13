@@ -52,18 +52,8 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
               <line x1="16" y1="16" x2="22" y2="22" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-          {/* Выпадающая панель поиска */}
-          {showSearch && (
-            <div className="search-flyout search-flyout-mobile">
-              <SearchBar
-                onSearch={runSearch}
-                autoFocus
-                onClose={() => setShowSearch(false)}
-                fullWidth={true}
-              />
-            </div>
-          )}
         </div>
+        {/* Сначала меню (может быть открыто) */}
         {mobileMenuOpen && (
           <NavMenu
             onMenuSearch={runSearch}
@@ -76,6 +66,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
             mobileView={true}
           />
         )}
+        {/* Потом поиск, если showSearch — всегда поверх меню */}
         {showSearch && (
           <div className="search-flyout search-flyout-mobile">
             <SearchBar
@@ -85,7 +76,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
               fullWidth={true}
             />
           </div>
-          )}
+        )}
       </header>
     );
   }
