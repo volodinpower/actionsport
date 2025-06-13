@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./ProductCard.css";
 
 /**
  * Карточка товара для каталога (адаптивная для мобильных)
@@ -93,7 +94,7 @@ export default function ProductCard({ product, onClick }) {
             {sizes.length > 0 ? `size: ${sizes.join(", ")}` : ""}
           </div>
         </div>
-        <div className="mt-auto min-h-[28px] max-h-[32px] sm:min-h-[40px] sm:max-h-[40px] flex flex-col justify-end items-end text-right">
+        <div className="mt-auto min-h-[28px] max-h-[32px] sm:min-h-[40px] sm:max-h-[40px] flex flex-col justify-end items-end">
           {showDiscount ? (
             <>
               <span className="text-[10px] sm:text-xs text-red-500 font-semibold block">{`sale: -${discount}%`}</span>
