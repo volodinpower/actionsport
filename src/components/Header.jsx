@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import NavMenu from "./NavMenu";
 import SearchBar from "./SearchBar";
-import "./Header.css"; // Новый файл ниже
+import "./Header.css";
 
 export default function Header({ onSearch, breadcrumbs, isHome }) {
   const [activeMenu, setActiveMenu] = useState(null);
@@ -39,7 +39,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
           <>
             <button
               aria-label="Открыть меню"
-              onClick={() => setMobileMenuOpen(v => !v)}
+              onClick={() => setMobileMenuOpen(true)}
               className={`burger-btn${mobileMenuOpen ? " active" : ""}`}
             >
               &#9776;
@@ -62,8 +62,6 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
                 onMenuSearch={runSearch}
                 activeMenu={activeMenu}
                 setActiveMenu={setActiveMenu}
-                mobileMenuOpen={mobileMenuOpen}
-                setMobileMenuOpen={setMobileMenuOpen}
                 breadcrumbs={breadcrumbs}
                 isHome={isHome}
               />
@@ -75,20 +73,18 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
         )}
       </div>
 
-      {/* --- Мобильное меню (бургер) --- */}
-      {isMobile && (
-        <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`}>
-          <NavMenu
-            onMenuSearch={runSearch}
-            activeMenu={activeMenu}
-            setActiveMenu={setActiveMenu}
-            mobileMenuOpen={mobileMenuOpen}
-            setMobileMenuOpen={setMobileMenuOpen}
-            breadcrumbs={breadcrumbs}
-            isHome={isHome}
-            mobileView={true}
-          />
-        </div>
+      {/* --- Мобильное меню --- */}
+      {isMobile && mobileMenuOpen && (
+        <NavMenu
+          onMenuSearch={runSearch}
+          activeMenu={activeMenu}
+          setActiveMenu={setActiveMenu}
+          mobileMenuOpen={mobileMenuOpen}
+          setMobileMenuOpen={setMobileMenuOpen}
+          breadcrumbs={breadcrumbs}
+          isHome={isHome}
+          mobileView={true}
+        />
       )}
     </header>
   );
