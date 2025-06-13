@@ -260,7 +260,6 @@
     color: #fff;
     background: none;
     border: none;
-    z-index: 1001;
     cursor: pointer;
   }
   .mobile-menu-list {
