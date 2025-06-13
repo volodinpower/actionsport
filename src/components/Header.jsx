@@ -7,6 +7,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 900);
@@ -18,6 +19,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
     if (onSearch) onSearch(query, crumbs, exclude, brand, category);
     setActiveMenu(null);
     setMobileMenuOpen(false);
+    setShowSearch(false); // Закрываем поиск при поиске
   };
 
   return (
@@ -52,7 +54,17 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
               />
             </a>
             <div className="search-mobile-wrap">
-              <SearchBar onSearch={runSearch} />
+              <button
+                className="search-btn"
+                aria-label="Открыть поиск"
+                onClick={() => setShowSearch(true)}
+              >
+                {/* SVG-лупа */}
+                <svg width="24" height="24" fill="none">
+                  <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2"/>
+                  <line x1="16" y1="16" x2="22" y2="22" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
             </div>
           </>
         ) : (
@@ -67,11 +79,31 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
               />
             </div>
             <div className="search-desktop-wrap">
-              <SearchBar onSearch={runSearch} />
+              <button
+                className="search-btn"
+                aria-label="Открыть поиск"
+                onClick={() => setShowSearch(true)}
+              >
+                <svg width="24" height="24" fill="none">
+                  <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2"/>
+                  <line x1="16" y1="16" x2="22" y2="22" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
             </div>
           </>
         )}
       </div>
+
+      {/* --- ВЫПАДАЮЩАЯ ПАНЕЛЬ ПОИСКА (МОДАЛЬНО) --- */}
+      {showSearch && (
+        <div className="search-flyout">
+          <SearchBar
+            onSearch={runSearch}
+            autoFocus={true}
+            onClose={() => setShowSearch(false)}
+          />
+        </div>
+      )}
 
       {/* --- Мобильное меню --- */}
       {isMobile && mobileMenuOpen && (

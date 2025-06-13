@@ -89,5 +89,28 @@
     padding: 0 10px;
   }
 }
-
+.search-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px;
+  margin-left: 10px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+}
+.search-flyout {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100vw;
+  background: #fff;
+  z-index: 120;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  animation: fadeInSearch .22s cubic-bezier(.65,.05,.36,1);
+}
+@keyframes fadeInSearch {
+  from { opacity: 0; transform: translateY(-16px);}
+  to   { opacity: 1; transform: none;}
+}
 
