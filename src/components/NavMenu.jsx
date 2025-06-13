@@ -198,15 +198,16 @@ export default function NavMenu({
     return (
       <>
         <nav>
-          <ul className="flex gap-6 items-center text-base font-medium">
+          <ul className="flex gap-6 items-center text-base font-medium nav-menu-wrap">
             {menuList.map((menu) => (
               <li
                 key={menu.name}
                 className={
                   menu.isSale
                     ? "nav-menu-sale cursor-pointer h-10 flex items-center"
-                    : "text-white hover:text-red-600 cursor-pointer h-10 flex items-center"
+                    : "cursor-pointer h-10 flex items-center"
                 }
+                style={!menu.isSale ? { color: "#fff" } : {}}
                 onMouseEnter={() =>
                   submenus[menu.name]
                     ? setActiveMenu(menu.name)

@@ -179,11 +179,13 @@
   font-style: italic;
 }
 .nav-menu-sale {
-  color: #ef4444 !important;    /* Tailwind text-red-500 */
+  color: #ef4444 !important;      /* ярко-красный */
   font-weight: 600;
+  letter-spacing: 0.03em;
 }
-.nav-menu-sale:hover, .nav-menu-sale:focus {
-  color: #dc2626 !important;    /* Tailwind text-red-600 */
+.nav-menu-sale:hover,
+.nav-menu-sale:focus {
+  color: #dc2626 !important;      /* темно-красный */
 }
 
 /* ---------- Мобилка ---------- */
