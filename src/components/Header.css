@@ -298,14 +298,18 @@
     cursor: pointer;
     padding: 0 0 0 4px; 
   }
-  .mobile-menu-back {
-    display: block;
-    margin: 13px 0 8px 8px;
-    background: none;
-    color: #aaa;
-    border: none;
-    font-size: 1.05em;
-    cursor: pointer;
-    padding: 0;
-  }
+.mobile-menu-back {
+  display: block;
+  width: 100%;
+  margin: 24px 0 0 0;
+  background: none;
+  color: #aaa;
+  border: none;
+  font-size: 1.1em;
+  cursor: pointer;
+  text-align: left;
+  padding: 10px 4px;
+}
+.mobile-menu-back:active,
+.mobile-menu-back:focus { color: #d1d1d1; }
 }

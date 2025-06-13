@@ -88,7 +88,7 @@ export default function NavMenu({
 
   // --- Мобильное меню ---
   if (isMobile && mobileMenuOpen) {
-    // SUBMENU
+    // Субменю
     if (mobileOpenSubmenu) {
       return (
         <div className="mobile-menu-modal">
@@ -102,12 +102,6 @@ export default function NavMenu({
             aria-label="Закрыть меню"
           >
             &times;
-          </button>
-          <button
-            className="mobile-menu-back"
-            onClick={() => setMobileOpenSubmenu(null)}
-          >
-            ← Назад
           </button>
           <ul className="mobile-menu-list">
             {submenus[mobileOpenSubmenu].map(item => (
@@ -133,11 +127,18 @@ export default function NavMenu({
               </li>
             ))}
           </ul>
+          <button
+            className="mobile-menu-back"
+            style={{ marginTop: 24 }}
+            onClick={() => setMobileOpenSubmenu(null)}
+          >
+            Back
+          </button>
         </div>
       );
     }
 
-    // MAIN MENU
+    // Основное меню
     return (
       <div className="mobile-menu-modal">
         <button
@@ -155,42 +156,55 @@ export default function NavMenu({
           {menuList.map(menu => (
             <li key={menu.name} className="mobile-menu-li" style={{padding: 0}}>
               <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
+                {/* КЛИК ПО ТЕКСТУ — поиск! */}
                 <button
                   className={
                     "mobile-menu-item" +
                     (menu.isSale ? " sale" : "")
                   }
-                  style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-start'}}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start'
+                  }}
                   onClick={() => {
-                    if (submenus[menu.name]) {
-                      setMobileOpenSubmenu(menu.name);
-                    } else {
-                      onMenuSearch(
-                        menu.query,
-                        [
-                          { label: "Main", query: "", exclude: "" },
-                          { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
-                        ],
-                        menu.exclude || ""
-                      );
-                      setMobileMenuOpen(false);
-                      setMobileActiveMenu?.(null);
-                      setMobileOpenSubmenu(null);
-                    }
+                    onMenuSearch(
+                      menu.query,
+                      [
+                        { label: "Main", query: "", exclude: "" },
+                        { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                      ],
+                      menu.exclude || ""
+                    );
+                    setMobileMenuOpen(false);
+                    setMobileActiveMenu?.(null);
+                    setMobileOpenSubmenu(null);
                   }}
                 >
                   {menu.label}
-                  {submenus[menu.name] && (
-                    <span
-                      className="mobile-menu-plus"
-                      style={{marginLeft: 4, fontSize: '1.2em'}}
-                      onClick={e => {
-                        e.stopPropagation();
-                        setMobileOpenSubmenu(menu.name);
-                      }}
-                    >+</span>
-                  )}
                 </button>
+                {/* КЛИК ПО ПЛЮСИКУ — открытие подменю */}
+                {submenus[menu.name] && (
+                  <button
+                    className="mobile-menu-plus"
+                    style={{
+                      marginLeft: 2,
+                      fontSize: '1.2em',
+                      background: 'none',
+                      border: 'none',
+                      color: '#aaa',
+                      padding: 0,
+                      lineHeight: 1,
+                      cursor: 'pointer'
+                    }}
+                    onClick={e => {
+                      e.stopPropagation();
+                      setMobileOpenSubmenu(menu.name);
+                    }}
+                    aria-label="Open submenu"
+                  >+</button>
+                )}
               </div>
             </li>
           ))}
@@ -287,6 +301,5 @@ export default function NavMenu({
     );
   }
 
-  // По дефолту рендерим null если не мобилка и не десктоп (теоретически не случается)
   return null;
 }
