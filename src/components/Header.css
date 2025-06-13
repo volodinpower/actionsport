@@ -242,7 +242,6 @@
     left: 0; right: 0;
     top: 54px;  /* высота navbar! */
     background: #222;   /* тёмный фон, как было */
-    z-index: 9999;
     min-height: 320px;
     box-shadow: 0 6px 28px 0 rgba(20,20,40,0.10);
     border-top: 1px solid #292929;
