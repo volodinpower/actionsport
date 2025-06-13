@@ -209,38 +209,38 @@ export default function NavMenu({
       <>
         <nav>
          <ul className="mobile-menu-list">
-          {menuList.map(menu => (
-            <li key={menu.name} className="mobile-menu-li">
-              <button
-                className={
-                  "mobile-menu-item" +
-                  (menu.isSale ? " sale" : "")
-                }
-                onClick={() => {
-                  if (submenus[menu.name]) {
-                    setMobileOpenSubmenu(menu.name);
-                  } else {
-                    onMenuSearch(...);
-                    setMobileMenuOpen(false);
-                    setMobileActiveMenu?.(null);
-                    setMobileOpenSubmenu(null);
-                  }
-                }}
-              >
-                {menu.label}
-                {submenus[menu.name] && (
-                  <span
-                    className="mobile-menu-plus"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setMobileOpenSubmenu(menu.name);
-                    }}
-                  >+</span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
+  {menuList.map(menu => (
+    <li key={menu.name} className="mobile-menu-li">
+      <button
+        className={
+          "mobile-menu-item" +
+          (menu.isSale ? " sale" : "")
+        }
+        onClick={() => {
+          if (submenus[menu.name]) {
+            setMobileOpenSubmenu(menu.name);
+          } else {
+            onMenuSearch(...);
+            setMobileMenuOpen(false);
+            setMobileActiveMenu?.(null);
+            setMobileOpenSubmenu(null);
+          }
+        }}
+      >
+        {menu.label}
+        {submenus[menu.name] && (
+          <span
+            className="mobile-menu-plus"
+            onClick={e => {
+              e.stopPropagation();
+              setMobileOpenSubmenu(menu.name);
+            }}
+          >+</span>
+        )}
+      </button>
+    </li>
+  ))}
+</ul>
         </nav>
         {activeMenu && (
           <div
