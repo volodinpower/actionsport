@@ -190,25 +190,11 @@
     align-items: center;
     justify-content: center;
   }
-  .burger-btn {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: #fff;
-    cursor: pointer;
-    margin-right: 0;
-    margin-left: 0;
-    padding: 4px 8px;
-  }
   .logo-mobile {
     height: 32px;
-    filter: brightness(0) invert(1); /* Белый логотип */
+    filter: brightness(0) invert(1); /* Белое лого */
   }
-  .search-btn {
-    margin-left: 0;
-    margin-right: 0;
-    color: #fff;
-  }
+  .burger-btn, .search-btn { color: #fff; }
   .searchbar-modal-outer,
   .searchbar-modal-inner {
     max-width: 100vw !important;
@@ -217,9 +203,5 @@
     margin: 0;
     padding-left: 8px !important;
     padding-right: 8px !important;
-  }
-  .search-input, .search-input-full {
-    font-size: 17px;
-    padding: 11px 12px;
   }
 }

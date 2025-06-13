@@ -22,6 +22,9 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
         try {
           const res = await fetch(`/search_smart?q=${encodeURIComponent(query)}`);
           const data = await res.json();
+          // --- DEBUG START ---
+          console.log("Ответ /search_smart:", data);
+          // --- DEBUG END ---
           if (Array.isArray(data)) {
             setSearchResults(data);
           } else if (data && Array.isArray(data.results)) {
@@ -31,6 +34,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
           }
         } catch (err) {
           setSearchResults([]);
+          console.error("Ошибка при поиске:", err);
         }
         setLoading(false);
       } else {
