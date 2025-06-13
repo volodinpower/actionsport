@@ -185,7 +185,7 @@
 @media (max-width: 900px) {
   .logo-bar, .logo-bar-inner { display: none !important; }
   .nav-bar {
-    padding-left: 0 !important;  /* УБРАТЬ отступ слева */
+    padding-left: 0 !important;
     padding-right: 0 !important;
   }
   .mobile-logo-center {
@@ -201,18 +201,18 @@
   .burger-btn {
     background: none;
     border: none;
-    font-size: 2.6rem;
+    font-size: 2.3rem;
     color: #fff;
     cursor: pointer;
     border-radius: 10px;
-    width: 44px;      /* КНОПКА стала уже */
+    width: 44px;
     height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: 0;
     margin-right: 0;
-    padding: 4px 0 4px 0; /* Минимальный padding слева */
+    padding: 4px 0 4px 0;
   }
   .search-btn { color: #fff; }
 
@@ -226,69 +226,91 @@
     padding-right: 8px !important;
   }
 
-.mobile-menu-modal {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 54px; /* Высота твоего navbar */
-  background: #181818;
-  z-index: 9999;
-  min-height: 340px;
-  border-top: 1px solid #292929;
-  box-shadow: 0 6px 28px 0 rgba(20,20,40,0.10);
-  animation: slideDown .22s;
-  padding-bottom: 24px;
-}
+  /* Мобильное меню */
+  .mobile-menu-modal {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 54px; /* Высота nav-bar */
+    background: #181818;
+    z-index: 9999;
+    min-height: 320px;
+    border-top: 1px solid #292929;
+    box-shadow: 0 6px 28px 0 rgba(20,20,40,0.10);
+    animation: slideDown .22s;
+    padding-bottom: 18px;
+  }
 
-@keyframes slideDown {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: none; opacity: 1; }
-}
+  @keyframes slideDown {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
 
-.mobile-menu-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 2.1rem;
-  color: #fff;
-  background: none;
-  border: none;
-  z-index: 1001;
-  cursor: pointer;
-}
+  .mobile-menu-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 2rem;
+    color: #fff;
+    background: none;
+    border: none;
+    z-index: 1001;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+  }
 
-.mobile-menu-list {
-  list-style: none;
-  padding: 32px 0 0 0;
-  margin: 0;
-  width: 100%;
-  max-width: 350px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;  /* было 24px, стало 10px */
-}
+  .mobile-menu-back {
+    margin: 14px 0 6px 10px;
+    background: none;
+    color: #aaa;
+    border: none;
+    font-size: 0.98em;
+    cursor: pointer;
+    padding: 0;
+  }
 
-.mobile-menu-item {
-  width: 100%;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.03rem;  /* было 1.5rem, стало чуть больше обычного */
-  padding: 8px 12px 8px 16px;  /* прижали к левому краю */
-  text-align: left;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start; /* всё влево */
-  transition: color 0.17s;
-  cursor: pointer;
-  border-radius: 7px;
-}
+  .mobile-menu-list {
+    align-items: flex-start;
+    list-style: none;
+    margin: 0 0 0 0;
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;   /* Меньше расстояние между пунктами */
+    padding: 8px 0 0 0;
+  }
 
-.mobile-menu-item.sale { color: #ff4747; }
-.mobile-menu-item:active,
-.mobile-menu-item:focus { color: #d1d1d1; }
-.mobile-menu-plus {
-  color: #aaa;
-  font-size: 1em;
-  margin-left: 8px;
+  .mobile-menu-item {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.09rem;    /* Меньше размер шрифта */
+    padding: 7px 5px 7px 15px; /* Слева отступ, сверху/снизу уменьшен */
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    transition: color 0.15s;
+    cursor: pointer;
+    border-radius: 7px;
+  }
+  .mobile-menu-item.sale { color: #ff4747; }
+  .mobile-menu-item:active,
+  .mobile-menu-item:focus { color: #d1d1d1; }
+  .mobile-menu-plus {
+    color: #aaa;
+    font-size: 1.08em;
+    margin-left: 5px;
+    padding: 0 5px;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .mobile-menu-plus:active,
+  .mobile-menu-plus:focus { background: #232323; }
 }

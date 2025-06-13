@@ -68,7 +68,7 @@ const menuList = [
 ];
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900); // 900px = твой порог
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth <= 900);
     window.addEventListener("resize", handler);
@@ -80,90 +80,110 @@ function useIsMobile() {
 export default function NavMenu({
   onMenuSearch,
   activeMenu, setActiveMenu,
-  mobileMenuOpen, setMobileMenuOpen
+  mobileMenuOpen, setMobileMenuOpen,
+  mobileActiveMenu, setMobileActiveMenu
 }) {
   const isMobile = useIsMobile();
   const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState(null);
 
-  // --- Мобильное меню ---
+  // --- Только мобильное меню ---
   if (isMobile && mobileMenuOpen) {
-    return (
-      <div className="mobile-menu-modal">
-        {/* Кнопка закрыть */}
-        <button
-          className="mobile-menu-close"
-          onClick={() => {
-            setMobileMenuOpen(false);
-            setMobileOpenSubmenu(null);
-          }}
-          aria-label="Закрыть меню"
-        >
-          ×
-        </button>
-        {/* Если открыто подменю */}
-        {mobileOpenSubmenu ? (
-          <div>
-            <button
-              className="mobile-menu-back"
-              onClick={() => setMobileOpenSubmenu(null)}
-              aria-label="Назад"
-            >
-              ← Назад
-            </button>
-            <ul className="mobile-menu-list">
-              {submenus[mobileOpenSubmenu].map((item) => (
-                <li key={item.label}>
-                  <button
-                    className="mobile-menu-item"
-                    onClick={() => {
-                      onMenuSearch(
-                        item.query,
-                        [
-                          { label: menuList.find(m => m.name === mobileOpenSubmenu).label, query: menuList.find(m => m.name === mobileOpenSubmenu).query },
-                          { label: item.label, query: item.query }
-                        ],
-                        item.exclude || ""
-                      );
-                      setMobileMenuOpen(false);
-                      setMobileOpenSubmenu(null);
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
+    // Субменю отображается вместо основного меню
+    if (mobileOpenSubmenu) {
+      return (
+        <div className="mobile-menu-fixed">
+          <button
+            className="mobile-menu-close"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Закрыть меню"
+          >
+            &times;
+          </button>
+          <button
+            className="mobile-menu-back"
+            onClick={() => setMobileOpenSubmenu(null)}
+          >
+            ← Назад
+          </button>
           <ul className="mobile-menu-list">
-            {menuList.map((menu) => (
-              <li key={menu.name}>
+            {submenus[mobileOpenSubmenu].map(item => (
+              <li key={item.label}>
                 <button
-                  className={`mobile-menu-item${menu.isSale ? " sale" : ""}`}
+                  className="mobile-menu-item"
                   onClick={() => {
-                    if (submenus[menu.name]) {
-                      setMobileOpenSubmenu(menu.name);
-                    } else {
-                      onMenuSearch(
-                        menu.query,
-                        [
-                          { label: menu.label, query: menu.query }
-                        ],
-                        menu.exclude || ""
-                      );
-                      setMobileMenuOpen(false);
-                    }
+                    onMenuSearch(
+                      item.query,
+                      [
+                        { label: menuList.find(m => m.name === mobileOpenSubmenu).label, query: menuList.find(m => m.name === mobileOpenSubmenu).query },
+                        { label: item.label, query: item.query }
+                      ],
+                      item.exclude || ""
+                    );
+                    setMobileMenuOpen(false);
+                    setMobileActiveMenu?.(null);
+                    setMobileOpenSubmenu(null);
                   }}
                 >
-                  {menu.label}
-                  {submenus[menu.name] && (
-                    <span className="mobile-menu-plus">+</span>
-                  )}
+                  {item.label}
                 </button>
               </li>
             ))}
           </ul>
-        )}
+        </div>
+      );
+    }
+
+    // Основное меню
+    return (
+      <div className="mobile-menu-fixed">
+        <button
+          className="mobile-menu-close"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-label="Закрыть меню"
+        >
+          &times;
+        </button>
+        <ul className="mobile-menu-list">
+          {menuList.map(menu => (
+            <li key={menu.name} className="flex items-center">
+              <button
+                className={
+                  "mobile-menu-item" +
+                  (menu.isSale ? " sale" : "")
+                }
+                onClick={() => {
+                  if (submenus[menu.name]) {
+                    setMobileOpenSubmenu(menu.name);
+                  } else {
+                    onMenuSearch(
+                      menu.query,
+                      [
+                        { label: "Main", query: "", exclude: "" },
+                        { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                      ],
+                      menu.exclude || ""
+                    );
+                    setMobileMenuOpen(false);
+                    setMobileActiveMenu?.(null);
+                    setMobileOpenSubmenu(null);
+                  }
+                }}
+              >
+                {menu.label}
+              </button>
+              {submenus[menu.name] && (
+                <button
+                  className="mobile-menu-plus"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setMobileOpenSubmenu(menu.name);
+                  }}
+                  aria-label="Открыть подпункты"
+                >+</button>
+              )}
+            </li>
+          ))}
+        </ul>
       </div>
     );
   }
