@@ -34,10 +34,7 @@
 }
 
 /* ---------- Меню навигации (десктоп) ---------- */
-.nav-menu-wrap ul,
-.nav-menu-wrap li {
-  color: #fff !important;
-}
+
 .nav-menu-wrap ul {
   display: flex;
   gap: 32px;
@@ -51,10 +48,7 @@
   cursor: pointer;
   transition: color .17s;
 }
-.nav-menu-wrap li:hover,
-.nav-menu-wrap li:focus {
-  color: #d1d1d1 !important;
-}
+
 
 /* ---------- Лупа (поиск) ---------- */
 .search-btn {
