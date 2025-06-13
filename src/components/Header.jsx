@@ -38,8 +38,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
           {/* Лого по центру */}
           <div className="mobile-logo-center">
             <a href="/">
-              {/* logo-invert.png — белое на черном! */}
-              <img src="/logo-invert.png" alt="Logo" className="logo-mobile" />
+              <img src="/logo.png" alt="Logo" className="logo-mobile" />
             </a>
           </div>
           {/* Лупа справа */}
