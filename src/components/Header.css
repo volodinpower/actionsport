@@ -183,7 +183,10 @@
 /* ---------- Мобилка ---------- */
 @media (max-width: 900px) {
   .logo-bar, .logo-bar-inner { display: none !important; }
-  .nav-bar { padding: 0 10px; }
+  .nav-bar {
+    padding-left: 0 !important;  /* УБРАТЬ отступ слева */
+    padding-right: 0 !important;
+  }
   .mobile-logo-center {
     flex: 1 1 auto;
     display: flex;
@@ -194,18 +197,22 @@
     height: 32px;
     filter: brightness(0) invert(1); /* Белое лого */
   }
-  .burger-btn {  background: none;
-  border: none;
-  font-size: 2.6rem;   /* Увеличь размер символа */
-  color: #fff;
-  cursor: pointer;  
-  border-radius: 12px; /* Мягкие края — опционально */
-  width: 64px;         /* Ширина кнопки */
-  height: 64px;        /* Высота кнопки */
-  display: flex;
-  align-items: center;
-  justify-content: center;}
-
+  .burger-btn {
+    background: none;
+    border: none;
+    font-size: 2.6rem;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 10px;
+    width: 44px;      /* КНОПКА стала уже */
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 4px 0 4px 0; /* Минимальный padding слева */
+  }
   .search-btn { color: #fff; }
 
   .searchbar-modal-outer,
