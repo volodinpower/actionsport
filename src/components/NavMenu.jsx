@@ -198,38 +198,36 @@ export default function NavMenu({
     return (
       <>
         <nav>
-          <ul className="flex gap-6 items-center text-sm font-medium">
-            {menuList.map((menu) => (
-              <li
-                key={menu.name}
-                className={
-                  `cursor-pointer h-10 flex items-center px-3 transition-all duration-150
-                  ${menu.isSale 
-                    ? "text-white bg-red-600 rounded-lg hover:bg-red-700" 
-                    : "hover:text-red-600"}`
-                }
-                onMouseEnter={() =>
-                  submenus[menu.name]
-                    ? setActiveMenu(menu.name)
-                    : setActiveMenu(null)
-                }
-                onClick={() => {
-                  onMenuSearch(
-                    menu.query,
-                    [
-                      { label: "Main", query: "", exclude: "" },
-                      { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
-                    ],
-                    menu.exclude || ""
-                  );
-                }}
-              >
-                {menu.label}
-              </li>
-            ))}
-          </ul>
+        <ul className="flex gap-6 items-center text-base font-medium">
+          {menuList.map((menu) => (
+            <li
+              key={menu.name}
+              className={
+                menu.isSale
+                  ? "text-red-500 hover:text-red-600 cursor-pointer h-10 flex items-center"
+                  : "text-white hover:text-red-600 cursor-pointer h-10 flex items-center"
+              }
+              onMouseEnter={() =>
+                submenus[menu.name]
+                  ? setActiveMenu(menu.name)
+                  : setActiveMenu(null)
+              }
+              onClick={() => {
+                onMenuSearch(
+                  menu.query,
+                  [
+                    { label: "Main", query: "", exclude: "" },
+                    { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                  ],
+                  menu.exclude || ""
+                );
+              }}
+            >
+              {menu.label}
+            </li>
+          ))}
+        </ul>
         </nav>
-
         {/* Десктопное подменю (штора) */}
         {activeMenu && (
           <div
