@@ -258,44 +258,37 @@
 }
 
 .mobile-menu-list {
-  align-items: start;
   list-style: none;
-  margin: 0 auto;
+  padding: 32px 0 0 0;
+  margin: 0;
   width: 100%;
   max-width: 350px;
   display: flex;
   flex-direction: column;
+  gap: 10px;  /* было 24px, стало 10px */
 }
+
 .mobile-menu-item {
   width: 100%;
   background: none;
   border: none;
   color: #fff;
-  font-size: 1.5rem;
-  padding: 10px 6px;
+  font-size: 1.03rem;  /* было 1.5rem, стало чуть больше обычного */
+  padding: 8px 12px 8px 16px;  /* прижали к левому краю */
   text-align: left;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start; /* всё влево */
   transition: color 0.17s;
   cursor: pointer;
+  border-radius: 7px;
 }
+
 .mobile-menu-item.sale { color: #ff4747; }
 .mobile-menu-item:active,
 .mobile-menu-item:focus { color: #d1d1d1; }
 .mobile-menu-plus {
   color: #aaa;
-  font-size: 1.3em;
-  margin-left: 10px;
+  font-size: 1em;
+  margin-left: 8px;
 }
-.mobile-menu-back {
-  margin: 20px 0 20px 10px;
-  background: none;
-  color: #aaa;
-  border: none;
-  font-size: 1.1em;
-  cursor: pointer;
-}
-
-}
-
