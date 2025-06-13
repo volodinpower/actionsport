@@ -1,16 +1,15 @@
-// src/components/Header.jsx
 import { useState, useEffect } from "react";
 import NavMenu from "./NavMenu";
 import SearchBar from "./SearchBar";
-import "./Header.css";
+import "./Header.css"; // Новый файл ниже
 
 export default function Header({ onSearch, breadcrumbs, isHome }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => setIsMobile(window.innerWidth <= 900);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -22,60 +21,63 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
   };
 
   return (
-    <header>
-      {/* Верхняя белая полоса с логотипом (скрываем на мобилках) */}
+    <header className="main-header">
+      {/* --- Десктоп: Белая полоса с лого --- */}
       {!isMobile && (
-        <div className="w-full bg-white border-b border-gray-200">
-          <div className="max-w-[1128px] mx-auto py-2 flex justify-center">
+        <div className="logo-bar">
+          <div className="logo-bar-inner">
             <a href="/">
-              <img src="/logo.png" alt="Logo" className="logo" />
+              <img src="/logo.png" alt="Logo" className="logo-desktop" />
             </a>
           </div>
         </div>
       )}
 
-      {/* Черная полоса меню */}
-      <div className="w-full bg-[#222] relative z-40 px-4 py-1 flex items-center justify-between">
+      {/* --- Верхняя полоса (черная) --- */}
+      <div className="nav-bar">
         {isMobile ? (
           <>
-            {/* Бургер и маленький логотип слева */}
-            <div className="flex items-center space-x-2">
-              <button
-                aria-label="Toggle menu"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-white text-2xl focus:outline-none"
-              >
-                &#9776;
-              </button>
-              <a href="/">
-                <img src="/logo.png" alt="Logo" className="h-8 object-contain" />
-              </a>
-            </div>
-
-            {/* Поиск справа, с отступом */}
-            <div className="flex-grow ml-4">
+            <button
+              aria-label="Открыть меню"
+              onClick={() => setMobileMenuOpen(v => !v)}
+              className={`burger-btn${mobileMenuOpen ? " active" : ""}`}
+            >
+              &#9776;
+            </button>
+            <a href="/" className="mobile-logo-link">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="logo-mobile"
+              />
+            </a>
+            <div className="search-mobile-wrap">
               <SearchBar onSearch={runSearch} />
             </div>
           </>
         ) : (
           <>
-            <NavMenu
-              onMenuSearch={runSearch}
-              activeMenu={activeMenu}
-              setActiveMenu={setActiveMenu}
-              mobileMenuOpen={mobileMenuOpen}
-              setMobileMenuOpen={setMobileMenuOpen}
-              breadcrumbs={breadcrumbs}
-              isHome={isHome}
-            />
-            <SearchBar onSearch={runSearch} />
+            <div className="nav-menu-wrap">
+              <NavMenu
+                onMenuSearch={runSearch}
+                activeMenu={activeMenu}
+                setActiveMenu={setActiveMenu}
+                mobileMenuOpen={mobileMenuOpen}
+                setMobileMenuOpen={setMobileMenuOpen}
+                breadcrumbs={breadcrumbs}
+                isHome={isHome}
+              />
+            </div>
+            <div className="search-desktop-wrap">
+              <SearchBar onSearch={runSearch} />
+            </div>
           </>
         )}
       </div>
 
-      {/* Мобильное меню (бургер) */}
-      {isMobile && mobileMenuOpen && (
-        <div className="bg-[#222] text-white px-4 py-2">
+      {/* --- Мобильное меню (бургер) --- */}
+      {isMobile && (
+        <div className={`mobile-menu${mobileMenuOpen ? " open" : ""}`}>
           <NavMenu
             onMenuSearch={runSearch}
             activeMenu={activeMenu}
