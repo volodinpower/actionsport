@@ -47,7 +47,7 @@
   list-style: none;
 }
 .nav-menu-wrap li {
-  font-size: 1rem;
+  font-size: 1.15rem;
   cursor: pointer;
   transition: color .17s;
 }
