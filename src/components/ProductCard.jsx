@@ -56,7 +56,7 @@ export default function ProductCard({ product, onClick }) {
           className="
             w-full 
             aspect-[5/6]       /* по умолчанию */
-            sm:aspect-[4/5]    /* чуть меньше высота на больших экранах */
+            sm:aspect-[4/7]    /* чуть меньше высота на больших экранах */
             md:aspect-[5/6]    /* возвращаем обратно на средних и выше */
             bg-white shadow-md overflow-hidden flex flex-col 
             transition-all duration-200 hover:shadow-2xl cursor-pointer
