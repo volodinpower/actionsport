@@ -47,7 +47,7 @@ const Banner = () => {
   return (
     // Используем классы Tailwind для адаптивного aspect-ratio
     // aspect-[25/9] для больших экранов, aspect-[16/9] для мобилок
-    <div className="w-full overflow-hidden shadow-lg aspect-[25/9] sm:aspect-[16/9]">
+    <div className="w-full overflow-hidden shadow-lg aspect-[25/9]">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         loop={true}
