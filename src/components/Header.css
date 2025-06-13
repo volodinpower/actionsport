@@ -218,7 +218,7 @@
     padding: 4px 0 4px 0;
   }
   .search-btn { color: #fff; }
-  
+
   .search-flyout-mobile {
     position: fixed;
     left: 0;
@@ -226,7 +226,6 @@
     width: 100vw;
     z-index: 2000;
     background: rgba(24,24,24,0.95); /* чуть затемнённый фон или #222 */
-    min-height: calc(100vh - 54px);
   }
 
   .searchbar-modal-outer,
