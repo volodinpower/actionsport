@@ -7,7 +7,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
   const [loading, setLoading] = useState(false);
   const searchInputRef = useRef();
   const navigate = useNavigate();
-
+  const API_URL = import.meta.env.VITE_API_URL || "";
   useEffect(() => {
     if (autoFocus && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -20,21 +20,12 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
       if (query.length > 0) {
         setLoading(true);
         try {
-          const res = await fetch(`/search_smart?q=${encodeURIComponent(query)}`);
+          const res = await fetch(`${API_URL}/search_smart?q=${encodeURIComponent(query)}`);
           const data = await res.json();
-          // --- DEBUG START ---
-          console.log("Ответ /search_smart:", data);
-          // --- DEBUG END ---
-          if (Array.isArray(data)) {
-            setSearchResults(data);
-          } else if (data && Array.isArray(data.results)) {
-            setSearchResults(data.results);
-          } else {
-            setSearchResults([]);
-          }
+          setSearchResults(Array.isArray(data) ? data : []);
         } catch (err) {
           setSearchResults([]);
-          console.error("Ошибка при поиске:", err);
+          console.error("Ошибка поиска:", err);
         }
         setLoading(false);
       } else {

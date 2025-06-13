@@ -16,7 +16,7 @@ const Footer = () => (
       {/* Левая колонка: контакты */}
       <div className="flex flex-col gap-1 basis-full md:basis-1/3 flex-1">
         <img
-          src={getImageUrl("/logo.png")}
+          src="/logo.png"
           alt="Boardshop Logo"
           className="h-auto w-[150px] invert mb-1"
           style={{ maxWidth: 160 }}
@@ -70,41 +70,6 @@ const Footer = () => (
           <div className="pt-4 text-gray-500 text-xs">
             &copy; {new Date().getFullYear()} Action Sport. All rights reserved.
           </div>
-        </div>
-      </div>
-
-      {/* Средняя колонка: навигация */}
-      <div className="flex flex-row gap-2 text-xs basis-full md:basis-1/3 flex-1 justify-center pt-6">
-        <div className="flex flex-col gap-[3px] items-end">
-          {firstCol.map(item => (
-            <a
-              key={item}
-              href="#"
-              className="hover:text-gray-400 whitespace-nowrap px-0 py-0 transition"
-            >
-              {item}
-            </a>
-          ))}
-        </div>
-        <div className="flex flex-col gap-[3px] items-start">
-          {secondCol.map(item => (
-            <a
-              key={item}
-              href="#"
-              className="hover:text-gray-400 whitespace-nowrap px-0 py-0 transition"
-            >
-              {item}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Правая колонка: информационный блок */}
-      <div className="flex flex-col gap-1 basis-full md:basis-1/3 flex-1 items-end pt-5">
-        <div className="text-right w-full text-xs text-gray-400">
-          We love action sports! <br />
-          Here you’ll find the best<br /> boards and gear for skate, snow, wake &amp; more.<br />
-          Delivery in Yerevan. Always online.
         </div>
       </div>
     </div>
