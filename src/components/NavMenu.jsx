@@ -88,13 +88,17 @@ export default function NavMenu({
 
   // --- Только мобильное меню ---
   if (isMobile && mobileMenuOpen) {
-    // Субменю отображается вместо основного меню
+    // Субменю открывается вместо основного меню
     if (mobileOpenSubmenu) {
       return (
-        <div className="mobile-menu-fixed">
+        <div className="mobile-menu-modal">
           <button
             className="mobile-menu-close"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setMobileOpenSubmenu(null);
+              setMobileActiveMenu?.(null);
+            }}
             aria-label="Закрыть меню"
           >
             &times;
@@ -135,17 +139,21 @@ export default function NavMenu({
 
     // Основное меню
     return (
-      <div className="mobile-menu-fixed">
+      <div className="mobile-menu-modal">
         <button
           className="mobile-menu-close"
-          onClick={() => setMobileMenuOpen(false)}
+          onClick={() => {
+            setMobileMenuOpen(false);
+            setMobileActiveMenu?.(null);
+            setMobileOpenSubmenu(null);
+          }}
           aria-label="Закрыть меню"
         >
           &times;
         </button>
         <ul className="mobile-menu-list">
           {menuList.map(menu => (
-            <li key={menu.name} className="flex items-center">
+            <li key={menu.name} className="mobile-menu-li">
               <button
                 className={
                   "mobile-menu-item" +
@@ -231,7 +239,6 @@ export default function NavMenu({
             ))}
           </ul>
         </nav>
-        {/* Десктопное подменю (штора) */}
         {activeMenu && (
           <div
             className="absolute left-0 right-0 bg-black text-gray-400 z-40"
