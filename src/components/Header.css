@@ -319,7 +319,6 @@
 }
 .mobile-menu-back:active,
 .mobile-menu-back:focus { color: #d1d1d1; }
-}
 .mobile-submenu-list {
   list-style: none;
   padding-left: 8px;
@@ -334,3 +333,15 @@
 }
 .mobile-submenu-list li .mobile-menu-item:active,
 .mobile-submenu-list li .mobile-menu-item:focus { color: #fff; }
+  .mobile-menu-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 1.5px;   /* уменьшай до 0 если надо вообще впритык */
+  }
+  .mobile-menu-plus {
+    margin-left: 0 !important;  /* если вдруг где-то остался */
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
