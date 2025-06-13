@@ -220,21 +220,26 @@
   .search-btn { color: #fff; }
 
   .searchbar-modal-outer {
+    position: absolute;
     left: 0 !important;
     right: 0 !important;
-    width: 100vw !important;
+    width: 100% !important;
+    max-width: 100% !important;
     justify-content: center !important;
     align-items: flex-start !important;
     margin: 0 !important;
     padding: 0 !important;
+    box-sizing: border-box;
+    background: transparent;
   }
-    .searchbar-modal-inner {
-    max-width: 100vw !important;
-    width: 100vw !important;
+  .searchbar-modal-inner {
+    width: 100% !important;
+    max-width: 100% !important;
     margin: 0 !important;
     border-radius: 0 !important;
     padding-left: 8px !important;
     padding-right: 8px !important;
+    box-sizing: border-box;
   }
 
   /* Мобильное меню */
