@@ -58,7 +58,7 @@
 }
 
 @media (max-width: 768px) {
-  .logo img {
+  .logo  {
     filter: invert(1);
   }
 }
