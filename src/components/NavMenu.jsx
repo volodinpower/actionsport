@@ -144,7 +144,7 @@ export default function NavMenu({
                   <button
                     className="mobile-menu-plus"
                     style={{
-                      marginLeft: 4,
+                      marginLeft: 1,
                       fontSize: '1.15em',
                       background: 'none',
                       border: 'none',
