@@ -217,9 +217,9 @@
     margin-right: 0;
     padding: 4px 0 4px 0;
   }
-  .search-btn { color: #fff; }
+    .search-btn { color: #fff; }
 
-  .search-flyout-mobile {
+    .search-flyout-mobile {
     position: fixed;
     left: 0;
     top: 54px; /* или высота твоего navbar */
@@ -234,11 +234,8 @@
     width: 100vw !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
     z-index: 10002 !important;
   }
-
   /* Мобильное меню */
    .mobile-menu-modal {
     position: absolute;
