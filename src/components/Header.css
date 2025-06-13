@@ -291,8 +291,7 @@
   .mobile-menu-item:focus { color: #d1d1d1; }
   .mobile-menu-plus {
     color: #aaa;
-    font-size: 1.15em;
-    margin-left: 4px;
+    font-size: 1.3em;
     background: none;
     border: none;
     cursor: pointer;
