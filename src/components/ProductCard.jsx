@@ -92,7 +92,7 @@ export default function ProductCard({ product, onClick }) {
             {sizes.length > 0 ? `size: ${sizes.join(", ")}` : ""}
           </div>
         </div>
-        <div className="mt-auto min-h-[40px] max-h-[40px] flex flex-col justify-end text-right">
+        <div className="mt-auto min-h-[40px] max-h-[40px] flex flex-col justify-end">
           {showDiscount ? (
             <>
               <span className="text-xs text-red-500 font-semibold block">{`sale: -${discount}%`}</span>
