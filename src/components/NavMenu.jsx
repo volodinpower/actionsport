@@ -80,8 +80,7 @@ function useIsMobile() {
 export default function NavMenu({
   onMenuSearch,
   activeMenu, setActiveMenu,
-  mobileMenuOpen, setMobileMenuOpen,
-  mobileActiveMenu, setMobileActiveMenu
+  mobileMenuOpen, setMobileMenuOpen
 }) {
   const isMobile = useIsMobile();
   const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState(null);
@@ -89,96 +88,82 @@ export default function NavMenu({
   // --- Мобильное меню ---
   if (isMobile && mobileMenuOpen) {
     return (
-      <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col">
-        <div className="flex justify-between items-center p-4">
-          <button
-            className="p-2"
-            onClick={() => {
-              setMobileMenuOpen(false);
-              setMobileActiveMenu?.(null);
-              setMobileOpenSubmenu(null);
-            }}
-            aria-label="Закрыть меню"
-          >
-            <svg width="32" height="32"><line x1="10" y1="10" x2="22" y2="22" stroke="#fff" strokeWidth="2"/><line x1="22" y1="10" x2="10" y2="22" stroke="#fff" strokeWidth="2"/></svg>
-          </button>
-        </div>
-        <div className="bg-[#222] flex-1 p-6 overflow-y-auto">
-          <ul className="space-y-4 text-xl mt-6">
+      <div className="mobile-menu-modal">
+        {/* Кнопка закрыть */}
+        <button
+          className="mobile-menu-close"
+          onClick={() => {
+            setMobileMenuOpen(false);
+            setMobileOpenSubmenu(null);
+          }}
+          aria-label="Закрыть меню"
+        >
+          ×
+        </button>
+        {/* Если открыто подменю */}
+        {mobileOpenSubmenu ? (
+          <div>
+            <button
+              className="mobile-menu-back"
+              onClick={() => setMobileOpenSubmenu(null)}
+              aria-label="Назад"
+            >
+              ← Назад
+            </button>
+            <ul className="mobile-menu-list">
+              {submenus[mobileOpenSubmenu].map((item) => (
+                <li key={item.label}>
+                  <button
+                    className="mobile-menu-item"
+                    onClick={() => {
+                      onMenuSearch(
+                        item.query,
+                        [
+                          { label: menuList.find(m => m.name === mobileOpenSubmenu).label, query: menuList.find(m => m.name === mobileOpenSubmenu).query },
+                          { label: item.label, query: item.query }
+                        ],
+                        item.exclude || ""
+                      );
+                      setMobileMenuOpen(false);
+                      setMobileOpenSubmenu(null);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <ul className="mobile-menu-list">
             {menuList.map((menu) => (
-              <li key={menu.name} className="flex items-center">
+              <li key={menu.name}>
                 <button
-                  className={`flex-1 text-left ${menu.isSale ? "text-red-500" : "text-white"}`}
+                  className={`mobile-menu-item${menu.isSale ? " sale" : ""}`}
                   onClick={() => {
-                    onMenuSearch(
-                      menu.query,
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
-                      ],
-                      menu.exclude || ""
-                    );
-                    setMobileMenuOpen(false);
-                    setMobileActiveMenu?.(null);
-                    setMobileOpenSubmenu(null);
+                    if (submenus[menu.name]) {
+                      setMobileOpenSubmenu(menu.name);
+                    } else {
+                      onMenuSearch(
+                        menu.query,
+                        [
+                          { label: menu.label, query: menu.query }
+                        ],
+                        menu.exclude || ""
+                      );
+                      setMobileMenuOpen(false);
+                    }
                   }}
                 >
                   {menu.label}
+                  {submenus[menu.name] && (
+                    <span className="mobile-menu-plus">+</span>
+                  )}
                 </button>
-                {submenus[menu.name] && submenus[menu.name].length > 0 && (
-                  <button
-                    className="ml-2 px-2 text-xl text-gray-400"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setMobileOpenSubmenu(
-                        mobileOpenSubmenu === menu.name ? null : menu.name
-                      );
-                    }}
-                    aria-label="Открыть подпункты"
-                  >
-                    {mobileOpenSubmenu === menu.name ? "−" : "+"}
-                  </button>
-                )}
               </li>
             ))}
           </ul>
-          {mobileOpenSubmenu && (
-            <div className="pl-4 mt-2">
-              <ul className="space-y-3 text-lg">
-                {submenus[mobileOpenSubmenu].map((item) => (
-                  <li key={item.label}>
-                    <button
-                      className="text-gray-300 hover:text-white"
-                      onClick={() => {
-                        onMenuSearch(
-                          item.query,
-                          [
-                            { label: menuList.find(m => m.name === mobileOpenSubmenu).label, query: menuList.find(m => m.name === mobileOpenSubmenu).query },
-                            { label: item.label, query: item.query }
-                          ],
-                          item.exclude || ""
-                        );
-                        setMobileMenuOpen(false);
-                        setMobileActiveMenu?.(null);
-                        setMobileOpenSubmenu(null);
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  </li>
-                ))}
-                <li>
-                  <button
-                    className="text-gray-400 text-sm mt-4"
-                    onClick={() => setMobileOpenSubmenu(null)}
-                  >
-                    ← Назад
-                  </button>
-                </li>
-              </ul>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     );
   }
