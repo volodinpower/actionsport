@@ -24,7 +24,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
 
   return (
     <header className="main-header">
-      {/* --- Десктоп: Белая полоса с лого --- */}
+      {/* --- Desktop: Логотип сверху --- */}
       {!isMobile && (
         <div className="logo-bar">
           <div className="logo-bar-inner">
@@ -35,50 +35,39 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
         </div>
       )}
 
-      {/* --- Верхняя полоса (черная) --- */}
+      {/* --- NAVBAR --- */}
       <div className="nav-bar">
         {isMobile ? (
           <>
+            {/* Mobile Left: Бургер */}
             <button
               aria-label="Открыть меню"
               onClick={() => setMobileMenuOpen(true)}
-              className={`burger-btn${mobileMenuOpen ? " active" : ""}`}
+              className="burger-btn"
             >
               &#9776;
             </button>
-            <a href="/" className="mobile-logo-link">
-              <img
-                src="/logo.png"
-                alt="Logo"
-                className="logo-mobile"
-              />
-            </a>
-            <div className="search-mobile-wrap">
-              <button
-                className="search-btn"
-                aria-label="Открыть поиск"
-                onClick={() => setShowSearch(v => !v)}
-              >
-                {/* SVG-лупа */}
-                <svg width="24" height="24" fill="none">
-                  <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2"/>
-                  <line x1="16" y1="16" x2="22" y2="22" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
+            {/* Mobile Center: Белый логотип */}
+            <div className="mobile-logo-center">
+              <a href="/">
+                <img src="/logo-invert.png" alt="Logo" className="logo-mobile" />
+              </a>
             </div>
-            {/* ВЫПАДАЮЩАЯ ПАНЕЛЬ ПОИСКА (мобильная) */}
-            {showSearch && (
-              <div className="search-flyout">
-                <SearchBar
-                  onSearch={runSearch}
-                  autoFocus
-                  onClose={() => setShowSearch(false)}
-                />
-              </div>
-            )}
+            {/* Mobile Right: Лупа */}
+            <button
+              className="search-btn search-btn-mobile"
+              aria-label="Открыть поиск"
+              onClick={() => setShowSearch(true)}
+            >
+              <svg width="24" height="24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2"/>
+                <line x1="16" y1="16" x2="22" y2="22" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
           </>
         ) : (
           <>
+            {/* Desktop nav */}
             <div className="nav-menu-wrap">
               <NavMenu
                 onMenuSearch={runSearch}
@@ -88,29 +77,30 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
                 isHome={isHome}
               />
             </div>
-            <div className="search-desktop-wrap">
-              <button
-                className="search-btn"
-                aria-label="Открыть поиск"
-                onClick={() => setShowSearch(v => !v)}
-              >
-                <svg width="24" height="24" fill="none">
-                  <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2"/>
-                  <line x1="16" y1="16" x2="22" y2="22" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-            {/* ВЫПАДАЮЩАЯ ПАНЕЛЬ ПОИСКА (десктоп) */}
-            {showSearch && (
-              <div className="search-flyout">
-                <SearchBar
-                  onSearch={runSearch}
-                  autoFocus
-                  onClose={() => setShowSearch(false)}
-                />
-              </div>
-            )}
+            <div className="search-desktop-spacer"></div>
+            <button
+              className="search-btn search-btn-desktop"
+              aria-label="Открыть поиск"
+              onClick={() => setShowSearch(true)}
+            >
+              <svg width="24" height="24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2"/>
+                <line x1="16" y1="16" x2="22" y2="22" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
           </>
+        )}
+
+        {/* ПОИСК МОДАЛКА */}
+        {showSearch && (
+          <div className={`search-flyout${isMobile ? " search-flyout-mobile" : ""}`}>
+            <SearchBar
+              onSearch={runSearch}
+              autoFocus
+              onClose={() => setShowSearch(false)}
+              fullWidth={!isMobile}
+            />
+          </div>
         )}
       </div>
 

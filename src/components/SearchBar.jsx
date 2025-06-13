@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function SearchBar({ onSearch, autoFocus = false, onClose }) {
+export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWidth = false }) {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,8 +22,6 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose }) {
         try {
           const res = await fetch(`/search_smart?q=${encodeURIComponent(query)}`);
           const data = await res.json();
-          // ---- DEBUG API ----
-          // console.log("API DATA:", data);
           if (Array.isArray(data)) {
             setSearchResults(data);
           } else if (data && Array.isArray(data.results)) {
@@ -43,14 +41,14 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose }) {
   }, [searchText]);
 
   return (
-    <div className="searchbar-modal-outer">
+    <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
       <div className="searchbar-modal-inner">
         <div className="search-input-row">
           <input
             ref={searchInputRef}
             type="text"
             placeholder="Поиск..."
-            className="search-input"
+            className={`search-input${fullWidth ? " search-input-full" : ""}`}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onKeyDown={e => {
