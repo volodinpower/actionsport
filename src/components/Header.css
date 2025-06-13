@@ -222,10 +222,10 @@
   .search-flyout-mobile {
     position: fixed;
     left: 0;
-    top: 54px; /* высота navbar */
+    top: 54px; /* или высота твоего navbar */
     width: 100vw;
-    z-index: 99999;
-    background: rgba(24,24,24,0.95); /* чуть затемнённый фон или #222 */
+    z-index: 100001; /* На 1 больше, чем у mobile-menu-modal */
+    background: rgba(24,24,24,0.92);
   }
 
   .searchbar-modal-outer,
@@ -236,7 +236,7 @@
     margin: 0 !important;
     padding-left: 8px !important;
     padding-right: 8px !important;
-    z-index: 10001 !important;
+    z-index: 10002 !important;
   }
 
   /* Мобильное меню */
