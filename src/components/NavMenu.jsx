@@ -202,7 +202,12 @@ export default function NavMenu({
             {menuList.map((menu) => (
               <li
                 key={menu.name}
-                className={`hover:text-red-600 cursor-pointer h-10 flex items-center${menu.isSale ? " text-red-500" : ""}`}
+                className={
+                  `cursor-pointer h-10 flex items-center px-3 transition-all duration-150
+                  ${menu.isSale 
+                    ? "text-white bg-red-600 rounded-lg hover:bg-red-700" 
+                    : "hover:text-red-600"}`
+                }
                 onMouseEnter={() =>
                   submenus[menu.name]
                     ? setActiveMenu(menu.name)
