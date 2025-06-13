@@ -267,3 +267,6 @@ export default function NavMenu({
           </div>
         </div>
       )}
+    </>
+  );
+}
