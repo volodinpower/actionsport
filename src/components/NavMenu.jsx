@@ -68,9 +68,9 @@ const menuList = [
 ];
 
 function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900); // 900px = твой порог
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 1024);
+    const handler = () => setIsMobile(window.innerWidth <= 900);
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
@@ -86,7 +86,7 @@ export default function NavMenu({
   const isMobile = useIsMobile();
   const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState(null);
 
-  // --- Мобильное меню с двумя действиями (название и плюс)
+  // --- Мобильное меню ---
   if (isMobile && mobileMenuOpen) {
     return (
       <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col">
@@ -98,7 +98,7 @@ export default function NavMenu({
             className="p-2"
             onClick={() => {
               setMobileMenuOpen(false);
-              setMobileActiveMenu(null);
+              setMobileActiveMenu?.(null);
               setMobileOpenSubmenu(null);
             }}
             aria-label="Закрыть меню"
@@ -122,7 +122,7 @@ export default function NavMenu({
                       menu.exclude || ""
                     );
                     setMobileMenuOpen(false);
-                    setMobileActiveMenu(null);
+                    setMobileActiveMenu?.(null);
                     setMobileOpenSubmenu(null);
                   }}
                 >
@@ -162,7 +162,7 @@ export default function NavMenu({
                           item.exclude || ""
                         );
                         setMobileMenuOpen(false);
-                        setMobileActiveMenu(null);
+                        setMobileActiveMenu?.(null);
                         setMobileOpenSubmenu(null);
                       }}
                     >
@@ -186,87 +186,91 @@ export default function NavMenu({
     );
   }
 
-  // --- Десктопное меню с ховером
-  const submenuItems = activeMenu ? submenus[activeMenu] || [] : [];
-  const columns = [];
-  const MAX_ITEMS = 6;
-  for (let i = 0; i < submenuItems.length; i += MAX_ITEMS) {
-    columns.push(submenuItems.slice(i, i + MAX_ITEMS));
+  // --- Десктопное меню ---
+  if (!isMobile) {
+    const submenuItems = activeMenu ? submenus[activeMenu] || [] : [];
+    const columns = [];
+    const MAX_ITEMS = 6;
+    for (let i = 0; i < submenuItems.length; i += MAX_ITEMS) {
+      columns.push(submenuItems.slice(i, i + MAX_ITEMS));
+    }
+
+    return (
+      <>
+        <nav>
+          <ul className="flex gap-6 items-center text-sm font-medium">
+            {menuList.map((menu) => (
+              <li
+                key={menu.name}
+                className={`hover:text-gray-300 cursor-pointer h-10 flex items-center${menu.isSale ? " text-red-500" : ""}`}
+                onMouseEnter={() =>
+                  submenus[menu.name]
+                    ? setActiveMenu(menu.name)
+                    : setActiveMenu(null)
+                }
+                onClick={() => {
+                  onMenuSearch(
+                    menu.query,
+                    [
+                      { label: "Main", query: "", exclude: "" },
+                      { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                    ],
+                    menu.exclude || ""
+                  );
+                }}
+              >
+                {menu.label}
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Десктопное подменю (штора) */}
+        {activeMenu && (
+          <div
+            className="absolute left-0 right-0 bg-black text-gray-400 z-40"
+            style={{
+              top: "100%",
+              width: "100vw",
+              paddingTop: "12px",
+              paddingBottom: "12px",
+              height: `${Math.max(1, Math.min(submenuItems.length, MAX_ITEMS)) * 32 + 24}px`
+            }}
+            onMouseEnter={() => setActiveMenu(activeMenu)}
+            onMouseLeave={() => setActiveMenu(null)}
+          >
+            <div className="flex flex-row items-start text-sm px-[calc((100vw-1128px)/2)] pl-6">
+              {submenuItems.length > 0 ? (
+                columns.map((col, idx) => (
+                  <div key={idx} className="flex flex-col mr-2">
+                    {col.map((item) => (
+                      <button
+                        key={item.label}
+                        className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
+                        onClick={() =>
+                          onMenuSearch(
+                            item.query,
+                            [
+                              { label: menuList.find(m => m.name === activeMenu).label, query: menuList.find(m => m.name === activeMenu).query },
+                              { label: item.label, query: item.query }
+                            ],
+                            item.exclude || ""
+                          )
+                        }
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                ))
+              ) : null}
+            </div>
+          </div>
+        )}
+      </>
+    );
   }
 
-  return (
-    <>
-      {/* Меню (десктоп) */}
-      <nav className="hidden lg:block">
-        <ul className="flex gap-6 items-center text-sm font-medium">
-          {menuList.map((menu) => (
-            <li
-              key={menu.name}
-              className={`hover:text-gray-300 cursor-pointer h-10 flex items-center${menu.isSale ? " text-red-500" : ""}`}
-              onMouseEnter={() =>
-                submenus[menu.name]
-                  ? setActiveMenu(menu.name)
-                  : setActiveMenu(null)
-              }
-              onClick={() => {
-                onMenuSearch(
-                  menu.query,
-                  [
-                    { label: "Main", query: "", exclude: "" },
-                    { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
-                  ],
-                  menu.exclude || ""
-                );
-              }}
-            >
-              {menu.label}
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      {/* Десктопное подменю (штора) */}
-      {activeMenu && !isMobile && (
-        <div
-          className="absolute left-0 right-0 bg-black text-gray-400 z-40 hidden lg:block"
-          style={{
-            top: "100%",
-            width: "100vw",
-            paddingTop: "12px",
-            paddingBottom: "12px",
-            height: `${Math.max(1, Math.min(submenuItems.length, MAX_ITEMS)) * 32 + 24}px`
-          }}
-          onMouseEnter={() => setActiveMenu(activeMenu)}
-          onMouseLeave={() => setActiveMenu(null)}
-        >
-          <div className="flex flex-row items-start text-sm px-[calc((100vw-1128px)/2)] pl-6">
-            {submenuItems.length > 0 ? (
-              columns.map((col, idx) => (
-                <div key={idx} className="flex flex-col mr-2">
-                  {col.map((item) => (
-                    <button
-                      key={item.label}
-                      className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
-                      onClick={() =>
-                        onMenuSearch(
-                          item.query,
-                          [
-                            { label: menuList.find(m => m.name === activeMenu).label, query: menuList.find(m => m.name === activeMenu).query },
-                            { label: item.label, query: item.query }
-                          ],
-                          item.exclude || ""
-                        )
-                      }
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              ))
-            ) : null}
-          </div>
-        </div>
-      )}
-    </>
-  );
+  // По дефолту рендерим null если не мобилка и не десктоп (теоретически не случается)
+  return null;
 }
