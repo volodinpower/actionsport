@@ -53,17 +53,6 @@ export const submenus = {
   accessories: [
     { label: "Bags", query: "рюкзак,сумка" },
     { label: "Cases", query: "чехол" }
-  ],
-  brands: [
-    { label: "Salomon", brand: "Salomon" },
-    { label: "Burton", brand: "Burton" },
-    { label: "Union", brand: "Union" },
-    { label: "Vans", brand: "Vans" },
-    { label: "Capita", brand: "Capita" },
-    { label: "Deeluxe", brand: "Deeluxe" },
-    { label: "DC", brand: "DC" },
-    { label: "Lib Tech", brand: "Lib Tech" },
-    { label: "GNU", brand: "GNU" }
   ]
 };
 
@@ -95,64 +84,109 @@ export default function NavMenu({
   mobileActiveMenu, setMobileActiveMenu
 }) {
   const isMobile = useIsMobile();
+  const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState(null);
 
-  const handleMenuClick = (menu) => {
-    if (isMobile) {
-      if (submenus[menu.name]) setMobileActiveMenu(menu.name);
-      else {
-        onMenuSearch(
-          menu.query,
-          [
-            { label: "Main", query: "", exclude: "" },
-            { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
-          ],
-          menu.exclude || ""
-        );
-      }
-    } else {
-      onMenuSearch(
-        menu.query,
-        [
-          { label: "Main", query: "", exclude: "" },
-          { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
-        ],
-        menu.exclude || ""
-      );
-    }
-  };
-
-const handleSubmenuClick = (menuName, itemLabel, query, brand) => {
-  const submenu = submenus[menuName] || [];
-  const item = submenu.find(i => i.label === itemLabel && (i.query === query || i.brand === brand));
-
-  if (menuName === "brands") {
-    onMenuSearch(
-      "",
-      [
-        { label: "Main", query: "", exclude: "", brand: "" },
-        { label: itemLabel, query: "", exclude: "", brand: brand || itemLabel }
-      ],
-      "",
-      brand || itemLabel,
-      itemLabel
-    );
-  } else {
-    const categoryQueries = (submenus[menuName] || []).map(i => i.query).join(",");
-    onMenuSearch(
-      categoryQueries,
-      [
-        { label: "Main", query: "", exclude: "" },
-        { label: menuName.charAt(0).toUpperCase() + menuName.slice(1), query: query, exclude: item?.exclude || "" }
-      ],
-      item?.exclude || "",
-      "", // бренд
-      itemLabel
+  // --- Мобильное меню с двумя действиями (название и плюс)
+  if (isMobile && mobileMenuOpen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col">
+        <div className="flex justify-between items-center p-4">
+          <a href="/">
+            <img src="/logo.png" alt="Logo" className="h-10 object-contain" />
+          </a>
+          <button
+            className="p-2"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setMobileActiveMenu(null);
+              setMobileOpenSubmenu(null);
+            }}
+            aria-label="Закрыть меню"
+          >
+            <svg width="32" height="32"><line x1="10" y1="10" x2="22" y2="22" stroke="#fff" strokeWidth="2"/><line x1="22" y1="10" x2="10" y2="22" stroke="#fff" strokeWidth="2"/></svg>
+          </button>
+        </div>
+        <div className="bg-[#222] flex-1 p-6 overflow-y-auto">
+          <ul className="space-y-4 text-xl mt-6">
+            {menuList.map((menu) => (
+              <li key={menu.name} className="flex items-center">
+                <button
+                  className={`flex-1 text-left ${menu.isSale ? "text-red-500" : "text-white"}`}
+                  onClick={() => {
+                    onMenuSearch(
+                      menu.query,
+                      [
+                        { label: "Main", query: "", exclude: "" },
+                        { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                      ],
+                      menu.exclude || ""
+                    );
+                    setMobileMenuOpen(false);
+                    setMobileActiveMenu(null);
+                    setMobileOpenSubmenu(null);
+                  }}
+                >
+                  {menu.label}
+                </button>
+                {submenus[menu.name] && submenus[menu.name].length > 0 && (
+                  <button
+                    className="ml-2 px-2 text-xl text-gray-400"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setMobileOpenSubmenu(
+                        mobileOpenSubmenu === menu.name ? null : menu.name
+                      );
+                    }}
+                    aria-label="Открыть подпункты"
+                  >
+                    {mobileOpenSubmenu === menu.name ? "−" : "+"}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+          {mobileOpenSubmenu && (
+            <div className="pl-4 mt-2">
+              <ul className="space-y-3 text-lg">
+                {submenus[mobileOpenSubmenu].map((item) => (
+                  <li key={item.label}>
+                    <button
+                      className="text-gray-300 hover:text-white"
+                      onClick={() => {
+                        onMenuSearch(
+                          item.query,
+                          [
+                            { label: menuList.find(m => m.name === mobileOpenSubmenu).label, query: menuList.find(m => m.name === mobileOpenSubmenu).query },
+                            { label: item.label, query: item.query }
+                          ],
+                          item.exclude || ""
+                        );
+                        setMobileMenuOpen(false);
+                        setMobileActiveMenu(null);
+                        setMobileOpenSubmenu(null);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+                <li>
+                  <button
+                    className="text-gray-400 text-sm mt-4"
+                    onClick={() => setMobileOpenSubmenu(null)}
+                  >
+                    ← Назад
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
-};
 
-
-  // --- Подменю для десктопа ---
+  // --- Десктопное меню с ховером
   const submenuItems = activeMenu ? submenus[activeMenu] || [] : [];
   const columns = [];
   const MAX_ITEMS = 6;
@@ -162,62 +196,6 @@ const handleSubmenuClick = (menuName, itemLabel, query, brand) => {
 
   return (
     <>
-      {/* Мобильное меню */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col">
-          <div className="flex justify-between items-center p-4">
-            <button
-              className="p-2"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setMobileActiveMenu(null);
-              }}
-              aria-label="Закрыть меню"
-            >
-              <svg width="32" height="32"><line x1="10" y1="10" x2="22" y2="22" stroke="#fff" strokeWidth="2"/><line x1="22" y1="10" x2="10" y2="22" stroke="#fff" strokeWidth="2"/></svg>
-            </button>
-          </div>
-          <div className="bg-[#222] flex-1 p-6 overflow-y-auto">
-            {!mobileActiveMenu && (
-              <ul className="space-y-4 text-xl mt-6">
-                {menuList.map((menu) => (
-                  <li key={menu.name}>
-                    <button
-                      className={`w-full text-left ${menu.isSale ? "text-red-500" : "text-white"}`}
-                      onClick={() => handleMenuClick(menu)}
-                    >
-                      {menu.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {mobileActiveMenu && (
-              <div>
-                <ul className="space-y-4 text-xl">
-                  {submenus[mobileActiveMenu].map((item) => (
-                    <li key={item.label}>
-                      <button
-                        className="text-gray-300 hover:text-white"
-                        onClick={() =>
-                          handleSubmenuClick(mobileActiveMenu, item.label, item.query, item.brand)
-                        }
-                      >
-                        {item.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  className="text-gray-300 mt-12 text-lg hover:text-white"
-                  onClick={() => setMobileActiveMenu(null)}
-                >← BACK</button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Меню (десктоп) */}
       <nav className="hidden lg:block">
         <ul className="flex gap-6 items-center text-sm font-medium">
@@ -230,7 +208,16 @@ const handleSubmenuClick = (menuName, itemLabel, query, brand) => {
                   ? setActiveMenu(menu.name)
                   : setActiveMenu(null)
               }
-              onClick={() => handleMenuClick(menu)}
+              onClick={() => {
+                onMenuSearch(
+                  menu.query,
+                  [
+                    { label: "Main", query: "", exclude: "" },
+                    { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                  ],
+                  menu.exclude || ""
+                );
+              }}
             >
               {menu.label}
             </li>
@@ -261,7 +248,14 @@ const handleSubmenuClick = (menuName, itemLabel, query, brand) => {
                       key={item.label}
                       className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                       onClick={() =>
-                        handleSubmenuClick(activeMenu, item.label, item.query, item.brand)
+                        onMenuSearch(
+                          item.query,
+                          [
+                            { label: menuList.find(m => m.name === activeMenu).label, query: menuList.find(m => m.name === activeMenu).query },
+                            { label: item.label, query: item.query }
+                          ],
+                          item.exclude || ""
+                        )
                       }
                     >
                       {item.label}
