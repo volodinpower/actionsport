@@ -1,3 +1,4 @@
+import "./Banner.css"; 
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
@@ -30,7 +31,7 @@ const Banner = () => {
 
   if (loading) {
     return (
-      <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center">
+      <div className="banner-aspect w-full bg-gray-100 flex items-center justify-center">
         Loading...
       </div>
     );
@@ -38,15 +39,14 @@ const Banner = () => {
 
   if (!banners.length) {
     return (
-      <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center text-gray-500">
-       No banner
+      <div className="banner-aspect w-full bg-gray-100 flex items-center justify-center text-gray-500">
+        No banner
       </div>
     );
   }
 
   return (
-    // Используем классы Tailwind для адаптивного aspect-ratio
-    <div className="w-full overflow-hidden shadow-lg aspect-[25/9]">
+    <div className="banner-aspect w-full overflow-hidden shadow-lg">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}
         loop={true}
