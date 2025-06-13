@@ -121,6 +121,8 @@
   .price-block {
     min-height: 19px;
     font-size: 12px;
+    align-items: end;
+    text-align: left;
   }
   .old-price, .new-price, .cur-price {
     font-size: 11px;
