@@ -119,7 +119,7 @@
     line-height: 1.02;
   }
   .price-block {
-    min-height: 19px;
+    min-height: 12px;
     font-size: 12px;
   }
   .old-price, .new-price, .cur-price {
