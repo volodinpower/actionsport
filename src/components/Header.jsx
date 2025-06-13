@@ -53,7 +53,17 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
             </svg>
           </button>
         </div>
-        {/* Сначала меню (может быть открыто) */}
+        
+        {showSearch && (
+          <div className="search-flyout search-flyout-mobile">
+            <SearchBar
+              onSearch={runSearch}
+              autoFocus
+              onClose={() => setShowSearch(false)}
+              fullWidth={true}
+            />
+          </div>
+        )}
         {mobileMenuOpen && (
           <NavMenu
             onMenuSearch={runSearch}
@@ -65,17 +75,6 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
             isHome={isHome}
             mobileView={true}
           />
-        )}
-        {/* Потом поиск, если showSearch — всегда поверх меню */}
-        {showSearch && (
-          <div className="search-flyout search-flyout-mobile">
-            <SearchBar
-              onSearch={runSearch}
-              autoFocus
-              onClose={() => setShowSearch(false)}
-              fullWidth={true}
-            />
-          </div>
         )}
       </header>
     );
