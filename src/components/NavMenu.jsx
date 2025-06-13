@@ -143,16 +143,6 @@ export default function NavMenu({
                 {submenus[menu.name] && (
                   <button
                     className="mobile-menu-plus"
-                    style={{
-                      marginLeft: 1,
-                      fontSize: '1.15em',
-                      background: 'none',
-                      border: 'none',
-                      color: '#aaa',
-                      padding: 0,
-                      lineHeight: 1,
-                      cursor: 'pointer'
-                    }}
                     onClick={e => {
                       e.stopPropagation();
                       toggleSubmenu(menu.name);
