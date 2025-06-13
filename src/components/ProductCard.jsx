@@ -56,7 +56,6 @@ export default function ProductCard({ product, onClick }) {
           className="
             w-full 
             aspect-[5/6]       /* по умолчанию */
-            xs:aspect-[4/7]
             sm:aspect-[4/5]    /* чуть меньше высота на больших экранах */
             md:aspect-[5/6]    /* возвращаем обратно на средних и выше */
             bg-white shadow-md overflow-hidden flex flex-col 
@@ -93,7 +92,7 @@ export default function ProductCard({ product, onClick }) {
             {sizes.length > 0 ? `size: ${sizes.join(", ")}` : ""}
           </div>
         </div>
-        <div className="mt-auto min-h-[40px] max-h-[40px] flex flex-col justify-end">
+        <div className="mt-auto min-h-[40px] max-h-[40px] flex flex-col justify-end text-right">
           {showDiscount ? (
             <>
               <span className="text-xs text-red-500 font-semibold block">{`sale: -${discount}%`}</span>
