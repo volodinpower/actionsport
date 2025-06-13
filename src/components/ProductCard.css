@@ -7,7 +7,7 @@
   border-radius: 8px;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 4/6;
+  aspect-ratio: 4/5;
   cursor: pointer;
   transition: box-shadow 0.2s;
   padding: 4px 4px 6px 4px;
@@ -103,7 +103,7 @@
 /* ---- Мобильная адаптация ---- */
 @media (max-width: 640px) {
   .product-card {
-    aspect-ratio: 4/6;
+    aspect-ratio: 4/5;
     padding: 2px 2px 4px 2px;
     border-radius: 5px;
   }
