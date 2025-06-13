@@ -84,61 +84,17 @@ export default function NavMenu({
   mobileActiveMenu, setMobileActiveMenu
 }) {
   const isMobile = useIsMobile();
-  const [mobileOpenSubmenu, setMobileOpenSubmenu] = useState(null);
+  // Открытые подменю в мобильном меню
+  const [openSubmenus, setOpenSubmenus] = useState([]);
+
+  const toggleSubmenu = (name) => {
+    setOpenSubmenus((prev) =>
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+    );
+  };
 
   // --- Мобильное меню ---
   if (isMobile && mobileMenuOpen) {
-    // Субменю
-    if (mobileOpenSubmenu) {
-      return (
-        <div className="mobile-menu-modal">
-          <button
-            className="mobile-menu-close"
-            onClick={() => {
-              setMobileMenuOpen(false);
-              setMobileOpenSubmenu(null);
-              setMobileActiveMenu?.(null);
-            }}
-            aria-label="Закрыть меню"
-          >
-            &times;
-          </button>
-          <ul className="mobile-menu-list">
-            {submenus[mobileOpenSubmenu].map(item => (
-              <li key={item.label}>
-                <button
-                  className="mobile-menu-item"
-                  onClick={() => {
-                    onMenuSearch(
-                      item.query,
-                      [
-                        { label: menuList.find(m => m.name === mobileOpenSubmenu).label, query: menuList.find(m => m.name === mobileOpenSubmenu).query },
-                        { label: item.label, query: item.query }
-                      ],
-                      item.exclude || ""
-                    );
-                    setMobileMenuOpen(false);
-                    setMobileActiveMenu?.(null);
-                    setMobileOpenSubmenu(null);
-                  }}
-                >
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-          <button
-            className="mobile-menu-back"
-            style={{ marginTop: 24 }}
-            onClick={() => setMobileOpenSubmenu(null)}
-          >
-            Back
-          </button>
-        </div>
-      );
-    }
-
-    // Основное меню
     return (
       <div className="mobile-menu-modal">
         <button
@@ -146,7 +102,7 @@ export default function NavMenu({
           onClick={() => {
             setMobileMenuOpen(false);
             setMobileActiveMenu?.(null);
-            setMobileOpenSubmenu(null);
+            setOpenSubmenus([]);
           }}
           aria-label="Close menu"
         >
@@ -156,11 +112,10 @@ export default function NavMenu({
           {menuList.map(menu => (
             <li key={menu.name} className="mobile-menu-li" style={{padding: 0}}>
               <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
-                {/* КЛИК ПО ТЕКСТУ — поиск! */}
+                {/* Основной пункт — фильтр по категории */}
                 <button
                   className={
-                    "mobile-menu-item" +
-                    (menu.isSale ? " sale" : "")
+                    "mobile-menu-item" + (menu.isSale ? " sale" : "")
                   }
                   style={{
                     flex: 1,
@@ -179,18 +134,18 @@ export default function NavMenu({
                     );
                     setMobileMenuOpen(false);
                     setMobileActiveMenu?.(null);
-                    setMobileOpenSubmenu(null);
+                    setOpenSubmenus([]);
                   }}
                 >
                   {menu.label}
                 </button>
-                {/* КЛИК ПО ПЛЮСИКУ — открытие подменю */}
+                {/* Плюсик для открытия/закрытия подменю */}
                 {submenus[menu.name] && (
                   <button
                     className="mobile-menu-plus"
                     style={{
-                      marginLeft: 2,
-                      fontSize: '1.2em',
+                      marginLeft: 4,
+                      fontSize: '1.15em',
                       background: 'none',
                       border: 'none',
                       color: '#aaa',
@@ -200,12 +155,42 @@ export default function NavMenu({
                     }}
                     onClick={e => {
                       e.stopPropagation();
-                      setMobileOpenSubmenu(menu.name);
+                      toggleSubmenu(menu.name);
                     }}
                     aria-label="Open submenu"
-                  >+</button>
+                  >
+                    {openSubmenus.includes(menu.name) ? "−" : "+"}
+                  </button>
                 )}
               </div>
+              {/* Подпункты */}
+              {openSubmenus.includes(menu.name) && (
+                <ul className="mobile-submenu-list" style={{paddingLeft: 14, marginTop: 0, marginBottom: 0}}>
+                  {submenus[menu.name].map((item) => (
+                    <li key={item.label}>
+                      <button
+                        className="mobile-menu-item"
+                        style={{fontSize: "1.05em"}}
+                        onClick={() => {
+                          onMenuSearch(
+                            item.query,
+                            [
+                              { label: menu.label, query: menu.query },
+                              { label: item.label, query: item.query }
+                            ],
+                            item.exclude || ""
+                          );
+                          setMobileMenuOpen(false);
+                          setMobileActiveMenu?.(null);
+                          setOpenSubmenus([]);
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>
