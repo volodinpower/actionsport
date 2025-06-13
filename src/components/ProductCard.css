@@ -1,0 +1,25 @@
+.product-card {
+  font-family: inherit;
+}
+
+@media (max-width: 640px) {
+  .product-card {
+    font-size: 13px;
+    padding: 6px 3px;
+    min-height: unset;
+    height: auto;
+    aspect-ratio: 4/6;
+  }
+  .product-card h2,
+  .product-card .product-title {
+    font-size: 13px;
+    line-height: 1.1;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .product-card .price-block {
+    min-height: 24px;
+    max-height: 32px;
+    font-size: 12px;
+  }
+}
