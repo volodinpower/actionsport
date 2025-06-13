@@ -86,7 +86,7 @@ export default function ProductCard({ product, onClick }) {
         <h2 className="text-xs sm:text-sm font-bold mb-1 mt-1 leading-tight overflow-hidden break-words line-clamp-2">
           {product.sitename}
         </h2>
-        <div className="flex flex-col gap-0.1">
+        <div className="flex flex-col gap-0">
           <div className="text-[9px] sm:text-[10px] text-gray-500 overflow-hidden text-ellipsis break-words">
             {product.color ? `color: ${product.color}` : ""}
           </div>
