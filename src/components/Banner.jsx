@@ -31,7 +31,7 @@ const Banner = () => {
   if (loading) {
     return (
       <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center">
-        Загрузка баннеров...
+        Loading...
       </div>
     );
   }
@@ -39,14 +39,13 @@ const Banner = () => {
   if (!banners.length) {
     return (
       <div className="w-full aspect-[25/9] bg-gray-100 flex items-center justify-center text-gray-500">
-        Нет баннеров
+       No banner
       </div>
     );
   }
 
   return (
     // Используем классы Tailwind для адаптивного aspect-ratio
-    // aspect-[25/9] для больших экранов, aspect-[16/9] для мобилок
     <div className="w-full overflow-hidden shadow-lg aspect-[25/9]">
       <Swiper
         modules={[Navigation, Pagination, Autoplay]}

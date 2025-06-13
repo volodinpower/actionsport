@@ -1,0 +1,8 @@
+.banner-aspect {
+  aspect-ratio: 25/9;
+}
+@media (max-width: 900px) {
+  .banner-aspect {
+    aspect-ratio: 4/5; /* Выбери подходящее вертикальное соотношение! */
+  }
+}
