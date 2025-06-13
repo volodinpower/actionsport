@@ -91,9 +91,6 @@ export default function NavMenu({
     return (
       <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col">
         <div className="flex justify-between items-center p-4">
-          <a href="/">
-            <img src="/logo.png" alt="Logo" className="h-10 object-contain" />
-          </a>
           <button
             className="p-2"
             onClick={() => {
