@@ -83,10 +83,10 @@ export default function ProductCard({ product, onClick }) {
       )}
 
       <div className="flex flex-col flex-1 pl-1 pr-1">
-        <h2 className="text-xs sm:text-sm font-bold mb-1 leading-tight overflow-hidden break-words line-clamp-2">
+        <h2 className="text-xs sm:text-sm font-bold mb-1 mt-1 leading-tight overflow-hidden break-words line-clamp-2">
           {product.sitename}
         </h2>
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-0.2">
           <div className="text-[9px] sm:text-[10px] text-gray-500 overflow-hidden text-ellipsis break-words">
             {product.color ? `color: ${product.color}` : ""}
           </div>
@@ -94,7 +94,7 @@ export default function ProductCard({ product, onClick }) {
             {sizes.length > 0 ? `size: ${sizes.join(", ")}` : ""}
           </div>
         </div>
-        <div className="mt-auto min-h-[28px] max-h-[32px] sm:min-h-[40px] sm:max-h-[40px] flex flex-col justify-end items-end">
+        <div className="mt-auto min-h-[28px] max-h-[32px] sm:min-h-[40px] sm:max-h-[40px] flex flex-col justify-end items-start">
           {showDiscount ? (
             <>
               <span className="text-[10px] sm:text-xs text-red-500 font-semibold block">{`sale: -${discount}%`}</span>
