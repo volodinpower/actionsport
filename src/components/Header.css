@@ -337,7 +337,7 @@
     display: flex;
     align-items: center;
     width: 100%;
-    gap: 1.5px;   /* уменьшай до 0 если надо вообще впритык */
+    gap: 0.5;  /* уменьшай до 0 если надо вообще впритык */
   }
   .mobile-menu-plus {
     margin-left: 0 !important;  /* если вдруг где-то остался */

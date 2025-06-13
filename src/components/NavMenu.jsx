@@ -81,10 +81,18 @@ export default function NavMenu({
   onMenuSearch,
   activeMenu, setActiveMenu,
   mobileMenuOpen, setMobileMenuOpen,
-  mobileActiveMenu, setMobileActiveMenu
+  mobileActiveMenu, setMobileActiveMenu,
+  breadcrumbs, isHome, mobileView
 }) {
-  const isMobile = useIsMobile();
-  // Открытые подменю в мобильном меню
+  // Мобильный детектор
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 900);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  // Открытые подменю
   const [openSubmenus, setOpenSubmenus] = useState([]);
 
   const toggleSubmenu = (name) => {
@@ -111,18 +119,13 @@ export default function NavMenu({
         <ul className="mobile-menu-list">
           {menuList.map(menu => (
             <li key={menu.name} className="mobile-menu-li" style={{padding: 0}}>
-              <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
-                {/* Основной пункт — фильтр по категории */}
+              {/* Класс для управления расстоянием между плюсиком и текстом */}
+              <div className="mobile-menu-row">
+                {/* Кнопка категории */}
                 <button
                   className={
                     "mobile-menu-item" + (menu.isSale ? " sale" : "")
                   }
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'flex-start'
-                  }}
                   onClick={() => {
                     onMenuSearch(
                       menu.query,
@@ -139,7 +142,7 @@ export default function NavMenu({
                 >
                   {menu.label}
                 </button>
-                {/* Плюсик для открытия/закрытия подменю */}
+                {/* Плюсик — без margin */}
                 {submenus[menu.name] && (
                   <button
                     className="mobile-menu-plus"
