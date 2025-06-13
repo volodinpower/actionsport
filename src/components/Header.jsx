@@ -19,7 +19,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
     if (onSearch) onSearch(query, crumbs, exclude, brand, category);
     setActiveMenu(null);
     setMobileMenuOpen(false);
-    setShowSearch(false); // Закрываем поиск при поиске
+    setShowSearch(false);
   };
 
   return (
@@ -57,7 +57,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
               <button
                 className="search-btn"
                 aria-label="Открыть поиск"
-                onClick={() => setShowSearch(true)}
+                onClick={() => setShowSearch(v => !v)}
               >
                 {/* SVG-лупа */}
                 <svg width="24" height="24" fill="none">
@@ -66,6 +66,16 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
                 </svg>
               </button>
             </div>
+            {/* ВЫПАДАЮЩАЯ ПАНЕЛЬ ПОИСКА (мобильная) */}
+            {showSearch && (
+              <div className="search-flyout">
+                <SearchBar
+                  onSearch={runSearch}
+                  autoFocus
+                  onClose={() => setShowSearch(false)}
+                />
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -82,7 +92,7 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
               <button
                 className="search-btn"
                 aria-label="Открыть поиск"
-                onClick={() => setShowSearch(true)}
+                onClick={() => setShowSearch(v => !v)}
               >
                 <svg width="24" height="24" fill="none">
                   <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2"/>
@@ -90,20 +100,19 @@ export default function Header({ onSearch, breadcrumbs, isHome }) {
                 </svg>
               </button>
             </div>
+            {/* ВЫПАДАЮЩАЯ ПАНЕЛЬ ПОИСКА (десктоп) */}
+            {showSearch && (
+              <div className="search-flyout">
+                <SearchBar
+                  onSearch={runSearch}
+                  autoFocus
+                  onClose={() => setShowSearch(false)}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
-
-      {/* --- ВЫПАДАЮЩАЯ ПАНЕЛЬ ПОИСКА (МОДАЛЬНО) --- */}
-      {showSearch && (
-        <div className="search-flyout">
-          <SearchBar
-            onSearch={runSearch}
-            autoFocus={true}
-            onClose={() => setShowSearch(false)}
-          />
-        </div>
-      )}
 
       {/* --- Мобильное меню --- */}
       {isMobile && mobileMenuOpen && (
