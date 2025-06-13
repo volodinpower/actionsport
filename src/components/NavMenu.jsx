@@ -267,17 +267,3 @@ export default function NavMenu({
           </div>
         </div>
       )}
-
-      {/* Мобильный бургер */}
-      <div className="lg:hidden flex items-center">
-        <button
-          className="p-2"
-          onClick={() => setMobileMenuOpen(true)}
-          aria-label="Открыть меню"
-        >
-          <svg width="32" height="32" fill="none"><rect y="7" width="32" height="3" rx="1.5" fill="#fff"/><rect y="15" width="32" height="3" rx="1.5" fill="#fff"/><rect y="23" width="32" height="3" rx="1.5" fill="#fff"/></svg>
-        </button>
-      </div>
-    </>
-  );
-}
