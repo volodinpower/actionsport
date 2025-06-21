@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { fetchProductById, incrementProductView, fetchProducts } from "../api";
+import { fetchProductById, fetchProducts, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -13,8 +13,7 @@ function apiUrl(path) {
 function makeImageUrl(url) {
   if (!url) return "/no-image.jpg";
   if (url.startsWith("http")) return url;
-  if (url.startsWith("/")) return apiUrl(url);
-  return url;
+  return apiUrl(url);
 }
 
 function normalize(val) {
@@ -25,10 +24,7 @@ function extractSizes(product) {
   if (!product) return [];
   if (Array.isArray(product.sizes)) return product.sizes.filter(Boolean);
   if (typeof product.sizes === "string")
-    return product.sizes
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return product.sizes.split(",").map(s => s.trim()).filter(Boolean);
   return [];
 }
 
@@ -58,11 +54,11 @@ export default function ProductDetails() {
 
   useEffect(() => {
     fetchProductById(id)
-      .then((data) => {
+      .then(data => {
         setProduct(data);
         setError(null);
       })
-      .catch((err) => {
+      .catch(err => {
         setError(err.message || "Ошибка загрузки товара");
         setProduct(null);
       });
@@ -72,28 +68,35 @@ export default function ProductDetails() {
     if (id) incrementProductView(id);
   }, [id]);
 
-  // ✅ Берем размеры только из текущего продукта
+  // ✅ Показываем только размеры для name + color
   useEffect(() => {
     if (!product) return;
-    setAvailableSizes(extractSizes(product));
+    fetchProducts("", 1000).then(data => {
+      const nameNorm = normalize(product.name);
+      const colorNorm = normalize(product.color);
+      const sizes = data
+        .filter(
+          item =>
+            normalize(item.name) === nameNorm &&
+            normalize(item.color) === colorNorm
+        )
+        .flatMap(extractSizes)
+        .filter(Boolean);
+      setAvailableSizes(Array.from(new Set(sizes)));
+    });
   }, [product]);
 
-useEffect(() => {
-  if (!product) return;
-  fetchProducts("", 1000).then((data) => {
-    const nameNorm = normalize(product.name);
-    const colorNorm = normalize(product.color);
-    const sizes = data
-      .filter(
-        (item) =>
-          normalize(item.name) === nameNorm &&
-          normalize(item.color) === colorNorm
-      )
-      .flatMap(extractSizes)
-      .filter(Boolean);
-    setAvailableSizes(Array.from(new Set(sizes)));
-  });
-}, [product]);
+  useEffect(() => {
+    if (!product || !product.name) {
+      setColorVariants([]);
+      return;
+    }
+    fetchProducts("", 1000).then(data => {
+      const nameNorm = normalize(product.name);
+      const items = data.filter(item => normalize(item.name) === nameNorm);
+      setColorVariants(items);
+    });
+  }, [product]);
 
   const rawImages = (() => {
     if (typeof product?.image_url !== "string" || !product.image_url.trim()) {
@@ -101,12 +104,11 @@ useEffect(() => {
     }
     const urls = product.image_url
       .split(",")
-      .map((u) => u.trim())
+      .map(u => u.trim())
       .filter(Boolean);
-    const numbered = urls.filter((u) => /_\d+\./.test(u));
+    const numbered = urls.filter(u => /_\d+\./.test(u));
     if (numbered.length > 0) return numbered.map(makeImageUrl);
-
-    const mains = urls.filter((u) => /_(main|prev)\./i.test(u));
+    const mains = urls.filter(u => /_(main|prev)\./i.test(u));
     return (mains.length ? mains : urls).map(makeImageUrl);
   })();
 
@@ -173,162 +175,44 @@ useEffect(() => {
   if (error) return <div className="p-8 text-center text-red-600">Ошибка: {error}</div>;
   if (!product) return <div className="p-8 text-center">Loading...</div>;
 
-  const colorBlock =
-    colorVariants.length <= 1 ? (
-      <div className="mb-1 text-gray-600 text-sm">
-        <b>color: </b> {product.color}
-      </div>
-    ) : (
-      <div className="mb-1 text-gray-600 text-sm gap-10">
-        <b>color: </b> {product.color}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginTop: 10,
-            marginBottom: 10,
-            maxWidth: 6 * 70,
-            overflow: "visible",
-          }}
-        >
-          {colorVariants.map((item) => {
-            const mainImg =
-              item.image_url?.split(",").map((u) => u.trim()).find((u) => u.includes("_main")) ||
-              item.image_url?.split(",")[0];
-            const imgSrc = mainImg ? makeImageUrl(mainImg) : "/no-image.jpg";
-            const isCurrent = String(item.id) === String(product.id);
-            return (
-              <div key={item.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 75 }}>
-                <a
-                  href={isCurrent ? undefined : `/product/${item.id}`}
-                  tabIndex={isCurrent ? -1 : 0}
-                  style={{
-                    pointerEvents: isCurrent ? "none" : "auto",
-                    borderRadius: 12,
-                    border: isCurrent ? "3px solid #0070f3" : "2px solid #eee",
-                    boxShadow: isCurrent ? "0 0 0 4px #aad8ff" : "0 1px 8px #0002",
-                    background: isCurrent ? "#e7f3ff" : "#fafbfc",
-                    outline: "none",
-                    display: "block",
-                    width: 65,
-                    height: 65,
-                    transition: "box-shadow 0.2s, border-color 0.2s",
-                  }}
-                  title={item.color || ""}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!isCurrent) navigate(`/product/${item.id}`);
-                  }}
-                >
-                  <img
-                    src={imgSrc}
-                    alt={item.color || displayName}
-                    style={{
-                      width: 60,
-                      height: 60,
-                      objectFit: "cover",
-                      borderRadius: 10,
-                      opacity: isCurrent ? 1 : 0.82,
-                    }}
-                    draggable={false}
-                  />
-                </a>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header onSearch={handleHeaderSearch} breadcrumbs={breadcrumbs} isHome={false} />
       <div className="w-full mx-auto pt-1">
-        <Breadcrumbs
-          items={breadcrumbs}
-          onBreadcrumbClick={(idx) => {
-            if (idx === 0) navigate("/");
-            else if (location.state?.breadcrumbs) {
-              const crumb = location.state.breadcrumbs[idx];
-              if (crumb?.query) {
-                navigate(`/?search=${encodeURIComponent(crumb.query)}`, {
-                  state: {
-                    breadcrumbs: location.state.breadcrumbs.slice(0, idx + 1),
-                    query: crumb.query,
-                  },
-                });
-              }
-            }
-          }}
-        />
+        <Breadcrumbs items={breadcrumbs} onBreadcrumbClick={() => navigate("/")} />
         <div className="bg-white shadow-md p-6 flex flex-col md:flex-row gap-8 mt-2 w-full">
-          {/* Фото */}
-          <div className="flex-shrink-0 flex-1 min-w-[300px] flex flex-col items-center justify-center">
-            {isMobile ? (
-              <div className="relative w-full flex items-center justify-center" style={{ minHeight: 280 }}>
-                {rawImages.length > 1 && (
-                  <button
-                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-20 text-white px-2 py-1"
-                    onClick={() => setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)}
-                    style={{ zIndex: 2 }}
-                  >
-                    ‹
-                  </button>
-                )}
+          {/* Картинка */}
+          <div className="flex-1 min-w-[300px] flex flex-col items-center justify-center">
+            <img
+              src={rawImages[mainIndex]}
+              alt={displayName}
+              className="w-3/4 object-contain shadow mb-3 cursor-pointer"
+              onClick={() => {
+                setShowModal(true);
+                setModalIndex(mainIndex);
+              }}
+            />
+            <div className="flex gap-3 mt-2 flex-wrap justify-center">
+              {rawImages.map((imgUrl, idx) => (
                 <img
-                  src={rawImages[mainIndex]}
-                  alt={displayName}
-                  className="w-full object-contain shadow mb-3 select-none"
-                  style={{ maxHeight: 340, cursor: "pointer" }}
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalIndex(mainIndex);
-                  }}
-                  draggable={false}
+                  key={idx}
+                  src={imgUrl}
+                  alt={`Фото ${idx + 1}`}
+                  className={`w-20 h-20 object-cover rounded-lg border-2 shadow-sm cursor-pointer ${
+                    idx === mainIndex ? "border-black" : "border-gray-200"
+                  }`}
+                  onClick={() => setMainIndex(idx)}
                 />
-                {rawImages.length > 1 && (
-                  <button
-                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-20 text-white px-2 py-1"
-                    onClick={() => setMainIndex((mainIndex + 1) % rawImages.length)}
-                    style={{ zIndex: 2 }}
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <img
-                  src={rawImages[mainIndex]}
-                  alt={displayName}
-                  className="w-3/4 object-contain shadow mb-3 cursor-pointer"
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalIndex(mainIndex);
-                  }}
-                />
-                <div className="flex gap-3 mt-2 flex-wrap justify-center">
-                  {rawImages.map((imgUrl, idx) => (
-                    <img
-                      key={idx}
-                      src={imgUrl}
-                      alt={`Фото ${idx + 1}`}
-                      className={`w-20 h-20 object-cover rounded-lg border-2 shadow-sm cursor-pointer ${
-                        idx === mainIndex ? "border-black" : "border-gray-200"
-                      }`}
-                      onClick={() => setMainIndex(idx)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+              ))}
+            </div>
           </div>
 
-          {/* Информация */}
+          {/* Инфо */}
           <div className="flex-1 flex flex-col justify-start mt-2">
             <h2 className="text-2xl font-bold mb-8">{displayName}</h2>
-            {colorBlock}
+            <div className="mb-1 text-gray-600 text-sm">
+              <b>color:</b> {product.color}
+            </div>
             <div className="mb-1 text-gray-600 text-sm">
               <b>size:</b> {availableSizes.length > 0 ? availableSizes.join(", ") : "—"}
             </div>
@@ -344,22 +228,6 @@ useEffect(() => {
           <button className="absolute top-4 right-6 text-white text-4xl font-bold" onClick={() => setShowModal(false)}>
             ×
           </button>
-          {rawImages.length > 1 && (
-            <>
-              <button
-                className="absolute left-6 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
-                onClick={() => setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length)}
-              >
-                ‹
-              </button>
-              <button
-                className="absolute right-6 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
-                onClick={() => setModalIndex((modalIndex + 1) % rawImages.length)}
-              >
-                ›
-              </button>
-            </>
-          )}
           <img
             src={rawImages[modalIndex]}
             alt={`${displayName} фото ${modalIndex + 1}`}
