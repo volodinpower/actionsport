@@ -166,7 +166,9 @@ const uniqueGenders = useMemo(() =>
   Array.from(new Set(filteredProducts.map(p => p.gender).filter(g => ["m", "w", "kids"].includes(g))))
 , [filteredProducts]);
 
-const showGenderOption = uniqueGenders.length > 1;
+// Главное отличие — теперь showGenderOption не пропадает при выбранном фильтре
+const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
+
 
   const allBrands = useMemo(() =>
     Array.from(
