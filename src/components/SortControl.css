@@ -1,54 +1,69 @@
 .sort-bar {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin-bottom: 12px;
+  margin: 8px 0 16px 0;
   width: 100%;
 }
 
-.sort-label {
-  color: #888;
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-
-.sort-buttons {
+.sort-btn-group {
   display: flex;
-  flex-wrap: nowrap;        /* ✅ все кнопки в одной строке */
-  overflow-x: auto;         /* ✅ скролл при нехватке места */
-  gap: 4px;
-  width: 100%;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .sort-btn {
-  padding: 6px 12px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  color: #222;
+  border-radius: 0;                /* Обычные углы */
+  padding: 8px 16px;
   font-size: 14px;
-  font-family: sans-serif;
-  font-weight: normal; /* не жирный */
-  text-align: center;
-  border: 1px solid #ccc;
-  background: white;
-  border-radius: 0; /* убрано скругление */
+  font-weight: 400;                /* жирный */
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
   cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: background 0.2s;
+  outline: none;
+  min-width: 120px;
+}
+.sort-btn.active, .sort-btn:focus-visible {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+  box-shadow: 0 2px 8px #2221;
 }
 
-.sort-btn.active {
-  background: black;
-  color: white;
-  border-color: black;
+.sort-reset-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 8px;
 }
-
-.reset-link {
-  font-size: 13px;
-  color: #007bff;
-  text-decoration: underline;
+.sort-reset-link {
+  color: #888;
+  font-size: 15px;
+  font-weight: 400;
   background: none;
   border: none;
-  padding: 0;
-  margin-left: auto;
+  outline: none;
   cursor: pointer;
-  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.sort-reset-link:hover,
+.sort-reset-link:focus {
+  color: #333;
+  text-decoration: underline;
+}
+
+/* Мобильная версия — сброс всегда на второй строке, прижат к правому краю */
+@media (max-width: 600px) {
+  .sort-bar {
+    flex-direction: column;
+  }
+  .sort-btn-group {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .sort-reset-row {
+    justify-content: flex-end;
+    margin-top: 8px;
+    width: 100%;
+  }
 }
