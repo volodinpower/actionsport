@@ -2,14 +2,13 @@
 const sortOptions = [
   { value: "asc", label: "Cheaper" },
   { value: "desc", label: "Top Priced" },
-  { value: "discount", label: "Biggest Discount" },
-  { value: "popular", label: "Most Popular" }
+  { value: "discount", label: "Discount" },
+  { value: "popular", label: "Popular" }
 ];
 
 export default function SortControl({ sort, setSort }) {
   return (
     <div className="sort-bar">
-      <span className="sort-label">Sort by:</span>
       <div className="sort-buttons">
         {sortOptions.map(opt => (
           <button
