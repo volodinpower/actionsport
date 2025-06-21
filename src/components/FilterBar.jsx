@@ -17,21 +17,20 @@ export default function FilterBar({
   allSizes = [],
   allBrands = [],
 }) {
-  // Обработка смены бренда — сбрасываем категорию, если бренд сменился
+  // Бренд
   const handleBrandChange = (opt) => {
     setBrandFilter(opt ? opt.value : "");
-    // Если выбрали бренд — сбрасываем выбранную категорию, т.к. доступные могут поменяться
     setCategoryFilter("");
   };
 
-  // Показывать gender если есть больше одного варианта, или выбран хотя бы один фильтр
+  // Показывать gender если опций больше одной, ИЛИ выбран фильтр, и при этом есть хотя бы одна опция для селекта
   const shouldShowGender =
-    (genderOptions && genderOptions.length > 1) ||
-    !!genderFilter;
+    showGender &&
+    ((genderOptions && genderOptions.length > 1) ||
+      (!!genderFilter && genderOptions && genderOptions.length > 0));
 
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
-      {/* Категория — только если showCategory и есть подкатегории */}
       {showCategory && submenuList.length > 0 && (
         <Select
           classNamePrefix="react-select"
@@ -50,7 +49,6 @@ export default function FilterBar({
           menuPlacement="auto"
         />
       )}
-      {/* Размер */}
       <Select
         classNamePrefix="react-select"
         placeholder="Size"
@@ -60,8 +58,8 @@ export default function FilterBar({
         options={allSizes.map(size => ({ value: size, label: size }))}
         menuPlacement="auto"
       />
-      {/* Gender */}
-      {showGender && shouldShowGender && (
+      {/* Gender — НЕ исчезает при выбранном фильтре, даже если всего 1 опция */}
+      {shouldShowGender && (
         <Select
           classNamePrefix="react-select"
           placeholder="Gender"
@@ -74,7 +72,6 @@ export default function FilterBar({
           menuPlacement="auto"
         />
       )}
-      {/* Бренд */}
       <Select
         classNamePrefix="react-select"
         placeholder="Brand"
@@ -84,7 +81,6 @@ export default function FilterBar({
         options={allBrands.map(brand => ({ value: brand, label: brand }))}
         menuPlacement="auto"
       />
-      {/* Сброс */}
       {(sizeFilter || brandFilter || genderFilter || categoryFilter) && (
         <button
           onClick={clearFilters}
