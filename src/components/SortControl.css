@@ -1,8 +1,9 @@
 .sort-bar {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   margin-bottom: 12px;
+  width: 100%;
 }
 
 .sort-label {
@@ -14,20 +15,22 @@
 
 .sort-buttons {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px; /* Минимальное расстояние между кнопками */
+  flex-wrap: nowrap;        /* ✅ все кнопки в одной строке */
+  overflow-x: auto;         /* ✅ скролл при нехватке места */
+  gap: 4px;
   width: 100%;
 }
 
 .sort-btn {
   padding: 5px 10px;
   font-size: 13px;
-  font-weight: normal; /* Убираем жирность */
+  font-weight: normal;
   border: 1px solid #ccc;
   background: white;
-  border-radius: 0; /* Убираем скругления */
+  border-radius: 0;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;           /* ✅ не даёт кнопке сжиматься */
   transition: background 0.2s;
 }
 
@@ -37,6 +40,14 @@
   border-color: black;
 }
 
-.reset-btn {
-  min-width: 90px;
+.reset-link {
+  font-size: 13px;
+  color: #007bff;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: auto;
+  cursor: pointer;
+  white-space: nowrap;
 }
