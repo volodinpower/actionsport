@@ -24,11 +24,10 @@ export default function FilterBar({
     setCategoryFilter("");
   };
 
-  // Если нужно сбрасывать бренд при смене категории — раскомментируй:
-  // const handleCategoryChange = (opt) => {
-  //   setCategoryFilter(opt ? opt.label : "");
-  //   setBrandFilter("");
-  // };
+  // Показывать gender если есть больше одного варианта, или выбран хотя бы один фильтр
+  const shouldShowGender =
+    (genderOptions && genderOptions.length > 1) ||
+    !!genderFilter;
 
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
@@ -62,7 +61,7 @@ export default function FilterBar({
         menuPlacement="auto"
       />
       {/* Gender */}
-      {showGender && (
+      {showGender && shouldShowGender && (
         <Select
           classNamePrefix="react-select"
           placeholder="Gender"
