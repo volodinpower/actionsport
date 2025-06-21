@@ -83,4 +83,16 @@
     padding: 0 12px;
     cursor: pointer;
     font-size: 15px;
-    font-weig
+    font-weight: 400;
+    outline: none;
+  }
+  .reset-link-mobile:disabled {
+    color: #ccc;
+    cursor: default;
+  }
+}
+@media (min-width: 601px) {
+  .sort-bar-mobile {
+    display: none;
+  }
+}
