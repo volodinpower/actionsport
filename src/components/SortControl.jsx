@@ -9,7 +9,6 @@ function SortControl({ sort, setSort }) {
   ];
   return (
     <div className="sort-bar">
-      <span className="sort-label">Sort:</span>
       <div className="sort-buttons">
         {options.map(opt => (
           <button

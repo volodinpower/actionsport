@@ -40,14 +40,3 @@
 .reset-btn {
   min-width: 90px;
 }
-
-@media (max-width: 768px) {
-  .sort-buttons {
-    justify-content: center;
-  }
-
-  .sort-btn {
-    flex: 1 1 calc(50% - 4px); /* 2 кнопки в ряд с минимальным отступом */
-    text-align: center;
-  }
-}
