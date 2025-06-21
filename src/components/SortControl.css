@@ -1,15 +1,20 @@
 .sort-bar {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: flex-start;
   margin-bottom: 12px;
   width: 100%;
+}
+
+.sort-label {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 4px;
 }
 
 .sort-buttons {
   display: flex;
   flex-wrap: nowrap;
-  overflow-x: auto;
   gap: 4px;
   width: 100%;
 }
@@ -22,7 +27,7 @@
   text-align: center;
   border: 1px solid #ccc;
   background: white;
-  border-radius: 0;
+  border-radius: 0; /* углы */
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -33,104 +38,4 @@
   background: black;
   color: white;
   border-color: black;
-}
-
-.reset-link {
-  font-size: 13px;
-  color: #888;
-  text-decoration: none;
-  background: none;
-  border: none;
-  padding: 0 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  font-weight: 400;
-  outline: none;
-}
-.reset-link:disabled {
-  color: #ccc;
-  cursor: default;
-}
-
-/* Мобильная версия */
-@media (max-width: 600px) {
-  .sort-bar {
-    display: none;
-  }
-  .sort-bar-mobile {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    margin-bottom: 14px;
-  }
-  .sort-select {
-    width: 135px;    /* ширина как у обычной кнопки */
-    padding: 6px 8px;
-    border: 1px solid #ccc;
-    font-size: 15px;
-    border-radius: 0;
-    background: #fff;
-    color: #222;
-    font-family: inherit;
-    font-weight: 400;
-  }
-  .reset-link-mobile {
-    color: #888;
-    text-decoration: none;
-    background: none;
-    border: none;
-    padding: 0 8px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 400;
-    outline: none;
-    height: 32px;
-    line-height: 32px;
-  }
-  .reset-link-mobile:disabled {
-    color: #ccc;
-    cursor: default;
-  }
-}
-@media (min-width: 601px) {
-.sort-bar-mobile select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  border-radius: 0;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 7px 32px 7px 12px;
-  font-size: 15px;
-}
-.sort-bar-mobile {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-.sort-bar-mobile .reset-link-mobile {
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 14px;
-  padding: 6px 8px;
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 400;
-}
-.sort-bar-mobile select:focus {
-  outline: 1.5px solid #222;
-  border-color: #222;
-}
-.sort-bar-mobile .reset-link-mobile:hover {
-  color: #111;
-}
-.sort-bar-mobile .pointer-events-none {
-  pointer-events: none;
-}
 }
