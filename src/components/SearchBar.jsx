@@ -43,7 +43,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Поиск..."
+            placeholder="Search..."
             className={`search-input${fullWidth ? " search-input-full" : ""}`}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
