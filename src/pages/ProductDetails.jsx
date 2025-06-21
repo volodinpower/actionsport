@@ -78,17 +78,22 @@ export default function ProductDetails() {
     setAvailableSizes(extractSizes(product));
   }, [product]);
 
-  useEffect(() => {
-    if (!product || !product.name) {
-      setColorVariants([]);
-      return;
-    }
-    fetchProducts("", 1000).then((data) => {
-      const nameNorm = normalize(product.name);
-      const items = data.filter((item) => normalize(item.name) === nameNorm);
-      setColorVariants(items);
-    });
-  }, [product]);
+useEffect(() => {
+  if (!product) return;
+  fetchProducts("", 1000).then((data) => {
+    const nameNorm = normalize(product.name);
+    const colorNorm = normalize(product.color);
+    const sizes = data
+      .filter(
+        (item) =>
+          normalize(item.name) === nameNorm &&
+          normalize(item.color) === colorNorm
+      )
+      .flatMap(extractSizes)
+      .filter(Boolean);
+    setAvailableSizes(Array.from(new Set(sizes)));
+  });
+}, [product]);
 
   const rawImages = (() => {
     if (typeof product?.image_url !== "string" || !product.image_url.trim()) {
