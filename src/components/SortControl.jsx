@@ -1,38 +1,32 @@
-import "./SortControl.css";
+import "./SortControl.css"
 
-const options = [
-  { value: "asc", label: "Сначала дешёвые" },
-  { value: "desc", label: "Сначала дорогие" },
-  { value: "popular", label: "Популярные" },
-  { value: "discount", label: "Сначала скидки" }
-];
-
-export default function SortControl({ sort, setSort }) {
+function SortControl({ sort, setSort }) {
+  const options = [
+    { value: "asc", label: "Cheapest" },
+    { value: "desc", label: "Top Priced" },
+    { value: "popular", label: "Popular" },
+    { value: "discount", label: "Discounts" }
+  ];
   return (
     <div className="sort-bar">
-      <div className="sort-btn-group">
+      <div className="sort-buttons">
         {options.map(opt => (
           <button
             key={opt.value}
-            type="button"
             onClick={() => setSort(opt.value)}
             className={`sort-btn${sort === opt.value ? " active" : ""}`}
-            aria-pressed={sort === opt.value}
           >
             {opt.label}
           </button>
         ))}
-      </div>
-      <div className="sort-reset-row">
-        <span
-          className="sort-reset-link"
+        <button
           onClick={() => setSort("")}
-          tabIndex={0}
-          role="button"
+          className="sort-btn reset-btn"
         >
-          reset sort
-        </span>
+          Reset All
+        </button>
       </div>
     </div>
   );
 }
+export default SortControl;
