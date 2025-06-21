@@ -8,6 +8,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
   const searchInputRef = useRef();
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "";
+
   useEffect(() => {
     if (autoFocus && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -25,7 +26,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
           setSearchResults(Array.isArray(data) ? data : []);
         } catch (err) {
           setSearchResults([]);
-          console.error("Ошибка поиска:", err);
+          console.error("Search error:", err);
         }
         setLoading(false);
       } else {
@@ -46,7 +47,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
             className={`search-input${fullWidth ? " search-input-full" : ""}`}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
                 onSearch(
@@ -66,7 +67,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
               className="search-close"
               onClick={onClose}
               tabIndex={-1}
-              aria-label="Закрыть поиск"
+              aria-label="Close search"
             >
               ×
             </button>
@@ -74,7 +75,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
           {searchText && (
             <button
               type="button"
-              aria-label="Очистить поиск"
+              aria-label="Clear search"
               className="search-clear"
               onClick={() => {
                 setSearchText("");
@@ -90,27 +91,32 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
         {(searchText || loading) && (
           <div className="search-results-list">
             {loading ? (
-              <div className="search-loading">Поиск...</div>
+              <div className="search-loading">Search...</div>
             ) : searchResults.length > 0 ? (
               searchResults.map((item) =>
                 item.is_brand ? (
                   <div
                     key={"brand-" + item.sitename}
                     className="search-result-item brand"
-                    onPointerDown={() => {
+                    onClick={() => {
                       setSearchText(item.sitename);
                       setSearchResults([]);
-                      onSearch("", [{ label: "Бренд", query: "", brand: item.sitename }], "", item.sitename);
+                      onSearch(
+                        "",
+                        [{ label: "Бренд", query: "", brand: item.sitename }],
+                        "",
+                        item.sitename
+                      );
                       if (onClose) onClose();
                     }}
                   >
-                    <span>{item.sitename} — бренд</span>
+                    <span>{item.sitename} - brand</span>
                   </div>
                 ) : (
                   <div
                     key={item.id}
                     className="search-result-item"
-                    onPointerDown={() => {
+                    onClick={() => {
                       setSearchText(item.sitename);
                       setSearchResults([]);
                       if (searchInputRef.current) searchInputRef.current.blur();
@@ -123,7 +129,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
                         item.main_img
                           ? (item.main_img.startsWith("http")
                               ? item.main_img
-                              : `http://localhost:8000${item.main_img}`)
+                              : `${API_URL}${item.main_img}`)
                           : "/no-image.jpg"
                       }
                       alt=""
@@ -135,7 +141,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
               )
             ) : (
               <div className="search-no-results">
-                Нет результатов
+                No results
               </div>
             )}
           </div>
