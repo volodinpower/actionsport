@@ -21,12 +21,18 @@
 }
 
 .sort-btn {
-  padding: 5px 10px;
-  font-size: 13px;
+  padding: 0;               /* убираем внутренние отступы */
+  font-size: 14px;
+  font-family: sans-serif;  /* убираем “эйрный” шрифт */
+  font-weight: 500;         /* обычная жирность */
+  text-align: center;
+  line-height: 34px;        /* по центру по вертикали */
+  border: 1px solid #ccc;
   background: white;
+  border-radius: 0;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;           /* ✅ не даёт кнопке сжиматься */
+  flex-shrink: 0;
   transition: background 0.2s;
 }
 
