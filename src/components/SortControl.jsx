@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import "./SortControl.css";
 
 const options = [
-  { value: "", label: "Без сортировки" },
-  { value: "asc", label: "Сначала дешёвые" },
-  { value: "desc", label: "Сначала дорогие" },
-  { value: "popular", label: "Популярные" },
-  { value: "discount", label: "Сначала скидки" },
+  { value: "", label: "sort" },
+  { value: "asc", label: "Cheaper" },
+  { value: "desc", label: "Top Priced" },
+  { value: "popular", label: "Popular" },
+  { value: "discount", label: "Discount" },
 ];
 
 function useIsMobile(breakpoint = 600) {
@@ -23,7 +23,7 @@ export default function SortControl({ sort, setSort }) {
   const isMobile = useIsMobile(600);
 
   if (isMobile) {
-    // --- Мобильная версия: выпадающий select и reset справа ---
+    // --- Мобильная версия: select и reset сбоку ---
     return (
       <div className="sort-bar-mobile">
         <select
@@ -47,7 +47,7 @@ export default function SortControl({ sort, setSort }) {
     );
   }
 
-  // --- Десктопная версия: кнопки как у тебя ---
+  // --- Десктопная версия: все кнопки подряд ---
   return (
     <div className="sort-bar">
       <div className="sort-buttons">
