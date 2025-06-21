@@ -1,3 +1,5 @@
+import "./SortControl.css"
+
 // SortControl.jsx
 const sortOptions = [
   { value: "asc", label: "Cheaper" },
