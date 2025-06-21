@@ -1,3 +1,5 @@
+import "./SortControl.css"
+
 function SortControl({ sort, setSort }) {
   const options = [
     { value: "asc", label: "Cheapest" },
