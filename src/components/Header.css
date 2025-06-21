@@ -140,8 +140,11 @@
   list-style: none;
   padding: 0;
   color: #333;
-  max-height: 330px;
+  max-height: 60vh; /* ниже, чем 330px */
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;  /* для плавности на iOS */
+  overscroll-behavior: contain;       /* предотвращает пропуск скролла наверх страницы */
+  background: #fff;
   border-radius: 0 0 10px 10px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
 }
