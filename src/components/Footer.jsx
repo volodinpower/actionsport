@@ -63,7 +63,7 @@ const Footer = () => (
           <img
           src="/logo.png"
           alt="ActionSport Logo"
-          className="h-auto w-[100px] invert mb-1 mt-4 ml-4"
+          className="h-auto w-[100px] invert mb-1 mt-4 ml-1"
         />
           {/* Копирайт */}
           <div className="pt-4 text-gray-500 text-xs">
