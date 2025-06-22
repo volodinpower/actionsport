@@ -12,7 +12,7 @@ const secondCol = navItems.slice(half);
 const Footer = () => (
   <footer className="w-full bg-black text-white pb-6 pt-0 px-0 mt-0">
     {/* Контент футера: три колонки */}
-    <div className="w-full mx-auto flex flex-col md:flex-row justify-between items-start gap-8 px-4 pt-3">
+    <div className="w-full mx-auto flex flex-col md:flex-row justify-between items-start gap-8 px-4 pt-2">
       {/* Левая колонка: контакты */}
       <div className="flex flex-col gap-1 basis-full md:basis-1/3 flex-1">
         <div className="flex flex-col gap-[2px] text-[11px] text-gray-300">
@@ -63,7 +63,7 @@ const Footer = () => (
           <img
           src="/logo.png"
           alt="ActionSport Logo"
-          className="h-auto w-[100px] invert mb-1 mt-4 ml-1"
+          className="h-auto w-[100px] invert mb-1 mt-4"
         />
           {/* Копирайт */}
           <div className="pt-4 text-gray-500 text-xs">
