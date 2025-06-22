@@ -4,7 +4,7 @@ export default function Breadcrumbs({ items, onBreadcrumbClick }) {
   if (!items || items.length < 2) return null;
 
   return (
-    <nav className="flex px-4 py-2 text-base sm:text-sm xs:text-xs breadcrumbs" aria-label="Breadcrumb">
+    <nav className="flex px-4 py-2 text-base sm:text-sm breadcrumbs" aria-label="Breadcrumb">
       {items.map((item, idx) =>
         idx < items.length - 1 ? (
           <span key={`${item.label}-${idx}`}>
