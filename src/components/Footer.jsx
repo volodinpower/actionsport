@@ -10,7 +10,7 @@ const firstCol = navItems.slice(0, half);
 const secondCol = navItems.slice(half);
 
 const Footer = () => (
-  <footer className="w-full bg-black text-white pb-6 pt-0 px-0 mt-0">
+  <footer className="w-full bg-[#222] text-white pb-4 pt-0 px-0 mt-0">
     {/* Контент футера: три колонки */}
     <div className="w-full mx-auto flex flex-col md:flex-row justify-between items-start gap-8 px-4 pt-2">
       {/* Левая колонка: контакты */}
