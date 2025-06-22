@@ -22,6 +22,22 @@ const Footer = () => (
           style={{ maxWidth: 160 }}
         />
         <div className="flex flex-col gap-[2px] text-[11px] text-gray-300">
+          {/* Адрес */}
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+              <circle cx="12" cy="9" r="2.5" />
+            </svg>
+            <span>Armenia, Yerevan, Nalbandyan str. 9, 0010</span>
+          </div>
+          {/* Время работы */}
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+            </svg>
+            <span>11:00-20:00, Monday closed</span>
+          </div>
           {/* Instagram */}
           <div className="flex items-center gap-2">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -49,22 +65,6 @@ const Footer = () => (
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.57.78l1.7 2.34a2 2 0 001.58.78H21a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2z" />
             </svg>
             <a href="tel:+79000000000" className="hover:text-white">+7 900 000-00-00</a>
-          </div>
-          {/* Время работы */}
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-            </svg>
-            <span>11:00-20:00, Monday closed</span>
-          </div>
-          {/* Адрес */}
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-              <circle cx="12" cy="9" r="2.5" />
-            </svg>
-            <span>Armenia, Yerevan, Nalbandyan str. 9, 0010</span>
           </div>
           {/* Копирайт */}
           <div className="pt-4 text-gray-500 text-xs">
