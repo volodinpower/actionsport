@@ -67,22 +67,13 @@ const menuList = [
   { label: "Sale", name: "sale", query: "sale", isSale: true }
 ];
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 900);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-  return isMobile;
-}
-
 export default function NavMenu({
   onMenuSearch,
   activeMenu, setActiveMenu,
   mobileMenuOpen, setMobileMenuOpen,
   mobileActiveMenu, setMobileActiveMenu,
-  breadcrumbs, isHome, mobileView
+  breadcrumbs, isHome, mobileView,
+  setCategoryFilter // <-- добавили этот проп
 }) {
   // Мобильный детектор
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
@@ -119,9 +110,7 @@ export default function NavMenu({
         <ul className="mobile-menu-list">
           {menuList.map(menu => (
             <li key={menu.name} className="mobile-menu-li" style={{padding: 0}}>
-              {/* Класс для управления расстоянием между плюсиком и текстом */}
               <div className="mobile-menu-row">
-                {/* Кнопка категории */}
                 <button
                   className={
                     "mobile-menu-item" + (menu.isSale ? " sale" : "")
@@ -138,11 +127,11 @@ export default function NavMenu({
                     setMobileMenuOpen(false);
                     setMobileActiveMenu?.(null);
                     setOpenSubmenus([]);
+                    if (setCategoryFilter) setCategoryFilter(""); // сбрасываем категорию при выборе раздела
                   }}
                 >
                   {menu.label}
                 </button>
-                {/* Плюсик — без margin */}
                 {submenus[menu.name] && (
                   <button
                     className="mobile-menu-plus"
@@ -156,7 +145,6 @@ export default function NavMenu({
                   </button>
                 )}
               </div>
-              {/* Подпункты */}
               {openSubmenus.includes(menu.name) && (
                 <ul className="mobile-submenu-list" style={{paddingLeft: 14, marginTop: 0, marginBottom: 0}}>
                   {submenus[menu.name].map((item) => (
@@ -168,12 +156,12 @@ export default function NavMenu({
                           onMenuSearch(
                             item.query,
                             [
-                              { label: "Main", query: "", exclude: "" },
-                              { label: menuList.find(m => m.name === activeMenu).label, query: menuList.find(m => m.name === activeMenu).query },
+                              { label: menu.label, query: menu.query },
                               { label: item.label, query: item.query }
                             ],
                             item.exclude || ""
                           );
+                          if (setCategoryFilter) setCategoryFilter(item.label); // <-- теперь фильтр синхронизируется!
                           setMobileMenuOpen(false);
                           setMobileActiveMenu?.(null);
                           setOpenSubmenus([]);
@@ -228,6 +216,7 @@ export default function NavMenu({
                     ],
                     menu.exclude || ""
                   );
+                  if (setCategoryFilter) setCategoryFilter(""); // сбрасываем категорию при выборе раздела
                 }}
               >
                 {menu.label}
@@ -256,7 +245,7 @@ export default function NavMenu({
                       <button
                         key={item.label}
                         className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
-                        onClick={() =>
+                        onClick={() => {
                           onMenuSearch(
                             item.query,
                             [
@@ -264,8 +253,9 @@ export default function NavMenu({
                               { label: item.label, query: item.query }
                             ],
                             item.exclude || ""
-                          )
-                        }
+                          );
+                          if (setCategoryFilter) setCategoryFilter(item.label); // <-- теперь фильтр синхронизируется!
+                        }}
                       >
                         {item.label}
                       </button>

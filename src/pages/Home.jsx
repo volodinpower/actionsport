@@ -255,6 +255,7 @@ const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
         onSearch={handleSearch}
         breadcrumbs={breadcrumbs}
         isHome={isHome}
+        setCategoryFilter={setCategoryFilter} 
       />
 
       {!isHome && breadcrumbs.length > 1 && (
