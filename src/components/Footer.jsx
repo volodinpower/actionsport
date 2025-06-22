@@ -15,12 +15,6 @@ const Footer = () => (
     <div className="w-full mx-auto flex flex-col md:flex-row justify-between items-start gap-8 px-4 pt-3">
       {/* Левая колонка: контакты */}
       <div className="flex flex-col gap-1 basis-full md:basis-1/3 flex-1">
-        <img
-          src="/logo.png"
-          alt="Boardshop Logo"
-          className="h-auto w-[150px] invert mb-1"
-          style={{ maxWidth: 160 }}
-        />
         <div className="flex flex-col gap-[2px] text-[11px] text-gray-300">
           {/* Адрес */}
           <div className="flex items-center gap-2">
@@ -66,6 +60,11 @@ const Footer = () => (
             </svg>
             <a href="tel:+79000000000" className="hover:text-white">+7 900 000-00-00</a>
           </div>
+          <img
+          src="/logo.png"
+          alt="ActionSport Logo"
+          className="h-auto w-[100px] invert mb-1"
+        />
           {/* Копирайт */}
           <div className="pt-4 text-gray-500 text-xs">
             &copy; {new Date().getFullYear()} Action Sport. All rights reserved.
