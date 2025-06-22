@@ -103,12 +103,12 @@
 /* ---- Мобильная адаптация ---- */
 @media (max-width: 640px) {
   .product-card {
-    aspect-ratio: 2/3;
+    aspect-ratio: 3/4;
     border-radius: 0 !important;
     padding: 2px 2px 4px 2px;
   }
   .product-image, .no-image {
-    height: 58%;
+    height: 65%;
     padding: 6px 1px 3px 1px;
     font-size: 11px;
     border-radius: 0 !important;
