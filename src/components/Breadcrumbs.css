@@ -1,0 +1,33 @@
+.breadcrumbs-nav {
+  font-size: 16px;
+  padding: 8px 16px;
+}
+
+.breadcrumb-link {
+  color: #222;
+  text-decoration: none;
+  transition: text-decoration 0.2s;
+}
+
+.breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb-divider {
+  margin: 0 10px;
+  color: #aaa;
+}
+
+.breadcrumb-current {
+  color: #999;
+}
+
+@media (max-width: 600px) {
+  .breadcrumbs-nav {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  .breadcrumb-divider {
+    margin: 0 4px;
+  }
+}

@@ -1,16 +1,17 @@
 import { Link } from "react-router-dom";
+import "./Breadcrumbs.css";
 
 export default function Breadcrumbs({ items, onBreadcrumbClick }) {
   if (!items || items.length < 2) return null;
 
   return (
-    <nav className="flex px-4 py-2 text-base sm:text-sm breadcrumbs" aria-label="Breadcrumb">
+    <nav className="breadcrumbs-nav" aria-label="Breadcrumb">
       {items.map((item, idx) =>
         idx < items.length - 1 ? (
           <span key={`${item.label}-${idx}`}>
             <Link
               to="#"
-              className="text-black hover:underline"
+              className="breadcrumb-link"
               onClick={e => {
                 e.preventDefault();
                 onBreadcrumbClick(idx);
@@ -19,10 +20,10 @@ export default function Breadcrumbs({ items, onBreadcrumbClick }) {
             >
               {item.label}
             </Link>
-            <span className="mx-2 text-gray-400">/</span>
+            <span className="breadcrumb-divider">/</span>
           </span>
         ) : (
-          <span key={`${item.label}-${idx}`} className="text-gray-500" aria-current="page">
+          <span key={`${item.label}-${idx}`} className="breadcrumb-current" aria-current="page">
             {item.label}
           </span>
         )
