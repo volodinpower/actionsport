@@ -168,7 +168,8 @@ export default function NavMenu({
                           onMenuSearch(
                             item.query,
                             [
-                              { label: menu.label, query: menu.query },
+                              { label: "Main", query: "", exclude: "" },
+                              { label: menuList.find(m => m.name === activeMenu).label, query: menuList.find(m => m.name === activeMenu).query },
                               { label: item.label, query: item.query }
                             ],
                             item.exclude || ""
