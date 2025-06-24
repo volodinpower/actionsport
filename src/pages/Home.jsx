@@ -124,36 +124,34 @@ const handleSearch = async (
   }, [location.search]);
 
   // --- Фильтрация по всем фильтрам разом ---
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
-      if (brandFilter) {
-        const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
-        if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
-      }
-      if (genderFilter && p.gender !== genderFilter) return false;
-      if (categoryFilter && submenuList.length > 0) {
-        const subItem = submenuList.find(item => item.label === categoryFilter);
-        if (subItem && subItem.query) {
-          const queries = subItem.query.split(",").map(q => q.trim().toLowerCase()).filter(Boolean);
-          if (
-            !queries.some(q => {
-              if (q.startsWith("^")) {
-                const plain = q.slice(1);
-                return (p.name || "").toLowerCase().startsWith(plain) ||
-                       (p.category || "").toLowerCase().startsWith(plain);
-              }
-              return (p.name || "").toLowerCase().includes(q) ||
-                     (p.category || "").toLowerCase().includes(q);
-            })
-          ) {
-            return false;
+const filteredProducts = useMemo(() => {
+  return products.filter(p => {
+    if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
+    if (brandFilter) {
+      const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+      if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
+    }
+    if (genderFilter && p.gender !== genderFilter) return false;
+    // Вот тут: categoryFilter — это query!
+    if (categoryFilter && submenuList.length > 0) {
+      const queries = categoryFilter.split(",").map(q => q.trim().toLowerCase()).filter(Boolean);
+      if (
+        !queries.some(q => {
+          if (q.startsWith("^")) {
+            const plain = q.slice(1);
+            return (p.name || "").toLowerCase().startsWith(plain) ||
+                   (p.category || "").toLowerCase().startsWith(plain);
           }
-        }
+          return (p.name || "").toLowerCase().includes(q) ||
+                 (p.category || "").toLowerCase().includes(q);
+        })
+      ) {
+        return false;
       }
-      return true;
-    });
-  }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
+    }
+    return true;
+  });
+}, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
 
   // --- Формируем динамические значения для фильтров ---
   const allSizes = useMemo(() =>

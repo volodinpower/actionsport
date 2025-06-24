@@ -161,7 +161,7 @@ export default function NavMenu({
                             ],
                             item.exclude || ""
                           );
-                          if (setCategoryFilter) setCategoryFilter(item.label); // <-- теперь фильтр синхронизируется!
+                          if (setCategoryFilter) setCategoryFilter(item.query); // <-- теперь фильтр синхронизируется!
                           setMobileMenuOpen(false);
                           setMobileActiveMenu?.(null);
                           setOpenSubmenus([]);
@@ -254,7 +254,7 @@ export default function NavMenu({
                             ],
                             item.exclude || ""
                           );
-                          if (setCategoryFilter) setCategoryFilter(item.label); // <-- теперь фильтр синхронизируется!
+                          if (setCategoryFilter) setCategoryFilter(item.query); // <-- теперь фильтр синхронизируется!
                         }}
                       >
                         {item.label}

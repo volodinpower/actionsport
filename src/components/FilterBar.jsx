@@ -17,22 +17,23 @@ export default function FilterBar({
   allSizes = [],
   allBrands = [],
 }) {
-  // Бренд
+  // Фильтр по бренду
   const handleBrandChange = (opt) => {
     setBrandFilter(opt ? opt.value : "");
     setCategoryFilter("");
   };
 
-  // Показывать gender если опций больше одной, ИЛИ выбран фильтр, и при этом есть хотя бы одна опция для селекта
+  // Показывать gender если опций больше одной или выбран фильтр
   const shouldShowGender =
     showGender &&
     ((genderOptions && genderOptions.length > 1) ||
       (!!genderFilter && genderOptions && genderOptions.length > 0));
 
-  // Найти item по query для отображения выбранного значения
-  const selectedCategory = categoryFilter
-    ? submenuList.find(item => item.query === categoryFilter)
-    : null;
+  // value для селектора категорий — ищем по query!
+  const selectedCategory =
+    categoryFilter && submenuList.length
+      ? submenuList.find(item => item.query === categoryFilter)
+      : null;
 
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
@@ -41,11 +42,12 @@ export default function FilterBar({
           classNamePrefix="react-select"
           placeholder="Category"
           isClearable={false}
-          value={selectedCategory
-            ? { value: selectedCategory.label, label: selectedCategory.label }
-            : null}
+          value={
+            selectedCategory
+              ? { value: selectedCategory.label, label: selectedCategory.label }
+              : null
+          }
           onChange={opt => {
-            // opt.value — это label, ищем объект в submenuList и берем его query
             if (opt) {
               const item = submenuList.find(i => i.label === opt.value);
               setCategoryFilter(item ? item.query : "");
@@ -69,15 +71,12 @@ export default function FilterBar({
         options={allSizes.map(size => ({ value: size, label: size }))}
         menuPlacement="auto"
       />
-      {/* Gender — НЕ исчезает при выбранном фильтре, даже если всего 1 опция */}
       {shouldShowGender && (
         <Select
           classNamePrefix="react-select"
           placeholder="Gender"
           isClearable
-          value={
-            genderOptions.find(opt => opt.value === genderFilter) || null
-          }
+          value={genderOptions.find(opt => opt.value === genderFilter) || null}
           onChange={opt => setGenderFilter(opt ? opt.value : "")}
           options={genderOptions}
           menuPlacement="auto"
