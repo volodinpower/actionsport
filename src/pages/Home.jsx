@@ -28,9 +28,12 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState(""); // query
   const [forceOpenCategory, setForceOpenCategory] = useState(false); // для автоселекта
   const [pendingCategory, setPendingCategory] = useState(""); // не обязателен, но пусть будет
-
+  
+  
+  console.log("DEBUG breadcrumbs:", breadcrumbs);
   const mainCategory = (breadcrumbs[1]?.label || "").toLowerCase();
   const submenuList = submenus[mainCategory] || [];
+  console.log("DEBUG mainCategory:", mainCategory, "submenuList:", submenuList);
 
   // --- Загрузка товаров ---
   const load = async (
