@@ -29,6 +29,11 @@ export default function FilterBar({
     ((genderOptions && genderOptions.length > 1) ||
       (!!genderFilter && genderOptions && genderOptions.length > 0));
 
+  // Найти item по query для отображения выбранного значения
+  const selectedCategory = categoryFilter
+    ? submenuList.find(item => item.query === categoryFilter)
+    : null;
+
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
       {showCategory && submenuList.length > 0 && (
@@ -36,12 +41,18 @@ export default function FilterBar({
           classNamePrefix="react-select"
           placeholder="Category"
           isClearable={false}
-          value={
-            categoryFilter
-              ? submenuList.find(item => item.label === categoryFilter)
-              : null
-          }
-          onChange={opt => setCategoryFilter(opt ? opt.label : "")}
+          value={selectedCategory
+            ? { value: selectedCategory.label, label: selectedCategory.label }
+            : null}
+          onChange={opt => {
+            // opt.value — это label, ищем объект в submenuList и берем его query
+            if (opt) {
+              const item = submenuList.find(i => i.label === opt.value);
+              setCategoryFilter(item ? item.query : "");
+            } else {
+              setCategoryFilter("");
+            }
+          }}
           options={submenuList.map(item => ({
             value: item.label,
             label: item.label
