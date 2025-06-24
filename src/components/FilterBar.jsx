@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useRef, useEffect } from "react";
 import Select from "react-select";
 
 export default function FilterBar({
@@ -17,33 +17,29 @@ export default function FilterBar({
   showCategory = false,
   allSizes = [],
   allBrands = [],
-  forceOpenCategory = false,       // Новое!
-  setForceOpenCategory = () => {}, // Новое!
+  forceOpenCategory = false,
+  setForceOpenCategory = () => {},
 }) {
   const categorySelectRef = useRef();
 
-  // --- Открывать селектор категории, если нужно ---
   useEffect(() => {
     if (forceOpenCategory && categorySelectRef.current) {
-      // Программно открыть селектор (рефокус, он сам раскроется)
+      // Программно открыть селектор (фокус)
       categorySelectRef.current.focus();
-      setForceOpenCategory(false); // Сбросить флаг, чтобы не зациклить
+      setForceOpenCategory(false);
     }
   }, [forceOpenCategory, setForceOpenCategory]);
 
-  // Бренд
   const handleBrandChange = (opt) => {
     setBrandFilter(opt ? opt.value : "");
     setCategoryFilter("");
   };
 
-  // Показываем gender если нужно
   const shouldShowGender =
     showGender &&
     ((genderOptions && genderOptions.length > 1) ||
       (!!genderFilter && genderOptions && genderOptions.length > 0));
 
-  // Найти текущий выбранный пункт для селектора (ищем по query)
   const selectedCategory = submenuList.find(item => item.query === categoryFilter) || null;
 
   return (

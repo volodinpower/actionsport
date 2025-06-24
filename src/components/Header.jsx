@@ -3,7 +3,7 @@ import NavMenu from "./NavMenu";
 import SearchBar from "./SearchBar";
 import "./Header.css";
 
-export default function Header({ onSearch, breadcrumbs, isHome, setCategoryFilter }) {
+export default function Header({ onSearch, breadcrumbs, isHome, setCategoryFilter, setForceOpenCategory }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
@@ -65,6 +65,7 @@ export default function Header({ onSearch, breadcrumbs, isHome, setCategoryFilte
             isHome={isHome}
             mobileView={true}
             setCategoryFilter={setCategoryFilter}
+            setForceOpenCategory={setForceOpenCategory}
           />
         )}
         {/* Поиск поверх меню */}
@@ -102,7 +103,8 @@ export default function Header({ onSearch, breadcrumbs, isHome, setCategoryFilte
             setActiveMenu={setActiveMenu}
             breadcrumbs={breadcrumbs}
             isHome={isHome}
-            setCategoryFilter={setCategoryFilter} 
+            setCategoryFilter={setCategoryFilter}
+            setForceOpenCategory={setForceOpenCategory}
           />
         </div>
         <div className="search-desktop-spacer"></div>

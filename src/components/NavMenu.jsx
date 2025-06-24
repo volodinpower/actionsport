@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import "./Header.css";
 
 // --- Подменю для меню ---
@@ -71,9 +71,9 @@ export default function NavMenu({
   onMenuSearch,
   activeMenu, setActiveMenu,
   mobileMenuOpen, setMobileMenuOpen,
-  mobileActiveMenu, setMobileActiveMenu,
   breadcrumbs, isHome, mobileView,
-  setCategoryFilter
+  setCategoryFilter,
+  setForceOpenCategory // <= новый проп
 }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
   useEffect(() => {
@@ -97,7 +97,6 @@ export default function NavMenu({
           className="mobile-menu-close"
           onClick={() => {
             setMobileMenuOpen(false);
-            setMobileActiveMenu?.(null);
             setOpenSubmenus([]);
           }}
           aria-label="Close menu"
@@ -120,7 +119,6 @@ export default function NavMenu({
                       menu.exclude || ""
                     );
                     setMobileMenuOpen(false);
-                    setMobileActiveMenu?.(null);
                     setOpenSubmenus([]);
                     if (setCategoryFilter) setCategoryFilter("");
                   }}
@@ -157,11 +155,11 @@ export default function NavMenu({
                             ],
                             item.exclude || "",
                             '', // brand
-                            item.query // <-- сюда!
+                            item.query
                           );
                           if (setCategoryFilter) setCategoryFilter(item.query);
+                          if (setForceOpenCategory) setForceOpenCategory(true); // <--
                           setMobileMenuOpen(false);
-                          setMobileActiveMenu?.(null);
                           setOpenSubmenus([]);
                         }}
                       >
@@ -252,9 +250,10 @@ export default function NavMenu({
                             ],
                             item.exclude || "",
                             '', // brand
-                            item.query // <-- категория как строка, не объект!
+                            item.query
                           );
                           if (setCategoryFilter) setCategoryFilter(item.query);
+                          if (setForceOpenCategory) setForceOpenCategory(true); // <--
                         }}
                       >
                         {item.label}

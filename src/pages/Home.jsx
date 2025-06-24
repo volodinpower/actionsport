@@ -17,9 +17,7 @@ export default function Home() {
   const urlSearchParams = new URLSearchParams(location.search);
   const urlSearch = urlSearchParams.get("search") || "";
 
-  const [breadcrumbs, setBreadcrumbs] = useState([
-    { label: "Main", query: "", exclude: "" }
-  ]);
+  const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
   const [products, setProducts] = useState([]);
   const [isHome, setIsHome] = useState(true);
 
@@ -27,10 +25,10 @@ export default function Home() {
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState(""); // всегда query (например "сноуборд")
-  const [forceOpenCategory, setForceOpenCategory] = useState(false); // для автопоказа селектора
+  const [categoryFilter, setCategoryFilter] = useState(""); // query
+  const [forceOpenCategory, setForceOpenCategory] = useState(false); // для автоселекта
+  const [pendingCategory, setPendingCategory] = useState(""); // не обязателен, но пусть будет
 
-  // Подменю для текущей главной категории
   const mainCategory = (breadcrumbs[1]?.label || "").toLowerCase();
   const submenuList = submenus[mainCategory] || [];
 
@@ -63,7 +61,6 @@ export default function Home() {
   };
 
   // --- Обработка поиска / перехода по меню ---
-  // Здесь: если есть аргумент category (query), ставим forceOpenCategory!
   const handleSearch = async (
     query,
     breadcrumbTrail,
@@ -74,7 +71,7 @@ export default function Home() {
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
     setCategoryFilter(category || "");
     setBrandFilter(filterBrand || "");
-    if (category) setForceOpenCategory(true); // открываем фильтр категории после клика по подменю
+    // <<< вот тут важно, чтобы при клике на подменю forceOpenCategory срабатывал
   };
 
   // --- Клик по хлебным крошкам ---
@@ -83,14 +80,14 @@ export default function Home() {
     const lastCrumb = newTrail[newTrail.length - 1];
     if (lastCrumb.query === "") {
       await load("", [{ label: "Main", query: "", exclude: "" }]);
-      setCategoryFilter(""); // сброс фильтра категории
+      setCategoryFilter("");
     } else {
       await load(lastCrumb.query, newTrail);
-      setCategoryFilter(""); // сброс фильтра категории
+      setCategoryFilter("");
     }
   };
 
-  // --- При изменении меню или возврате назад ---
+  // --- При первом рендере / возврате назад ---
   useEffect(() => {
     if (location.state && location.state.breadcrumbs) {
       setBreadcrumbs(location.state.breadcrumbs);
@@ -182,7 +179,6 @@ export default function Home() {
     return options;
   }, [filteredProducts, genderFilter]);
 
-  // --- Сортировка товаров ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -244,6 +240,7 @@ export default function Home() {
         breadcrumbs={breadcrumbs}
         isHome={isHome}
         setCategoryFilter={setCategoryFilter}
+        setForceOpenCategory={setForceOpenCategory} // <- обязательно!
       />
 
       {!isHome && breadcrumbs.length > 1 && (
@@ -269,9 +266,9 @@ export default function Home() {
             setCategoryFilter={setCategoryFilter}
             clearFilters={clearFilters}
             showGender={showGenderOption}
-            showCategory={!isHome && submenuList.length > 0}
-            forceOpenCategory={forceOpenCategory}         // <--- Новое
-            setForceOpenCategory={setForceOpenCategory}   // <--- Новое
+            showCategory={submenuList.length > 0}
+            forceOpenCategory={forceOpenCategory}
+            setForceOpenCategory={setForceOpenCategory}
           />
           <div>
             <SortControl sort={sort} setSort={setSort} />
