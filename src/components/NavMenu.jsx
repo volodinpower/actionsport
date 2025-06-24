@@ -4,7 +4,7 @@ import "./Header.css";
 // --- Подменю для меню ---
 export const submenus = {
   snowboard: [
-    { label: "Boards", query: "сноуборд, СНОУБОРД" },
+    { label: "Boards", query: "сноуборд" },
     { label: "Boots", query: "ботинки для сноуборда" },
     { label: "Bindings", query: "крепления для сноуборда" },
     { label: "Goggles", query: "маска,линза" },
@@ -14,8 +14,8 @@ export const submenus = {
     { label: "Decks", query: "дека" },
     { label: "Completes", query: "комплект скейтборд" },
     { label: "Trucks", query: "подвески" },
-    { label: "Wheels", query: "колеса, КОЛЕСА" },
-    { label: "Bearings", query: "подшипники, ПОДШИПНИКИ" },
+    { label: "Wheels", query: "колеса" },
+    { label: "Bearings", query: "подшипники" },
     { label: "Tools", query: "инструмент, ластик для шкурки, ИНСТРУМЕНТ", exclude:"BINDING MULTI TOOL,#3 SCREW DRIVER" }
   ],
   sup: [
@@ -73,7 +73,7 @@ export default function NavMenu({
   mobileMenuOpen, setMobileMenuOpen,
   mobileActiveMenu, setMobileActiveMenu,
   breadcrumbs, isHome, mobileView,
-  setCategoryFilter // <-- добавили этот проп
+  setCategoryFilter
 }) {
   // Мобильный детектор
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
@@ -83,9 +83,7 @@ export default function NavMenu({
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // Открытые подменю
   const [openSubmenus, setOpenSubmenus] = useState([]);
-
   const toggleSubmenu = (name) => {
     setOpenSubmenus((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
@@ -112,9 +110,7 @@ export default function NavMenu({
             <li key={menu.name} className="mobile-menu-li" style={{padding: 0}}>
               <div className="mobile-menu-row">
                 <button
-                  className={
-                    "mobile-menu-item" + (menu.isSale ? " sale" : "")
-                  }
+                  className={"mobile-menu-item" + (menu.isSale ? " sale" : "")}
                   onClick={() => {
                     onMenuSearch(
                       menu.query,
@@ -161,7 +157,7 @@ export default function NavMenu({
                             ],
                             item.exclude || ""
                           );
-                          if (setCategoryFilter) setCategoryFilter(item.query); // <-- теперь фильтр синхронизируется!
+                          if (setCategoryFilter) setCategoryFilter({ label: item.label, query: item.query });
                           setMobileMenuOpen(false);
                           setMobileActiveMenu?.(null);
                           setOpenSubmenus([]);
@@ -254,7 +250,7 @@ export default function NavMenu({
                             ],
                             item.exclude || ""
                           );
-                          if (setCategoryFilter) setCategoryFilter(item.query); // <-- теперь фильтр синхронизируется!
+                          if (setCategoryFilter) setCategoryFilter({ label: item.label, query: item.query });
                         }}
                       >
                         {item.label}

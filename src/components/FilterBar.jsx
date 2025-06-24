@@ -17,23 +17,20 @@ export default function FilterBar({
   allSizes = [],
   allBrands = [],
 }) {
-  // Фильтр по бренду
+  // Бренд
   const handleBrandChange = (opt) => {
     setBrandFilter(opt ? opt.value : "");
     setCategoryFilter("");
   };
 
-  // Показывать gender если опций больше одной или выбран фильтр
+  // Показываем gender если нужно
   const shouldShowGender =
     showGender &&
     ((genderOptions && genderOptions.length > 1) ||
       (!!genderFilter && genderOptions && genderOptions.length > 0));
 
-  // value для селектора категорий — ищем по query!
-  const selectedCategory =
-    categoryFilter && submenuList.length
-      ? submenuList.find(item => item.query === categoryFilter)
-      : null;
+  // Найти текущий выбранный пункт для селектора (ищем по query)
+  const selectedCategory = submenuList.find(item => item.query === categoryFilter) || null;
 
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
@@ -44,19 +41,18 @@ export default function FilterBar({
           isClearable={false}
           value={
             selectedCategory
-              ? { value: selectedCategory.label, label: selectedCategory.label }
+              ? { value: selectedCategory.query, label: selectedCategory.label }
               : null
           }
           onChange={opt => {
             if (opt) {
-              const item = submenuList.find(i => i.label === opt.value);
-              setCategoryFilter(item ? item.query : "");
+              setCategoryFilter(opt.value); // сюда уходит query!
             } else {
               setCategoryFilter("");
             }
           }}
           options={submenuList.map(item => ({
-            value: item.label,
+            value: item.query,
             label: item.label
           }))}
           menuPlacement="auto"

@@ -27,8 +27,7 @@ export default function Home() {
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  // Важно: нужно выставлять pendingCategory чтобы селектор выделял нужную категорию при клике по подменю
+  const [categoryFilter, setCategoryFilter] = useState(""); // здесь всегда query!
   const [pendingCategory, setPendingCategory] = useState("");
 
   const mainCategory = (breadcrumbs[1]?.label || "").toLowerCase();
@@ -63,22 +62,23 @@ export default function Home() {
   };
 
   // --- Обработка поиска / перехода по меню ---
-const handleSearch = async (
-  query,
-  breadcrumbTrail,
-  excludeArg = "",
-  filterBrand = "",
-  category = ""
-) => {
-  console.log("Home: handleSearch", { query, breadcrumbTrail, excludeArg, filterBrand, category });
-  await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
-  setCategoryFilter(category || "");
-  setBrandFilter(filterBrand || ""); // <--- вот это обязательно!
-};
+  const handleSearch = async (
+    query,
+    breadcrumbTrail,
+    excludeArg = "",
+    filterBrand = "",
+    category = ""
+  ) => {
+    // category — это query (строка)
+    await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
+    setCategoryFilter(category || "");
+    setBrandFilter(filterBrand || "");
+  };
 
   // --- При изменении submenuList или pendingCategory — выставить фильтр ---
   useEffect(() => {
-    if (pendingCategory && submenuList.find(item => item.label === pendingCategory)) {
+    // pendingCategory теперь — это query!
+    if (pendingCategory && submenuList.find(item => item.query === pendingCategory)) {
       setCategoryFilter(pendingCategory);
       setPendingCategory("");
     }
@@ -124,34 +124,34 @@ const handleSearch = async (
   }, [location.search]);
 
   // --- Фильтрация по всем фильтрам разом ---
-const filteredProducts = useMemo(() => {
-  return products.filter(p => {
-    if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
-    if (brandFilter) {
-      const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
-      if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
-    }
-    if (genderFilter && p.gender !== genderFilter) return false;
-    // Вот тут: categoryFilter — это query!
-    if (categoryFilter && submenuList.length > 0) {
-      const queries = categoryFilter.split(",").map(q => q.trim().toLowerCase()).filter(Boolean);
-      if (
-        !queries.some(q => {
-          if (q.startsWith("^")) {
-            const plain = q.slice(1);
-            return (p.name || "").toLowerCase().startsWith(plain) ||
-                   (p.category || "").toLowerCase().startsWith(plain);
-          }
-          return (p.name || "").toLowerCase().includes(q) ||
-                 (p.category || "").toLowerCase().includes(q);
-        })
-      ) {
-        return false;
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
+      if (brandFilter) {
+        const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+        if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
-    }
-    return true;
-  });
-}, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
+      if (genderFilter && p.gender !== genderFilter) return false;
+      // categoryFilter — это query, например "сноуборд"
+      if (categoryFilter && submenuList.length > 0) {
+        const queries = categoryFilter.split(",").map(q => q.trim().toLowerCase()).filter(Boolean);
+        if (
+          !queries.some(q => {
+            if (q.startsWith("^")) {
+              const plain = q.slice(1);
+              return (p.name || "").toLowerCase().startsWith(plain) ||
+                     (p.category || "").toLowerCase().startsWith(plain);
+            }
+            return (p.name || "").toLowerCase().includes(q) ||
+                   (p.category || "").toLowerCase().includes(q);
+          })
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
 
   // --- Формируем динамические значения для фильтров ---
   const allSizes = useMemo(() =>
@@ -160,13 +160,11 @@ const filteredProducts = useMemo(() => {
     ).sort((a, b) => a.localeCompare(b, "ru", { numeric: true }))
   , [filteredProducts]);
 
-const uniqueGenders = useMemo(() =>
-  Array.from(new Set(filteredProducts.map(p => p.gender).filter(g => ["m", "w", "kids"].includes(g))))
-, [filteredProducts]);
+  const uniqueGenders = useMemo(() =>
+    Array.from(new Set(filteredProducts.map(p => p.gender).filter(g => ["m", "w", "kids"].includes(g))))
+  , [filteredProducts]);
 
-// Главное отличие — теперь showGenderOption не пропадает при выбранном фильтре
-const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
-
+  const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
 
   const allBrands = useMemo(() =>
     Array.from(
