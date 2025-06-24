@@ -14,7 +14,7 @@ export default function FilterBar({
   setCategoryFilter,
   clearFilters,
   showGender = true,
-  showCategory = false,
+  showCategory = true,
   allSizes = [],
   allBrands = [],
   forceOpenCategory = false,
