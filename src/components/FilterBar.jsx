@@ -14,7 +14,7 @@ export default function FilterBar({
   setCategoryFilter,
   clearFilters,
   showGender = true,
-  showCategory = true,
+  showCategory = true, // <- всегда true!
   allSizes = [],
   allBrands = [],
   forceOpenCategory = false,
@@ -24,7 +24,6 @@ export default function FilterBar({
 
   useEffect(() => {
     if (forceOpenCategory && categorySelectRef.current) {
-      // Программно открыть селектор (фокус)
       categorySelectRef.current.focus();
       setForceOpenCategory(false);
     }
@@ -41,6 +40,9 @@ export default function FilterBar({
       (!!genderFilter && genderOptions && genderOptions.length > 0));
 
   const selectedCategory = submenuList.find(item => item.query === categoryFilter) || null;
+
+  // debug
+  // console.log('FilterBar', { showCategory, submenuList, selectedCategory });
 
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
