@@ -16,7 +16,20 @@ export default function FilterBar({
   showCategory = false,
   allSizes = [],
   allBrands = [],
+  forceOpenCategory = false,       // Новое!
+  setForceOpenCategory = () => {}, // Новое!
 }) {
+  const categorySelectRef = useRef();
+
+  // --- Открывать селектор категории, если нужно ---
+  useEffect(() => {
+    if (forceOpenCategory && categorySelectRef.current) {
+      // Программно открыть селектор (рефокус, он сам раскроется)
+      categorySelectRef.current.focus();
+      setForceOpenCategory(false); // Сбросить флаг, чтобы не зациклить
+    }
+  }, [forceOpenCategory, setForceOpenCategory]);
+
   // Бренд
   const handleBrandChange = (opt) => {
     setBrandFilter(opt ? opt.value : "");
@@ -36,6 +49,7 @@ export default function FilterBar({
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
       {showCategory && submenuList.length > 0 && (
         <Select
+          ref={categorySelectRef}
           classNamePrefix="react-select"
           placeholder="Category"
           isClearable={false}
@@ -45,11 +59,8 @@ export default function FilterBar({
               : null
           }
           onChange={opt => {
-            if (opt) {
-              setCategoryFilter(opt.value); // сюда уходит query!
-            } else {
-              setCategoryFilter("");
-            }
+            if (opt) setCategoryFilter(opt.value);
+            else setCategoryFilter("");
           }}
           options={submenuList.map(item => ({
             value: item.query,
