@@ -4,7 +4,7 @@ import "./Header.css";
 // --- Подменю для меню ---
 export const submenus = {
   snowboard: [
-    { label: "Boards", query: "^сноуборд, ^СНОУБОРД" },
+    { label: "Boards", query: "сноуборд, СНОУБОРД" },
     { label: "Boots", query: "ботинки для сноуборда" },
     { label: "Bindings", query: "крепления для сноуборда" },
     { label: "Goggles", query: "маска,линза" },
@@ -25,7 +25,7 @@ export const submenus = {
     { label: "Accessories", query: "sup accessories" }
   ],
   wake: [
-    { label: "Boards", query: "^вейкборд, доска для вейкборда" },
+    { label: "Boards", query: "вейкборд, доска для вейкборда" },
     { label: "Bindings", query: "крепления для вейкборда" },
     { label: "Wetsuit", query: "гидрокостюм" },
     { label: "Lycra", query: "лайкра" }
@@ -37,8 +37,8 @@ export const submenus = {
   ],
   clothes: [
     { label: "Jackets", query: "куртка" },
-    { label: "Pants", query: "^штаны, полукомбинезон" },
-    { label: "Suits", query: "^комбинезон" },
+    { label: "Pants", query: "штаны, полукомбинезон" },
+    { label: "Suits", query: "комбинезон" },
     { label: "Thermal underwear", query: "термо" },
     { label: "T-shirts", query: "футболка" },
     { label: "Longsleeves", query: "лонгслив" },
