@@ -266,7 +266,7 @@ export default function Home() {
             setCategoryFilter={setCategoryFilter}
             clearFilters={clearFilters}
             showGender={showGenderOption}
-            showCategory={submenuList.length > 0}
+            showCategory={true}
             forceOpenCategory={forceOpenCategory}
             setForceOpenCategory={setForceOpenCategory}
           />
