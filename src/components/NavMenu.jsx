@@ -73,7 +73,7 @@ export default function NavMenu({
   mobileMenuOpen, setMobileMenuOpen,
   breadcrumbs, isHome, mobileView,
   setCategoryFilter,
-  setForceOpenCategory // <= новый проп
+  setForceOpenCategory
 }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
   useEffect(() => {
@@ -105,7 +105,7 @@ export default function NavMenu({
         </button>
         <ul className="mobile-menu-list">
           {menuList.map(menu => (
-            <li key={menu.name} className="mobile-menu-li" style={{padding: 0}}>
+            <li key={menu.name} className="mobile-menu-li" style={{ padding: 0 }}>
               <div className="mobile-menu-row">
                 <button
                   className={"mobile-menu-item" + (menu.isSale ? " sale" : "")}
@@ -114,7 +114,7 @@ export default function NavMenu({
                       menu.query,
                       [
                         { label: "Main", query: "", exclude: "" },
-                        { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                        { label: menu.name, query: menu.query, exclude: menu.exclude || "" } // <--
                       ],
                       menu.exclude || ""
                     );
@@ -140,17 +140,17 @@ export default function NavMenu({
               </div>
               {/* --- Подменю на мобиле --- */}
               {openSubmenus.includes(menu.name) && (
-                <ul className="mobile-submenu-list" style={{paddingLeft: 14, marginTop: 0, marginBottom: 0}}>
+                <ul className="mobile-submenu-list" style={{ paddingLeft: 14, marginTop: 0, marginBottom: 0 }}>
                   {submenus[menu.name].map((item) => (
                     <li key={item.label}>
                       <button
                         className="mobile-menu-item"
-                        style={{fontSize: "1.05em"}}
+                        style={{ fontSize: "1.05em" }}
                         onClick={() => {
                           onMenuSearch(
                             item.query,
                             [
-                              { label: menu.label, query: menu.query },
+                              { label: menu.name, query: menu.query }, // ключ категории!
                               { label: item.label, query: item.query }
                             ],
                             item.exclude || "",
@@ -158,7 +158,7 @@ export default function NavMenu({
                             item.query
                           );
                           if (setCategoryFilter) setCategoryFilter(item.query);
-                          if (setForceOpenCategory) setForceOpenCategory(true); // <--
+                          if (setForceOpenCategory) setForceOpenCategory(true);
                           setMobileMenuOpen(false);
                           setOpenSubmenus([]);
                         }}
@@ -208,7 +208,7 @@ export default function NavMenu({
                     menu.query,
                     [
                       { label: "Main", query: "", exclude: "" },
-                      { label: menu.label, query: menu.query, exclude: menu.exclude || "" }
+                      { label: menu.name, query: menu.query, exclude: menu.exclude || "" } // <--
                     ],
                     menu.exclude || ""
                   );
@@ -245,7 +245,7 @@ export default function NavMenu({
                           onMenuSearch(
                             item.query,
                             [
-                              { label: menuList.find(m => m.name === activeMenu).label, query: menuList.find(m => m.name === activeMenu).query },
+                              { label: activeMenu, query: menuList.find(m => m.name === activeMenu).query },
                               { label: item.label, query: item.query }
                             ],
                             item.exclude || "",
@@ -253,7 +253,7 @@ export default function NavMenu({
                             item.query
                           );
                           if (setCategoryFilter) setCategoryFilter(item.query);
-                          if (setForceOpenCategory) setForceOpenCategory(true); // <--
+                          if (setForceOpenCategory) setForceOpenCategory(true);
                         }}
                       >
                         {item.label}
