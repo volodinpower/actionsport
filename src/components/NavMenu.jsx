@@ -75,7 +75,6 @@ export default function NavMenu({
   breadcrumbs, isHome, mobileView,
   setCategoryFilter
 }) {
-  // Мобильный детектор
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth <= 900);
@@ -123,7 +122,7 @@ export default function NavMenu({
                     setMobileMenuOpen(false);
                     setMobileActiveMenu?.(null);
                     setOpenSubmenus([]);
-                    if (setCategoryFilter) setCategoryFilter(""); // сбрасываем категорию при выборе раздела
+                    if (setCategoryFilter) setCategoryFilter("");
                   }}
                 >
                   {menu.label}
@@ -141,6 +140,7 @@ export default function NavMenu({
                   </button>
                 )}
               </div>
+              {/* --- Подменю на мобиле --- */}
               {openSubmenus.includes(menu.name) && (
                 <ul className="mobile-submenu-list" style={{paddingLeft: 14, marginTop: 0, marginBottom: 0}}>
                   {submenus[menu.name].map((item) => (
@@ -155,9 +155,11 @@ export default function NavMenu({
                               { label: menu.label, query: menu.query },
                               { label: item.label, query: item.query }
                             ],
-                            item.exclude || ""
+                            item.exclude || "",
+                            '', // brand
+                            item.query // <-- сюда!
                           );
-                          if (setCategoryFilter) setCategoryFilter({ label: item.label, query: item.query });
+                          if (setCategoryFilter) setCategoryFilter(item.query);
                           setMobileMenuOpen(false);
                           setMobileActiveMenu?.(null);
                           setOpenSubmenus([]);
@@ -212,7 +214,7 @@ export default function NavMenu({
                     ],
                     menu.exclude || ""
                   );
-                  if (setCategoryFilter) setCategoryFilter(""); // сбрасываем категорию при выборе раздела
+                  if (setCategoryFilter) setCategoryFilter("");
                 }}
               >
                 {menu.label}
@@ -248,9 +250,11 @@ export default function NavMenu({
                               { label: menuList.find(m => m.name === activeMenu).label, query: menuList.find(m => m.name === activeMenu).query },
                               { label: item.label, query: item.query }
                             ],
-                            item.exclude || ""
+                            item.exclude || "",
+                            '', // brand
+                            item.query // <-- категория как строка, не объект!
                           );
-                          if (setCategoryFilter) setCategoryFilter({ label: item.label, query: item.query });
+                          if (setCategoryFilter) setCategoryFilter(item.query);
                         }}
                       >
                         {item.label}
