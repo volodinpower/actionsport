@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
 import { fetchProducts, fetchPopularProducts } from "../api";
@@ -27,10 +27,9 @@ export default function Home() {
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState(""); // всегда query (например "сноуборд")
-  const [forceOpenCategory, setForceOpenCategory] = useState(false); // для автопоказа селектора
+  const [categoryFilter, setCategoryFilter] = useState(""); // здесь всегда query!
+  const [pendingCategory, setPendingCategory] = useState("");
 
-  // Подменю для текущей главной категории
   const mainCategory = (breadcrumbs[1]?.label || "").toLowerCase();
   const submenuList = submenus[mainCategory] || [];
 
@@ -63,7 +62,6 @@ export default function Home() {
   };
 
   // --- Обработка поиска / перехода по меню ---
-  // Здесь: если есть аргумент category (query), ставим forceOpenCategory!
   const handleSearch = async (
     query,
     breadcrumbTrail,
@@ -71,11 +69,20 @@ export default function Home() {
     filterBrand = "",
     category = ""
   ) => {
+    // category — это query (строка)
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
     setCategoryFilter(category || "");
     setBrandFilter(filterBrand || "");
-    if (category) setForceOpenCategory(true); // открываем фильтр категории после клика по подменю
   };
+
+  // --- При изменении submenuList или pendingCategory — выставить фильтр ---
+  useEffect(() => {
+    // pendingCategory теперь — это query!
+    if (pendingCategory && submenuList.find(item => item.query === pendingCategory)) {
+      setCategoryFilter(pendingCategory);
+      setPendingCategory("");
+    }
+  }, [submenuList, pendingCategory]);
 
   // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = async (idx) => {
@@ -90,7 +97,7 @@ export default function Home() {
     }
   };
 
-  // --- При изменении меню или возврате назад ---
+  // --- При первом рендере / возврате назад ---
   useEffect(() => {
     if (location.state && location.state.breadcrumbs) {
       setBreadcrumbs(location.state.breadcrumbs);
@@ -125,6 +132,7 @@ export default function Home() {
         if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
       if (genderFilter && p.gender !== genderFilter) return false;
+      // categoryFilter — это query, например "сноуборд"
       if (categoryFilter && submenuList.length > 0) {
         const queries = categoryFilter.split(",").map(q => q.trim().toLowerCase()).filter(Boolean);
         if (
@@ -243,7 +251,7 @@ export default function Home() {
         onSearch={handleSearch}
         breadcrumbs={breadcrumbs}
         isHome={isHome}
-        setCategoryFilter={setCategoryFilter}
+        setCategoryFilter={setCategoryFilter} 
       />
 
       {!isHome && breadcrumbs.length > 1 && (
@@ -270,8 +278,6 @@ export default function Home() {
             clearFilters={clearFilters}
             showGender={showGenderOption}
             showCategory={submenuList.length > 0}
-            forceOpenCategory={forceOpenCategory}         // <--- Новое
-            setForceOpenCategory={setForceOpenCategory}   // <--- Новое
           />
           <div>
             <SortControl sort={sort} setSort={setSort} />
