@@ -29,6 +29,7 @@ export default function Header({
     category,
     subcategory
   ) => {
+    console.log("runSearch", { query, crumbs, exclude, brand, category, subcategory });
     if (onSearch)
       onSearch(query, crumbs, exclude, brand, category, subcategory);
     setActiveMenu(null);
