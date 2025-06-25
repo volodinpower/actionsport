@@ -8,7 +8,6 @@ import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
-import { submenus } from "../components/NavMenu";
 
 export default function Home() {
   const location = useLocation();
@@ -16,6 +15,9 @@ export default function Home() {
 
   const urlSearchParams = new URLSearchParams(location.search);
   const urlSearch = urlSearchParams.get("search") || "";
+
+  // Новое: СТЕЙТ КАТЕГОРИЙ (динамически с бэка)
+  const [categories, setCategories] = useState([]);
 
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
   const [products, setProducts] = useState([]);
@@ -25,15 +27,23 @@ export default function Home() {
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState(""); // query
-  const [forceOpenCategory, setForceOpenCategory] = useState(false); // для автоселекта
-  const [pendingCategory, setPendingCategory] = useState(""); // не обязателен, но пусть будет
-  
-  
-  console.log("DEBUG breadcrumbs:", breadcrumbs);
-  const mainCategory = (breadcrumbs[1]?.label || "");
-  const submenuList = submenus[mainCategory] || [];
-  console.log("DEBUG mainCategory:", mainCategory, "submenuList:", submenuList);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [forceOpenCategory, setForceOpenCategory] = useState(false);
+  const [pendingCategory, setPendingCategory] = useState("");
+
+  // Загрузка КАТЕГОРИЙ
+  useEffect(() => {
+    fetch(import.meta.env.VITE_API_URL + "/categories")
+      .then(res => res.json())
+      .then(data => setCategories(data || []));
+  }, []);
+
+  // ДИНАМИЧЕСКИЙ submenuList из categories по breadcrumbs[1]?.label (ожидаем, что это category_key)
+  const mainCategoryKey = breadcrumbs[1]?.label || "";
+  const submenuList = useMemo(() => {
+    const cat = categories.find(c => c.category_key === mainCategoryKey);
+    return cat ? cat.subcategories : [];
+  }, [categories, mainCategoryKey]);
 
   // --- Загрузка товаров ---
   const load = async (
@@ -60,24 +70,23 @@ export default function Home() {
     setSizeFilter("");
     setBrandFilter(lastBrand || "");
     setGenderFilter("");
-    // Категорию не сбрасываем!
   };
 
-  // --- Обработка поиска / перехода по меню ---
   const handleSearch = async (
     query,
     breadcrumbTrail,
     excludeArg = "",
     filterBrand = "",
-    category = ""
+    category = "",
+    subcategory = ""
   ) => {
+    // Можно также передавать ключи (category, subcategory) в фильтрацию товаров
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
     setCategoryFilter(category || "");
     setBrandFilter(filterBrand || "");
-    // <<< вот тут важно, чтобы при клике на подменю forceOpenCategory срабатывал
+    setForceOpenCategory(!!subcategory); // Если выбран подпункт — открывай фильтр
   };
 
-  // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
@@ -90,7 +99,6 @@ export default function Home() {
     }
   };
 
-  // --- При первом рендере / возврате назад ---
   useEffect(() => {
     if (location.state && location.state.breadcrumbs) {
       setBreadcrumbs(location.state.breadcrumbs);
@@ -125,27 +133,18 @@ export default function Home() {
         if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
       if (genderFilter && p.gender !== genderFilter) return false;
+      // Фильтрация по подкатегории теперь работает с submenuList
       if (categoryFilter && submenuList.length > 0) {
-        const queries = categoryFilter.split(",").map(q => q.trim().toLowerCase()).filter(Boolean);
-        if (
-          !queries.some(q => {
-            if (q.startsWith("^")) {
-              const plain = q.slice(1);
-              return (p.name || "").toLowerCase().startsWith(plain) ||
-                     (p.category || "").toLowerCase().startsWith(plain);
-            }
-            return (p.name || "").toLowerCase().includes(q) ||
-                   (p.category || "").toLowerCase().includes(q);
-          })
-        ) {
-          return false;
-        }
+        // categoryFilter = subcategory_key, submenuList содержит список подкатегорий
+        if (!submenuList.includes(categoryFilter)) return false;
+        // Можно сделать строгий матч по p.subcategory_key === categoryFilter
+        if (p.subcategory_key && p.subcategory_key !== categoryFilter) return false;
       }
       return true;
     });
   }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
 
-  // --- Формируем динамические значения для фильтров ---
+  // --- Динамика фильтров ---
   const allSizes = useMemo(() =>
     Array.from(
       new Set(filteredProducts.flatMap(p => Array.isArray(p.sizes) ? p.sizes : []).filter(Boolean))
@@ -164,7 +163,6 @@ export default function Home() {
     ).sort()
   , [filteredProducts]);
 
-  // --- Динамические gender options ---
   const genderOptions = useMemo(() => {
     const variants = Array.from(
       new Set(filteredProducts.map(p => p.gender).filter(g => ["m", "w", "kids"].includes(g)))
@@ -243,7 +241,7 @@ export default function Home() {
         breadcrumbs={breadcrumbs}
         isHome={isHome}
         setCategoryFilter={setCategoryFilter}
-        setForceOpenCategory={setForceOpenCategory} // <- обязательно!
+        setForceOpenCategory={setForceOpenCategory}
       />
 
       {!isHome && breadcrumbs.length > 1 && (
@@ -257,7 +255,7 @@ export default function Home() {
           <FilterBar
             allSizes={allSizes}
             allBrands={allBrands}
-            submenuList={submenuList}
+            submenuList={submenuList} // теперь динамический!
             sizeFilter={sizeFilter}
             setSizeFilter={setSizeFilter}
             brandFilter={brandFilter}

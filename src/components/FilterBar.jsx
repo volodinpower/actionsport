@@ -14,7 +14,7 @@ export default function FilterBar({
   setCategoryFilter,
   clearFilters,
   showGender = true,
-  showCategory = true, // <- всегда true!
+  showCategory = true,
   allSizes = [],
   allBrands = [],
   forceOpenCategory = false,
@@ -29,6 +29,13 @@ export default function FilterBar({
     }
   }, [forceOpenCategory, setForceOpenCategory]);
 
+  // submenuList теперь просто массив subcategory_key
+  const categoryOptions = submenuList.map(sub => ({
+    value: sub,
+    label: sub // если нужно — тут можно преобразовать в красивое имя
+  }));
+  const selectedCategory = categoryOptions.find(opt => opt.value === categoryFilter) || null;
+
   const handleBrandChange = (opt) => {
     setBrandFilter(opt ? opt.value : "");
     setCategoryFilter("");
@@ -39,30 +46,17 @@ export default function FilterBar({
     ((genderOptions && genderOptions.length > 1) ||
       (!!genderFilter && genderOptions && genderOptions.length > 0));
 
-  const selectedCategory = submenuList.find(item => item.query === categoryFilter) || null;
-  console.log('FilterBar', { showCategory, submenuList, selectedCategory });
-
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
-      {showCategory && submenuList.length > 0 && (
+      {showCategory && categoryOptions.length > 0 && (
         <Select
           ref={categorySelectRef}
           classNamePrefix="react-select"
           placeholder="Category"
           isClearable={false}
-          value={
-            selectedCategory
-              ? { value: selectedCategory.query, label: selectedCategory.label }
-              : null
-          }
-          onChange={opt => {
-            if (opt) setCategoryFilter(opt.value);
-            else setCategoryFilter("");
-          }}
-          options={submenuList.map(item => ({
-            value: item.query,
-            label: item.label
-          }))}
+          value={selectedCategory}
+          onChange={opt => setCategoryFilter(opt ? opt.value : "")}
+          options={categoryOptions}
           menuPlacement="auto"
         />
       )}

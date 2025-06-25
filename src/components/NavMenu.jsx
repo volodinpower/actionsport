@@ -1,72 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Header.css";
 
-// --- Подменю для меню ---
-export const submenus = {
-  snowboard: [
-    { label: "Boards", query: "сноуборд" },
-    { label: "Boots", query: "ботинки для сноуборда" },
-    { label: "Bindings", query: "крепления для сноуборда" },
-    { label: "Goggles", query: "маска,линза" },
-    { label: "Snow Bag", query: "чехол" }
-  ],
-  skateboard: [
-    { label: "Decks", query: "дека" },
-    { label: "Completes", query: "комплект скейтборд" },
-    { label: "Trucks", query: "подвески" },
-    { label: "Wheels", query: "колеса" },
-    { label: "Bearings", query: "подшипники" },
-    { label: "Tools", query: "инструмент, ластик для шкурки, ИНСТРУМЕНТ", exclude:"BINDING MULTI TOOL,#3 SCREW DRIVER" }
-  ],
-  sup: [
-    { label: "Boards", query: "надувная доска SUP" },
-    { label: "Paddles", query: "весло" },
-    { label: "Pump", query: "насос" },
-    { label: "Accessories", query: "sup accessories" }
-  ],
-  wake: [
-    { label: "Boards", query: "вейкборд, доска для вейкборда" },
-    { label: "Bindings", query: "крепления для вейкборда" },
-    { label: "Wetsuit", query: "гидрокостюм" },
-    { label: "Lycra", query: "лайкра" }
-  ],
-  shoes: [
-    { label: "Sneakers", query: "кеды" },
-    { label: "Trainers", query: "кроссовки, КРОССОВКИ, Кроссовки" },
-    { label: "Boots", query: "^ботинки, ^Ботинки", exclude: "ботинки для сноуборда"}
-  ],
-  clothes: [
-    { label: "Jackets", query: "куртка" },
-    { label: "Pants", query: "штаны, полукомбинезон" },
-    { label: "Suits", query: "комбинезон" },
-    { label: "Thermal underwear", query: "термо" },
-    { label: "T-shirts", query: "футболка" },
-    { label: "Longsleeves", query: "лонгслив" },
-    { label: "Hoodies", query: "толстовка" },
-    { label: "Trousers & Jeans", query: "брюки,джинсы" },
-    { label: "Shorts", query: "шорты" },
-    { label: "Caps & Bucket hats", query: "кепка,панама" },
-    { label: "Hats", query: "шапка" },
-    { label: "Balaclavas & Gaiters", query: "балаклава,гейтор" },
-    { label: "Gloves & Mittens", query: "перчатки,варежки" }
-  ],
-  accessories: [
-    { label: "Bags", query: "рюкзак,сумка" },
-    { label: "Cases", query: "чехол" }
-  ]
-};
-
-const menuList = [
-  ...Object.keys(submenus).map(key => ({
-    label: key.charAt(0).toUpperCase() + key.slice(1),
-    name: key,
-    query: (submenus[key] || []).map(item => item.query).join(","),
-    exclude: (submenus[key] || []).map(item => item.exclude).filter(Boolean).join(","),
-    isSale: false
-  })),
-  { label: "Sale", name: "sale", query: "sale", isSale: true }
-];
-
 export default function NavMenu({
   onMenuSearch,
   activeMenu, setActiveMenu,
@@ -75,14 +9,23 @@ export default function NavMenu({
   setCategoryFilter,
   setForceOpenCategory
 }) {
+  const [categories, setCategories] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
+  const [openSubmenus, setOpenSubmenus] = useState([]);
+
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth <= 900);
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  const [openSubmenus, setOpenSubmenus] = useState([]);
+  // --- Грузим категории с бэка
+  useEffect(() => {
+    fetch(import.meta.env.VITE_API_URL + "/categories")
+      .then(res => res.json())
+      .then(data => setCategories(data || []));
+  }, []);
+
   const toggleSubmenu = (name) => {
     setOpenSubmenus((prev) =>
       prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
@@ -104,66 +47,66 @@ export default function NavMenu({
           &times;
         </button>
         <ul className="mobile-menu-list">
-          {menuList.map(menu => (
-            <li key={menu.name} className="mobile-menu-li" style={{ padding: 0 }}>
+          {categories.map(cat => (
+            <li key={cat.category_key} className="mobile-menu-li" style={{ padding: 0 }}>
               <div className="mobile-menu-row">
                 <button
-                  className={"mobile-menu-item" + (menu.isSale ? " sale" : "")}
+                  className="mobile-menu-item"
                   onClick={() => {
                     onMenuSearch(
-                      menu.query,
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: menu.name, query: menu.query, exclude: menu.exclude || "" } // <--
-                      ],
-                      menu.exclude || ""
+                      "", // основной фильтр
+                      [{ label: "Main", query: "", exclude: "" }, { label: cat.category_key, query: cat.category_key }],
+                      "", // exclude
+                      "", // brand
+                      cat.category_key
                     );
                     setMobileMenuOpen(false);
                     setOpenSubmenus([]);
-                    if (setCategoryFilter) setCategoryFilter("");
+                    if (setCategoryFilter) setCategoryFilter(cat.category_key);
                   }}
                 >
-                  {menu.label}
+                  {cat.category_key}
                 </button>
-                {submenus[menu.name] && (
+                {cat.subcategories.length > 0 && (
                   <button
                     className="mobile-menu-plus"
                     onClick={e => {
                       e.stopPropagation();
-                      toggleSubmenu(menu.name);
+                      toggleSubmenu(cat.category_key);
                     }}
                     aria-label="Open submenu"
                   >
-                    {openSubmenus.includes(menu.name) ? "−" : "+"}
+                    {openSubmenus.includes(cat.category_key) ? "−" : "+"}
                   </button>
                 )}
               </div>
               {/* --- Подменю на мобиле --- */}
-              {openSubmenus.includes(menu.name) && (
+              {openSubmenus.includes(cat.category_key) && (
                 <ul className="mobile-submenu-list" style={{ paddingLeft: 14, marginTop: 0, marginBottom: 0 }}>
-                  {submenus[menu.name].map((item) => (
-                    <li key={item.label}>
+                  {cat.subcategories.map((sub) => (
+                    <li key={sub}>
                       <button
                         className="mobile-menu-item"
                         style={{ fontSize: "1.05em" }}
                         onClick={() => {
                           onMenuSearch(
-                            item.query,
+                            "", // основной фильтр не нужен
                             [
-                              { label: menu.name, query: menu.query }, // ключ категории!
-                              { label: item.label, query: item.query }
+                              { label: cat.category_key, query: cat.category_key },
+                              { label: sub, query: sub }
                             ],
-                            item.exclude || "",
-                            '', // brand
-                            item.query
+                            "",
+                            "",
+                            cat.category_key,
+                            sub
                           );
-                          if (setCategoryFilter) setCategoryFilter(item.query);
+                          if (setCategoryFilter) setCategoryFilter(sub);
                           if (setForceOpenCategory) setForceOpenCategory(true);
-                          setMobileMenuOpen(false);
+                          setMobileMenuOpen?.(false);
                           setOpenSubmenus([]);
                         }}
                       >
-                        {item.label}
+                        {sub}
                       </button>
                     </li>
                   ))}
@@ -171,6 +114,7 @@ export default function NavMenu({
               )}
             </li>
           ))}
+          {/* Sale пункт если хочешь можно добавить вручную */}
         </ul>
       </div>
     );
@@ -178,7 +122,9 @@ export default function NavMenu({
 
   // --- Десктопное меню ---
   if (!isMobile) {
-    const submenuItems = activeMenu ? submenus[activeMenu] || [] : [];
+    const submenuItems = activeMenu
+      ? (categories.find(cat => cat.category_key === activeMenu)?.subcategories || [])
+      : [];
     const columns = [];
     const MAX_ITEMS = 6;
     for (let i = 0; i < submenuItems.length; i += MAX_ITEMS) {
@@ -189,33 +135,26 @@ export default function NavMenu({
       <>
         <nav>
           <ul className="flex gap-6 items-center text-base font-medium nav-menu-wrap">
-            {menuList.map((menu) => (
+            {categories.map((cat) => (
               <li
-                key={menu.name}
-                className={
-                  menu.isSale
-                    ? "nav-menu-sale cursor-pointer h-10 flex items-center"
-                    : "cursor-pointer h-10 flex items-center"
-                }
-                style={!menu.isSale ? { color: "#fff" } : {}}
+                key={cat.category_key}
+                className="cursor-pointer h-10 flex items-center"
+                style={{ color: "#fff" }}
                 onMouseEnter={() =>
-                  submenus[menu.name]
-                    ? setActiveMenu(menu.name)
+                  cat.subcategories.length > 0
+                    ? setActiveMenu(cat.category_key)
                     : setActiveMenu(null)
                 }
                 onClick={() => {
                   onMenuSearch(
-                    menu.query,
-                    [
-                      { label: "Main", query: "", exclude: "" },
-                      { label: menu.name, query: menu.query, exclude: menu.exclude || "" } // <--
-                    ],
-                    menu.exclude || ""
+                    "",
+                    [{ label: "Main", query: "", exclude: "" }, { label: cat.category_key, query: cat.category_key }],
+                    ""
                   );
-                  if (setCategoryFilter) setCategoryFilter("");
+                  if (setCategoryFilter) setCategoryFilter(cat.category_key);
                 }}
               >
-                {menu.label}
+                {cat.category_key}
               </li>
             ))}
           </ul>
@@ -237,26 +176,27 @@ export default function NavMenu({
               {submenuItems.length > 0 ? (
                 columns.map((col, idx) => (
                   <div key={idx} className="flex flex-col mr-2">
-                    {col.map((item) => (
+                    {col.map((sub) => (
                       <button
-                        key={item.label}
+                        key={sub}
                         className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                         onClick={() => {
                           onMenuSearch(
-                            item.query,
+                            "",
                             [
-                              { label: activeMenu, query: menuList.find(m => m.name === activeMenu).query },
-                              { label: item.label, query: item.query }
+                              { label: activeMenu, query: activeMenu },
+                              { label: sub, query: sub }
                             ],
-                            item.exclude || "",
-                            '', // brand
-                            item.query
+                            "",
+                            "",
+                            activeMenu,
+                            sub
                           );
-                          if (setCategoryFilter) setCategoryFilter(item.query);
+                          if (setCategoryFilter) setCategoryFilter(sub);
                           if (setForceOpenCategory) setForceOpenCategory(true);
                         }}
                       >
-                        {item.label}
+                        {sub}
                       </button>
                     ))}
                   </div>
