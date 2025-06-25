@@ -87,6 +87,7 @@ export default function Home() {
     category = "",
     subcategory = ""
   ) => {
+    console.log("handleSearch вызван с:", {query, breadcrumbTrail, excludeArg, filterBrand, category, subcategory});
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
     // !!! Клик по главной категории сбрасывает фильтр подкатегории:
     if (category && !subcategory) {
@@ -96,6 +97,7 @@ export default function Home() {
     }
     setBrandFilter(filterBrand || "");
     setForceOpenCategory(!!subcategory);
+    console.log("productsList =", productsList);
   };
 
   const handleBreadcrumbClick = async (idx) => {
