@@ -16,9 +16,7 @@ export default function Home() {
   const urlSearchParams = new URLSearchParams(location.search);
   const urlSearch = urlSearchParams.get("search") || "";
 
-  // Новое: СТЕЙТ КАТЕГОРИЙ (динамически с бэка)
   const [categories, setCategories] = useState([]);
-
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
   const [products, setProducts] = useState([]);
   const [isHome, setIsHome] = useState(true);
@@ -29,25 +27,36 @@ export default function Home() {
   const [genderFilter, setGenderFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
-  const [pendingCategory, setPendingCategory] = useState("");
 
-  // Загрузка КАТЕГОРИЙ
-    useEffect(() => {
-      fetchCategories()
-        .then(data => setCategories(data || []))
-        .catch(() => setCategories([]));
-    }, []);
+  // --- Загрузка категорий ---
+  useEffect(() => {
+    fetchCategories()
+      .then(data => setCategories(data || []))
+      .catch(() => setCategories([]));
+  }, []);
 
-  // ДИНАМИЧЕСКИЙ submenuList из categories по breadcrumbs[1]?.label (ожидаем, что это category_key)
+  // --- Массивы всех ключей категорий и подкатегорий ---
+  const allCategoryKeys = useMemo(() =>
+    categories.map(c => c.category_key), [categories]);
+
+  const allSubcategoryKeys = useMemo(() =>
+    categories.flatMap(c =>
+      (c.subcategories || []).map(sub =>
+        typeof sub === "string"
+          ? sub
+          : sub.subcategory_key || sub.query
+      )
+    ), [categories]);
+
+  // --- submenuList для FilterBar ---
   const mainCategoryKey = breadcrumbs[1]?.label || "";
   const submenuList = useMemo(() => {
     const cat = categories.find(c => c.category_key === mainCategoryKey);
-    // Если subcategories — массив объектов {label, query}, возвращаем только label!
     return cat
       ? cat.subcategories.map(sub =>
           typeof sub === "string"
             ? sub
-            : sub.label // всегда возвращаем строку-ключ
+            : sub.subcategory_key || sub.query
         )
       : [];
   }, [categories, mainCategoryKey]);
@@ -78,7 +87,8 @@ export default function Home() {
     setBrandFilter(lastBrand || "");
     setGenderFilter("");
   };
-    
+
+  // --- Клик по меню/подменю ---
   const handleSearch = async (
     query,
     breadcrumbTrail,
@@ -87,20 +97,19 @@ export default function Home() {
     category = "",
     subcategory = ""
   ) => {
-    console.log("handleSearch вызван с:", {query, breadcrumbTrail, excludeArg, filterBrand, category, subcategory});
-    let productsList = [];
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
-    // !!! Клик по главной категории сбрасывает фильтр подкатегории:
+
+    // Клик по главной категории
     if (category && !subcategory) {
-      setCategoryFilter("");
+      setCategoryFilter(category);
     } else if (category && subcategory) {
       setCategoryFilter(subcategory);
     }
     setBrandFilter(filterBrand || "");
     setForceOpenCategory(!!subcategory);
-    console.log("productsList =", productsList);
   };
 
+  // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
@@ -113,6 +122,7 @@ export default function Home() {
     }
   };
 
+  // --- Инициализация (по location/search) ---
   useEffect(() => {
     if (location.state && location.state.breadcrumbs) {
       setBreadcrumbs(location.state.breadcrumbs);
@@ -138,7 +148,7 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
-  // --- Фильтрация по всем фильтрам разом ---
+  // --- ГЛАВНАЯ ФИЛЬТРАЦИЯ ---
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
@@ -147,18 +157,29 @@ export default function Home() {
         if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
       if (genderFilter && p.gender !== genderFilter) return false;
-      // Фильтрация по подкатегории теперь работает с submenuList
-      if (categoryFilter && submenuList.length > 0) {
-        // categoryFilter = subcategory_key, submenuList содержит список подкатегорий
-        if (!submenuList.includes(categoryFilter)) return false;
-        // Можно сделать строгий матч по p.subcategory_key === categoryFilter
-        if (p.subcategory_key && p.subcategory_key !== categoryFilter) return false;
+
+      if (categoryFilter) {
+        if (allCategoryKeys.includes(categoryFilter)) {
+          return p.category_key === categoryFilter;
+        }
+        if (allSubcategoryKeys.includes(categoryFilter)) {
+          return p.subcategory_key === categoryFilter;
+        }
+        return false;
       }
       return true;
     });
-  }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
+  }, [
+    products,
+    sizeFilter,
+    brandFilter,
+    genderFilter,
+    categoryFilter,
+    allCategoryKeys,
+    allSubcategoryKeys,
+  ]);
 
-  // --- Динамика фильтров ---
+  // --- Фильтры для FilterBar ---
   const allSizes = useMemo(() =>
     Array.from(
       new Set(filteredProducts.flatMap(p => Array.isArray(p.sizes) ? p.sizes : []).filter(Boolean))
@@ -269,7 +290,7 @@ export default function Home() {
           <FilterBar
             allSizes={allSizes}
             allBrands={allBrands}
-            submenuList={submenuList} // теперь динамический!
+            submenuList={submenuList}
             sizeFilter={sizeFilter}
             setSizeFilter={setSizeFilter}
             brandFilter={brandFilter}

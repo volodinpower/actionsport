@@ -26,7 +26,9 @@ export default function NavMenu({
           (data || []).map(cat => ({
             ...cat,
             subcategories: (cat.subcategories || []).map(sub =>
-              typeof sub === "string" ? { label: sub, query: sub } : sub
+              typeof sub === "string"
+                ? { label: sub, query: sub, subcategory_key: sub }
+                : { ...sub, query: sub.subcategory_key || sub.query, subcategory_key: sub.subcategory_key || sub.query }
             )
           }))
         );
@@ -94,23 +96,23 @@ export default function NavMenu({
               {openSubmenus.includes(cat.category_key) && (
                 <ul className="mobile-submenu-list" style={{ paddingLeft: 14 }}>
                   {cat.subcategories.map((sub) => (
-                    <li key={sub.label}>
+                    <li key={sub.subcategory_key}>
                       <button
                         className="mobile-menu-item"
                         style={{ fontSize: "1.05em" }}
                         onClick={() => {
                           onMenuSearch(
-                            sub.label,
+                            sub.subcategory_key, // <-- filter по subcategory_key!
                             [
                               { label: cat.category_key, query: cat.category_key },
-                              { label: sub.label, query: sub.query }
+                              { label: sub.label, query: sub.subcategory_key }
                             ],
                             "",
                             "",
                             cat.category_key,
-                            sub.label
+                            sub.subcategory_key
                           );
-                          setCategoryFilter?.(sub.label);
+                          setCategoryFilter?.(sub.subcategory_key);
                           setForceOpenCategory?.(true);
                           setMobileMenuOpen?.(false);
                           setOpenSubmenus([]);
@@ -131,7 +133,6 @@ export default function NavMenu({
 
   // --- Десктопное меню ---
   if (!isMobile) {
-    // Для подменю мы НЕ знаем cat, но знаем activeMenu (category_key текущей категории)
     const submenuItems = activeMenu
       ? (categories.find(cat => cat.category_key === activeMenu)?.subcategories || [])
       : [];
@@ -199,22 +200,21 @@ export default function NavMenu({
                   <div key={idx} className="flex flex-col mr-2">
                     {col.map((sub) => (
                       <button
-                        key={sub.label}
+                        key={sub.subcategory_key}
                         className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                         onClick={() => {
-                          // cat недоступен! Используем activeMenu вместо cat.category_key
                           onMenuSearch(
-                            sub.label,
+                            sub.subcategory_key,
                             [
                               { label: activeMenu, query: activeMenu },
-                              { label: sub.label, query: sub.query }
+                              { label: sub.label, query: sub.subcategory_key }
                             ],
                             "",
                             "",
                             activeMenu,
-                            sub.label
+                            sub.subcategory_key
                           );
-                          setCategoryFilter?.(sub.label);
+                          setCategoryFilter?.(sub.subcategory_key);
                           setForceOpenCategory?.(true);
                         }}
                       >
