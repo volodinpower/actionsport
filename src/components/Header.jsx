@@ -14,9 +14,16 @@ export default function Header({ onSearch, breadcrumbs, isHome, setCategoryFilte
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const runSearch = (query, crumbs, exclude = "", brand, category) => {
-    if (onSearch) onSearch(query, crumbs, exclude, brand, category);
+  
+  const runSearch = (
+    query,
+    crumbs,
+    exclude = "",
+    brand = "",
+    category = "",
+    subcategory = ""
+  ) => {
+    if (onSearch) onSearch(query, crumbs, exclude, brand, category, subcategory);
     setActiveMenu(null);
     setMobileMenuOpen(false);
     setShowSearch(false);
