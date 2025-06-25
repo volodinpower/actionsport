@@ -35,19 +35,6 @@ export default function Home() {
       .catch(() => setCategories([]));
   }, []);
 
-  // --- Массивы всех ключей категорий и подкатегорий ---
-  const allCategoryKeys = useMemo(() =>
-    categories.map(c => c.category_key), [categories]);
-
-  const allSubcategoryKeys = useMemo(() =>
-    categories.flatMap(c =>
-      (c.subcategories || []).map(sub =>
-        typeof sub === "string"
-          ? sub
-          : sub.subcategory_key || sub.query
-      )
-    ), [categories]);
-
   // --- submenuList для FilterBar ---
   const mainCategoryKey = breadcrumbs[1]?.label || "";
   const submenuList = useMemo(() => {
@@ -56,7 +43,7 @@ export default function Home() {
       ? cat.subcategories.map(sub =>
           typeof sub === "string"
             ? sub
-            : sub.subcategory_key || sub.query
+            : sub.subcategory_key || sub.label
         )
       : [];
   }, [categories, mainCategoryKey]);
@@ -99,11 +86,13 @@ export default function Home() {
   ) => {
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
 
-    // Клик по главной категории
-    if (category && !subcategory) {
-      setCategoryFilter(category);
-    } else if (category && subcategory) {
-      setCategoryFilter(subcategory);
+    // ВАЖНО: всегда передавать ключ!
+    if (subcategory) {
+      setCategoryFilter(subcategory); // если подкатегория — фильтруем по subcategory_key
+    } else if (category) {
+      setCategoryFilter(category); // если категория — фильтруем по category_key
+    } else {
+      setCategoryFilter("");
     }
     setBrandFilter(filterBrand || "");
     setForceOpenCategory(!!subcategory);
@@ -157,15 +146,11 @@ export default function Home() {
         if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
       if (genderFilter && p.gender !== genderFilter) return false;
-
       if (categoryFilter) {
-        if (allCategoryKeys.includes(categoryFilter)) {
-          return p.category_key === categoryFilter;
-        }
-        if (allSubcategoryKeys.includes(categoryFilter)) {
-          return p.subcategory_key === categoryFilter;
-        }
-        return false;
+        return (
+          p.category_key === categoryFilter ||
+          p.subcategory_key === categoryFilter
+        );
       }
       return true;
     });
@@ -174,9 +159,7 @@ export default function Home() {
     sizeFilter,
     brandFilter,
     genderFilter,
-    categoryFilter,
-    allCategoryKeys,
-    allSubcategoryKeys,
+    categoryFilter
   ]);
 
   // --- Фильтры для FilterBar ---
@@ -268,17 +251,7 @@ export default function Home() {
       }
     });
   };
-  useEffect(() => {
-    if (products.length > 0) {
-      console.log("Один продукт:", products[0]);
-    }
-  }, [products]);
 
-  useEffect(() => {
-    if (categories.length > 0) {
-      console.log("Одна категория:", categories[0]);
-    }
-  }, [categories]);
   return (
     <>
       <Header
