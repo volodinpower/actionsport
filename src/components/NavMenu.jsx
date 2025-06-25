@@ -61,17 +61,17 @@ export default function NavMenu({
                   className="mobile-menu-item"
                   onClick={() => {
                     // Клик по главной категории: сбрасывает подкатегорию!
-                    onMenuSearch(
-                      "",
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: cat.category_key, query: cat.category_key }
-                      ],
-                      "",
-                      "",
-                      cat.category_key,
-                      null // <-- subcategory = null
-                    );
+                  onMenuSearch(
+                    cat.category_key, // вот это!
+                    [
+                      { label: "Main", query: "", exclude: "" },
+                      { label: cat.category_key, query: cat.category_key }
+                    ],
+                    "",
+                    "",
+                    cat.category_key,
+                    null
+                  );
                     setMobileMenuOpen(false);
                     setOpenSubmenus([]);
                     setCategoryFilter?.(cat.category_key);
@@ -100,17 +100,17 @@ export default function NavMenu({
                         className="mobile-menu-item"
                         style={{ fontSize: "1.05em" }}
                         onClick={() => {
-                          onMenuSearch(
-                            "",
-                            [
-                              { label: cat.category_key, query: cat.category_key },
-                              { label: sub.label, query: sub.query }
-                            ],
-                            "",
-                            "",
-                            cat.category_key,
-                            sub.label // <-- subcategory
-                          );
+                        onMenuSearch(
+                          sub.label, // или sub.query — в зависимости от структуры
+                          [
+                            { label: cat.category_key, query: cat.category_key },
+                            { label: sub.label, query: sub.query }
+                          ],
+                          "",
+                          "",
+                          cat.category_key,
+                          sub.label
+                        );
                           setCategoryFilter?.(sub.label);
                           setForceOpenCategory?.(true);
                           setMobileMenuOpen?.(false);
@@ -160,17 +160,17 @@ export default function NavMenu({
                   onClick={() => {
                     console.log("Клик по категории:", cat.category_key);
                     // Клик по главной категории: сбрасывает подкатегорию!
-                    onMenuSearch(
-                      "",
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: cat.category_key, query: cat.category_key }
-                      ],
-                      "",
-                      "",
-                      cat.category_key,
-                      null // <-- subcategory = null
-                    );
+                  onMenuSearch(
+                    cat.category_key, // вот это!
+                    [
+                      { label: "Main", query: "", exclude: "" },
+                      { label: cat.category_key, query: cat.category_key }
+                    ],
+                    "",
+                    "",
+                    cat.category_key,
+                    null
+                  );
                     setCategoryFilter?.(cat.category_key);
                     setForceOpenCategory?.(false);
                   }}
@@ -204,17 +204,18 @@ export default function NavMenu({
                         key={sub.label}
                         className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                         onClick={() => {
+                          console.log("NavMenu: onClick по категории", cat.category_key);
                           onMenuSearch(
-                            "",
-                            [
-                              { label: activeMenu, query: activeMenu },
-                              { label: sub.label, query: sub.query }
-                            ],
-                            "",
-                            "",
-                            activeMenu,
-                            sub.label // <-- subcategory
-                          );
+                          sub.label, // или sub.query — в зависимости от структуры
+                          [
+                            { label: cat.category_key, query: cat.category_key },
+                            { label: sub.label, query: sub.query }
+                          ],
+                          "",
+                          "",
+                          cat.category_key,
+                          sub.label
+                        );
                           setCategoryFilter?.(sub.label);
                           setForceOpenCategory?.(true);
                         }}
