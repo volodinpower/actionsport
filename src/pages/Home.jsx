@@ -245,11 +245,7 @@ const filteredProducts = useMemo(() => {
       }
     });
   };
-useEffect(() => {
-  console.log('categoryFilter:', categoryFilter);
-  console.log('products:', products.slice(0, 5)); // первые 5 продуктов
-  console.log('filteredProducts:', filteredProducts.slice(0, 5));
-}, [categoryFilter, products, filteredProducts]);
+    console.log("Товар полностью:", products[0]);
 
   return (
     <>
