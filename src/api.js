@@ -278,25 +278,11 @@ export async function incrementProductView(id) {
   });
 }
 
-// --- Экспортировать всё одной структурой (если захочешь использовать import * as api from "./api")
-export default {
-  fetchProducts,
-  fetchRandomProducts,
-  uploadXlsx,
-  fetchProductById,
-  setProductImageUrl,
-  uploadProductImage,
-  deleteProductImage,
-  getXlsxImportReport,
-  fetchProductDetails,
-  fetchProductsWithoutImages,
-  fetchProductsCount,
-  fetchProductsRaw,
-  fetchBrands,
-  fetchBanners,
-  uploadBanner,
-  deleteBanner,
-  updateBanner,
-  setProductReserved,
-  syncImagesForGroup,
-};
+export async function fetchCategories() {
+  const res = await fetch(apiUrl("/categories"));
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  // Если вдруг backend вернул не массив — возвращай []
+  return Array.isArray(data) ? data : [];
+}
+
