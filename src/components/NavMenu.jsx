@@ -158,6 +158,7 @@ export default function NavMenu({
               >
                 <span
                   onClick={() => {
+                    console.log("Клик по категории:", cat.category_key);
                     // Клик по главной категории: сбрасывает подкатегорию!
                     onMenuSearch(
                       "",
