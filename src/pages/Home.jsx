@@ -78,25 +78,24 @@ export default function Home() {
     setBrandFilter(lastBrand || "");
     setGenderFilter("");
   };
-    
-  const handleSearch = async (
-    query,
-    breadcrumbTrail,
-    excludeArg = "",
-    filterBrand = "",
-    category = "",
-    subcategory = ""
-  ) => {
-    await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
-    // !!! Клик по главной категории сбрасывает фильтр подкатегории:
-    if (category && !subcategory) {
-      setCategoryFilter("");
-    } else if (category && subcategory) {
-      setCategoryFilter(subcategory);
-    }
-    setBrandFilter(filterBrand || "");
-    setForceOpenCategory(!!subcategory);
-  };
+const handleSearch = async (
+  query,
+  breadcrumbTrail,
+  excludeArg = "",
+  filterBrand = "",
+  category = "",
+  subcategory = ""
+) => {
+  await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
+  // !!! Клик по главной категории сбрасывает фильтр подкатегории:
+  if (category && !subcategory) {
+    setCategoryFilter("");
+  } else if (category && subcategory) {
+    setCategoryFilter(subcategory);
+  }
+  setBrandFilter(filterBrand || "");
+  setForceOpenCategory(!!subcategory);
+};
 
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
