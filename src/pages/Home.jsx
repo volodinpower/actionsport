@@ -90,27 +90,37 @@ export default function Home() {
   };
 
   // --- Клик по меню/подменю ---
-  const handleSearch = async (
-    query,
-    breadcrumbTrail,
-    excludeArg = "",
-    filterBrand = "",
-    category = "",
-    subcategory = ""
-  ) => {
-    await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
+const handleSearch = async (
+  query,
+  breadcrumbTrail,
+  excludeArg = "",
+  filterBrand = "",
+  category = "",
+  subcategory = ""
+) => {
+  // Если это просто категория (меню), query должен быть ПУСТОЙ строкой!
+  let realQuery = "";
+  if (subcategory) {
+    realQuery = ""; // всегда пустой, фильтрация на фронте
+  } else if (category) {
+    realQuery = ""; // всегда пустой
+  } else if (query) {
+    realQuery = query;
+  }
 
-    // ВАЖНО: всегда передавать ключ!
-    if (subcategory) {
-      setCategoryFilter(subcategory); // если подкатегория — фильтруем по subcategory_key
-    } else if (category) {
-      setCategoryFilter(category); // если категория — фильтруем по category_key
-    } else {
-      setCategoryFilter("");
-    }
-    setBrandFilter(filterBrand || "");
-    setForceOpenCategory(!!subcategory);
-  };
+  await load(realQuery, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
+
+  if (subcategory) {
+    setCategoryFilter(subcategory);
+  } else if (category) {
+    setCategoryFilter(category);
+  } else {
+    setCategoryFilter("");
+  }
+  setBrandFilter(filterBrand || "");
+  setForceOpenCategory(!!subcategory);
+};
+
 
   // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = async (idx) => {
