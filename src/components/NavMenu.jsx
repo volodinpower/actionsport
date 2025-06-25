@@ -19,11 +19,20 @@ export default function NavMenu({
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // --- Грузим категории с бэка
+  // --- Грузим категории с бэка и приводим subcategories к объекту
   useEffect(() => {
     fetch(import.meta.env.VITE_API_URL + "/categories")
       .then(res => res.json())
-      .then(data => setCategories(data || []));
+      .then(data => {
+        setCategories(
+          (data || []).map(cat => ({
+            ...cat,
+            subcategories: (cat.subcategories || []).map(sub =>
+              typeof sub === "string" ? { label: sub, query: sub } : sub
+            )
+          }))
+        );
+      });
   }, []);
 
   const toggleSubmenu = (name) => {
@@ -54,10 +63,10 @@ export default function NavMenu({
                   className="mobile-menu-item"
                   onClick={() => {
                     onMenuSearch(
-                      "", // основной фильтр
+                      "",
                       [{ label: "Main", query: "", exclude: "" }, { label: cat.category_key, query: cat.category_key }],
-                      "", // exclude
-                      "", // brand
+                      "",
+                      "",
                       cat.category_key
                     );
                     setMobileMenuOpen(false);
@@ -84,29 +93,29 @@ export default function NavMenu({
               {openSubmenus.includes(cat.category_key) && (
                 <ul className="mobile-submenu-list" style={{ paddingLeft: 14, marginTop: 0, marginBottom: 0 }}>
                   {cat.subcategories.map((sub) => (
-                    <li key={sub}>
+                    <li key={sub.label}>
                       <button
                         className="mobile-menu-item"
                         style={{ fontSize: "1.05em" }}
                         onClick={() => {
                           onMenuSearch(
-                            "", // основной фильтр не нужен
+                            "",
                             [
                               { label: cat.category_key, query: cat.category_key },
-                              { label: sub, query: sub }
+                              { label: sub.label, query: sub.query }
                             ],
                             "",
                             "",
                             cat.category_key,
-                            sub
+                            sub.label
                           );
-                          if (setCategoryFilter) setCategoryFilter(sub);
+                          if (setCategoryFilter) setCategoryFilter(sub.label);
                           if (setForceOpenCategory) setForceOpenCategory(true);
                           setMobileMenuOpen?.(false);
                           setOpenSubmenus([]);
                         }}
                       >
-                        {sub}
+                        {sub.label}
                       </button>
                     </li>
                   ))}
@@ -114,7 +123,6 @@ export default function NavMenu({
               )}
             </li>
           ))}
-          {/* Sale пункт если хочешь можно добавить вручную */}
         </ul>
       </div>
     );
@@ -178,25 +186,25 @@ export default function NavMenu({
                   <div key={idx} className="flex flex-col mr-2">
                     {col.map((sub) => (
                       <button
-                        key={sub}
+                        key={sub.label}
                         className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                         onClick={() => {
                           onMenuSearch(
                             "",
                             [
                               { label: activeMenu, query: activeMenu },
-                              { label: sub, query: sub }
+                              { label: sub.label, query: sub.query }
                             ],
                             "",
                             "",
                             activeMenu,
-                            sub
+                            sub.label
                           );
-                          if (setCategoryFilter) setCategoryFilter(sub);
+                          if (setCategoryFilter) setCategoryFilter(sub.label);
                           if (setForceOpenCategory) setForceOpenCategory(true);
                         }}
                       >
-                        {sub}
+                        {sub.label}
                       </button>
                     ))}
                   </div>
