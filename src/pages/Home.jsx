@@ -35,18 +35,32 @@ export default function Home() {
       .catch(() => setCategories([]));
   }, []);
 
-  // --- submenuList для FilterBar ---
-  const mainCategoryKey = breadcrumbs[1]?.label || "";
+  // --- submenuList для FilterBar (важно: вычислять по текущему categoryFilter!) ---
   const submenuList = useMemo(() => {
-    const cat = categories.find(c => c.category_key === mainCategoryKey);
-    return cat
-      ? cat.subcategories.map(sub =>
+    // 1. Если выбранная фильтрация — это категория, вернём все её подкатегории
+    let cat = categories.find(c => c.category_key === categoryFilter);
+    if (cat) {
+      return cat.subcategories.map(sub =>
+        typeof sub === "string"
+          ? sub
+          : sub.subcategory_key || sub.label
+      );
+    }
+    // 2. Если выбранная фильтрация — это подкатегория, находим родителя и его подкатегории
+    for (let c of categories) {
+      if ((c.subcategories || []).some(sub =>
+        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
+      )) {
+        return c.subcategories.map(sub =>
           typeof sub === "string"
             ? sub
             : sub.subcategory_key || sub.label
-        )
-      : [];
-  }, [categories, mainCategoryKey]);
+        );
+      }
+    }
+    // 3. Если ничего не найдено, возвращаем []
+    return [];
+  }, [categories, categoryFilter]);
 
   // --- Загрузка товаров ---
   const load = async (
@@ -138,31 +152,28 @@ export default function Home() {
   }, [location.search]);
 
   // --- ГЛАВНАЯ ФИЛЬТРАЦИЯ ---
-const filteredProducts = useMemo(() => {
-  return products.filter(p => {
-    if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
-    if (brandFilter) {
-      const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
-      if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
-    }
-    if (genderFilter && p.gender !== genderFilter) return false;
-    // --- Самое важное:
-    if (categoryFilter) {
-      // Если выбрана подкатегория из submenuList — фильтруем по subcategory_key
-      // Если выбрана категория (основное меню) — фильтруем по category_key
-      const isSub = submenuList.includes(categoryFilter);
-      if (isSub) {
-        return p.subcategory_key === categoryFilter;
-      } else {
-        return p.category_key === categoryFilter;
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
+      if (brandFilter) {
+        const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+        if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
-    }
-    return true;
-  });
-}, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
-
-
-
+      if (genderFilter && p.gender !== genderFilter) return false;
+      // --- Самое важное:
+      if (categoryFilter) {
+        // Если выбрана подкатегория из submenuList — фильтруем по subcategory_key
+        // Если выбрана категория (основное меню) — фильтруем по category_key
+        const isSub = submenuList.includes(categoryFilter);
+        if (isSub) {
+          return p.subcategory_key === categoryFilter;
+        } else {
+          return p.category_key === categoryFilter;
+        }
+      }
+      return true;
+    });
+  }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
 
   // --- Фильтры для FilterBar ---
   const allSizes = useMemo(() =>
@@ -253,7 +264,32 @@ const filteredProducts = useMemo(() => {
       }
     });
   };
-    console.log("Товар полностью:", products[0]);
+
+  // --- DEBUG (всегда под товарами) ---
+  // Можно убрать после успешной отладки
+  const debugBlock = (
+    <div style={{
+      background: "#222",
+      color: "#fff",
+      padding: "8px",
+      marginBottom: 12,
+      borderRadius: 6,
+      fontSize: 14
+    }}>
+      <div>categoryFilter: {categoryFilter}</div>
+      <div>submenuList: {JSON.stringify(submenuList)}</div>
+      <div>products: {products.length}</div>
+      <div>filteredProducts: {filteredProducts.length}</div>
+      {products[0] && (
+        <details>
+          <summary>Пример товара</summary>
+          <pre style={{ color: "#fff", fontSize: 13 }}>
+            {JSON.stringify(products[0], null, 2)}
+          </pre>
+        </details>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -299,14 +335,7 @@ const filteredProducts = useMemo(() => {
       )}
 
       <div className="mx-auto px-2 pb-12">
-          {/* --- DEBUG BLOCK --- */}
-  <div style={{ background: "#222", color: "#fff", padding: "8px", marginBottom: 12, borderRadius: 6, fontSize: 14 }}>
-    <div>categoryFilter: {categoryFilter}</div>
-    <div>submenuList: {JSON.stringify(submenuList)}</div>
-    <div>products: {products.length}</div>
-    <div>filteredProducts: {filteredProducts.length}</div>
-  </div>
-  {/* --- END DEBUG BLOCK --- */}
+        {debugBlock}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
           {displayedProducts.length > 0 ? (
             displayedProducts.map(product => (
