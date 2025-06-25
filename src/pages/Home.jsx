@@ -88,6 +88,7 @@ export default function Home() {
     subcategory = ""
   ) => {
     console.log("handleSearch вызван с:", {query, breadcrumbTrail, excludeArg, filterBrand, category, subcategory});
+    let productsList = [];
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
     // !!! Клик по главной категории сбрасывает фильтр подкатегории:
     if (category && !subcategory) {
