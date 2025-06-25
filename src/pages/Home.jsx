@@ -31,7 +31,7 @@ export default function Home() {
   
   
   console.log("DEBUG breadcrumbs:", breadcrumbs);
-  const mainCategory = (breadcrumbs[1]?.query || "");
+  const mainCategory = (breadcrumbs[1]?.label || "");
   const submenuList = submenus[mainCategory] || [];
   console.log("DEBUG mainCategory:", mainCategory, "submenuList:", submenuList);
 
