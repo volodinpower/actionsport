@@ -18,7 +18,8 @@ export default defineConfig(({ mode }) => {
         '/brands': 'http://localhost:8000',
         '/banners': 'http://localhost:8000',
         '/token': 'http://localhost:8000',
-        '/search_smart': 'http://localhost:8000'
+        '/search_smart': 'http://localhost:8000',
+        '/categories': 'http://localhost:8000'
       },
     },
   };
