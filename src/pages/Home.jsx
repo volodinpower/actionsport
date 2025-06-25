@@ -138,19 +138,29 @@ export default function Home() {
   }, [location.search]);
 
   // --- ГЛАВНАЯ ФИЛЬТРАЦИЯ ---
- const filteredProducts = useMemo(() => {
-  return products.filter(p => {
-    if (categoryFilter) {
-      console.log('COMPARE', p.category_key, p.subcategory_key, categoryFilter);
-      return (
-        p.category_key === categoryFilter ||
-        p.subcategory_key === categoryFilter
-      );
-    }
-    return true;
-  });
-}, [products, categoryFilter]);
-
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
+      if (brandFilter) {
+        const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+        if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
+      }
+      if (genderFilter && p.gender !== genderFilter) return false;
+      if (categoryFilter) {
+        return (
+          p.category_key === categoryFilter ||
+          p.subcategory_key === categoryFilter
+        );
+      }
+      return true;
+    });
+  }, [
+    products,
+    sizeFilter,
+    brandFilter,
+    genderFilter,
+    categoryFilter
+  ]);
 
   // --- Фильтры для FilterBar ---
   const allSizes = useMemo(() =>
