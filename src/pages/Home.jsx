@@ -140,20 +140,28 @@ export default function Home() {
   // --- ГЛАВНАЯ ФИЛЬТРАЦИЯ ---
 const filteredProducts = useMemo(() => {
   return products.filter(p => {
-    console.log(
-      'DEBUG:', 
-      'categoryFilter:', categoryFilter, 
-      '| p.category_key:', p.category_key, 
-      '| p.subcategory_key:', p.subcategory_key,
-      '| ==cat?', p.category_key === categoryFilter,
-      '| ==subcat?', p.subcategory_key === categoryFilter
-    );
-    return (
-      p.category_key === categoryFilter ||
-      p.subcategory_key === categoryFilter
-    );
+    if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
+    if (brandFilter) {
+      const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+      if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
+    }
+    if (genderFilter && p.gender !== genderFilter) return false;
+    // --- Самое важное:
+    if (categoryFilter) {
+      // Если выбрана подкатегория из submenuList — фильтруем по subcategory_key
+      // Если выбрана категория (основное меню) — фильтруем по category_key
+      const isSub = submenuList.includes(categoryFilter);
+      if (isSub) {
+        return p.subcategory_key === categoryFilter;
+      } else {
+        return p.category_key === categoryFilter;
+      }
+    }
+    return true;
   });
-}, [products, categoryFilter]);
+}, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
+
+
 
 
   // --- Фильтры для FilterBar ---
@@ -291,6 +299,14 @@ const filteredProducts = useMemo(() => {
       )}
 
       <div className="mx-auto px-2 pb-12">
+          {/* --- DEBUG BLOCK --- */}
+  <div style={{ background: "#222", color: "#fff", padding: "8px", marginBottom: 12, borderRadius: 6, fontSize: 14 }}>
+    <div>categoryFilter: {categoryFilter}</div>
+    <div>submenuList: {JSON.stringify(submenuList)}</div>
+    <div>products: {products.length}</div>
+    <div>filteredProducts: {filteredProducts.length}</div>
+  </div>
+  {/* --- END DEBUG BLOCK --- */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
           {displayedProducts.length > 0 ? (
             displayedProducts.map(product => (
