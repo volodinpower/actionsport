@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
-import { fetchProducts, fetchPopularProducts } from "../api";
+import { fetchProducts, fetchPopularProducts, fetchCategories } from "../api";
 import Banner from "../components/Banner";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -32,17 +32,24 @@ export default function Home() {
   const [pendingCategory, setPendingCategory] = useState("");
 
   // Загрузка КАТЕГОРИЙ
-  useEffect(() => {
-    fetch(import.meta.env.VITE_API_URL + "/categories")
-      .then(res => res.json())
-      .then(data => setCategories(data || []));
-  }, []);
+    useEffect(() => {
+      fetchCategories()
+        .then(data => setCategories(data || []))
+        .catch(() => setCategories([]));
+    }, []);
 
   // ДИНАМИЧЕСКИЙ submenuList из categories по breadcrumbs[1]?.label (ожидаем, что это category_key)
   const mainCategoryKey = breadcrumbs[1]?.label || "";
   const submenuList = useMemo(() => {
     const cat = categories.find(c => c.category_key === mainCategoryKey);
-    return cat ? cat.subcategories : [];
+    // Если subcategories — массив объектов {label, query}, возвращаем только label!
+    return cat
+      ? cat.subcategories.map(sub =>
+          typeof sub === "string"
+            ? sub
+            : sub.label // всегда возвращаем строку-ключ
+        )
+      : [];
   }, [categories, mainCategoryKey]);
 
   // --- Загрузка товаров ---
@@ -71,7 +78,7 @@ export default function Home() {
     setBrandFilter(lastBrand || "");
     setGenderFilter("");
   };
-
+    
   const handleSearch = async (
     query,
     breadcrumbTrail,
@@ -80,11 +87,15 @@ export default function Home() {
     category = "",
     subcategory = ""
   ) => {
-    // Можно также передавать ключи (category, subcategory) в фильтрацию товаров
     await load(query, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
-    setCategoryFilter(category || "");
+    // !!! Клик по главной категории сбрасывает фильтр подкатегории:
+    if (category && !subcategory) {
+      setCategoryFilter("");
+    } else if (category && subcategory) {
+      setCategoryFilter(subcategory);
+    }
     setBrandFilter(filterBrand || "");
-    setForceOpenCategory(!!subcategory); // Если выбран подпункт — открывай фильтр
+    setForceOpenCategory(!!subcategory);
   };
 
   const handleBreadcrumbClick = async (idx) => {

@@ -3,13 +3,8 @@ import "./Header.css";
 
 export default function NavMenu({
   onMenuSearch,
-  activeMenu,
-  setActiveMenu,
-  mobileMenuOpen,
-  setMobileMenuOpen,
-  breadcrumbs,
-  isHome,
-  mobileView,
+  activeMenu, setActiveMenu,
+  mobileMenuOpen, setMobileMenuOpen,
   setCategoryFilter,
   setForceOpenCategory,
 }) {
@@ -23,17 +18,16 @@ export default function NavMenu({
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // --- Грузим категории с бэка и приводим subcategories к объекту
   useEffect(() => {
     fetch(import.meta.env.VITE_API_URL + "/categories")
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         setCategories(
-          (data || []).map((cat) => ({
+          (data || []).map(cat => ({
             ...cat,
-            subcategories: (cat.subcategories || []).map((sub) =>
+            subcategories: (cat.subcategories || []).map(sub =>
               typeof sub === "string" ? { label: sub, query: sub } : sub
-            ),
+            )
           }))
         );
       });
@@ -60,30 +54,27 @@ export default function NavMenu({
           &times;
         </button>
         <ul className="mobile-menu-list">
-          {categories.map((cat) => (
-            <li
-              key={cat.category_key}
-              className="mobile-menu-li"
-              style={{ padding: 0 }}
-            >
+          {categories.map(cat => (
+            <li key={cat.category_key} className="mobile-menu-li" style={{ padding: 0 }}>
               <div className="mobile-menu-row">
                 <button
                   className="mobile-menu-item"
                   onClick={() => {
+                    // Клик по главной категории: сбрасывает подкатегорию!
                     onMenuSearch(
                       "",
                       [
                         { label: "Main", query: "", exclude: "" },
-                        { label: cat.category_key, query: cat.category_key },
+                        { label: cat.category_key, query: cat.category_key }
                       ],
                       "",
                       "",
                       cat.category_key,
-                      ""
+                      null // <-- subcategory = null
                     );
                     setMobileMenuOpen(false);
                     setOpenSubmenus([]);
-                    if (setCategoryFilter) setCategoryFilter(cat.category_key);
+                    setCategoryFilter?.(cat.category_key);
                   }}
                 >
                   {cat.category_key}
@@ -91,7 +82,7 @@ export default function NavMenu({
                 {cat.subcategories.length > 0 && (
                   <button
                     className="mobile-menu-plus"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       toggleSubmenu(cat.category_key);
                     }}
@@ -101,16 +92,8 @@ export default function NavMenu({
                   </button>
                 )}
               </div>
-              {/* --- Подменю на мобиле --- */}
               {openSubmenus.includes(cat.category_key) && (
-                <ul
-                  className="mobile-submenu-list"
-                  style={{
-                    paddingLeft: 14,
-                    marginTop: 0,
-                    marginBottom: 0,
-                  }}
-                >
+                <ul className="mobile-submenu-list" style={{ paddingLeft: 14 }}>
                   {cat.subcategories.map((sub) => (
                     <li key={sub.label}>
                       <button
@@ -121,15 +104,15 @@ export default function NavMenu({
                             "",
                             [
                               { label: cat.category_key, query: cat.category_key },
-                              { label: sub.label, query: sub.query },
+                              { label: sub.label, query: sub.query }
                             ],
                             "",
                             "",
                             cat.category_key,
-                            sub.label
+                            sub.label // <-- subcategory
                           );
-                          if (setCategoryFilter) setCategoryFilter(sub.label);
-                          if (setForceOpenCategory) setForceOpenCategory(true);
+                          setCategoryFilter?.(sub.label);
+                          setForceOpenCategory?.(true);
                           setMobileMenuOpen?.(false);
                           setOpenSubmenus([]);
                         }}
@@ -150,7 +133,7 @@ export default function NavMenu({
   // --- Десктопное меню ---
   if (!isMobile) {
     const submenuItems = activeMenu
-      ? categories.find((cat) => cat.category_key === activeMenu)?.subcategories || []
+      ? (categories.find(cat => cat.category_key === activeMenu)?.subcategories || [])
       : [];
     const columns = [];
     const MAX_ITEMS = 6;
@@ -172,22 +155,28 @@ export default function NavMenu({
                     ? setActiveMenu(cat.category_key)
                     : setActiveMenu(null)
                 }
-                onClick={() => {
-                  onMenuSearch(
-                    "",
-                    [
-                      { label: "Main", query: "", exclude: "" },
-                      { label: cat.category_key, query: cat.category_key },
-                    ],
-                    "",
-                    "",
-                    cat.category_key,
-                    ""
-                  );
-                  if (setCategoryFilter) setCategoryFilter(cat.category_key);
-                }}
               >
-                {cat.category_key}
+                <span
+                  onClick={() => {
+                    // Клик по главной категории: сбрасывает подкатегорию!
+                    onMenuSearch(
+                      "",
+                      [
+                        { label: "Main", query: "", exclude: "" },
+                        { label: cat.category_key, query: cat.category_key }
+                      ],
+                      "",
+                      "",
+                      cat.category_key,
+                      null // <-- subcategory = null
+                    );
+                    setCategoryFilter?.(cat.category_key);
+                    setForceOpenCategory?.(false);
+                  }}
+                  style={{ display: "inline-block", width: "100%" }}
+                >
+                  {cat.category_key}
+                </span>
               </li>
             ))}
           </ul>
@@ -200,13 +189,13 @@ export default function NavMenu({
               width: "100vw",
               paddingTop: "12px",
               paddingBottom: "12px",
-              height: `${Math.max(1, Math.min(submenuItems.length, MAX_ITEMS)) * 32 + 24}px`,
+              height: `${Math.max(1, Math.min(submenuItems.length, MAX_ITEMS)) * 32 + 24}px`
             }}
             onMouseEnter={() => setActiveMenu(activeMenu)}
             onMouseLeave={() => setActiveMenu(null)}
           >
             <div className="flex flex-row items-start text-sm px-[calc((100vw-1128px)/2)] pl-6">
-              {submenuItems.length > 0 &&
+              {submenuItems.length > 0 ? (
                 columns.map((col, idx) => (
                   <div key={idx} className="flex flex-col mr-2">
                     {col.map((sub) => (
@@ -218,22 +207,23 @@ export default function NavMenu({
                             "",
                             [
                               { label: activeMenu, query: activeMenu },
-                              { label: sub.label, query: sub.query },
+                              { label: sub.label, query: sub.query }
                             ],
                             "",
                             "",
                             activeMenu,
-                            sub.label
+                            sub.label // <-- subcategory
                           );
-                          if (setCategoryFilter) setCategoryFilter(sub.label);
-                          if (setForceOpenCategory) setForceOpenCategory(true);
+                          setCategoryFilter?.(sub.label);
+                          setForceOpenCategory?.(true);
                         }}
                       >
                         {sub.label}
                       </button>
                     ))}
                   </div>
-                ))}
+                ))
+              ) : null}
             </div>
           </div>
         )}
