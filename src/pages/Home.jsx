@@ -268,7 +268,17 @@ export default function Home() {
       }
     });
   };
+  useEffect(() => {
+    if (products.length > 0) {
+      console.log("Один продукт:", products[0]);
+    }
+  }, [products]);
 
+  useEffect(() => {
+    if (categories.length > 0) {
+      console.log("Одна категория:", categories[0]);
+    }
+  }, [categories]);
   return (
     <>
       <Header
