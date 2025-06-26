@@ -38,7 +38,6 @@ export default function FilterBar({
 
   const handleBrandChange = (opt) => {
     setBrandFilter(opt ? opt.value : "");
-    setCategoryFilter("");
   };
 
   const shouldShowGender =
