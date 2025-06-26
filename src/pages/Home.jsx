@@ -120,7 +120,7 @@ const handleSearch = async (
   } else if (category) {
     categoryKey = category;
   }
-
+  console.log('categoryKey:', categoryKey, 'subcategoryKey:', subcategoryKey);
   await load("", breadcrumbTrail || breadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey);
 
   if (subcategory) {
