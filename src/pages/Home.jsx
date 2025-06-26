@@ -73,9 +73,9 @@ const load = async (
 ) => {
   const lastExclude = bc.length > 0 ? bc[bc.length - 1].exclude || excludeArg : excludeArg;
   const lastBrand = bc.length > 0 ? bc[bc.length - 1].brand || brandFilterArg : brandFilterArg;
-  console.log("LOAD", { query, limit, excludeArg, brandFilterArg, categoryKey, subcategoryKey });
   let productsList = [];
   let limit = 150;
+  console.log("LOAD", { query, limit, excludeArg, brandFilterArg, categoryKey, subcategoryKey })
   if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
     productsList = await fetchPopularProducts(20);
     setIsHome(true);
@@ -174,29 +174,17 @@ const handleSearch = async (
   }, [location.search]);
 
   // --- ГЛАВНАЯ ФИЛЬТРАЦИЯ ---
-const filteredProducts = useMemo(() => {
-  return products.filter(p => {
-    if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
-    if (brandFilter) {
-      const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
-      if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
-    }
-    if (genderFilter && p.gender !== genderFilter) return false;
-    // --- Фильтрация по категории/подкатегории
-    if (categoryFilter) {
-      // submenuList — это массив подкатегорий, если выбранная фильтрация — это категория
-      const isSub = submenuList.includes(categoryFilter);
-      if (isSub) {
-        // Если выбрана подкатегория
-        return p.subcategory_key === categoryFilter;
-      } else {
-        // Если выбрана основная категория
-        return p.category_key === categoryFilter;
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
+      if (brandFilter) {
+        const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+        if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
-    }
-    return true;
-  });
-}, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
+      if (genderFilter && p.gender !== genderFilter) return false;
+      return true;
+    });
+  }, [products, sizeFilter, brandFilter, genderFilter]);
 
   // --- Фильтры для FilterBar ---
   const allSizes = useMemo(() =>
