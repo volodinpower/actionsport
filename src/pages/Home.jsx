@@ -130,12 +130,13 @@ export default function Home() {
     const newTrail = breadcrumbs.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
     if (lastCrumb.query === "") {
-      await load("", [{ label: "Main", query: "", exclude: "" }]);
+      await load("", [{ label: "Main", query: "", exclude: "" }], "", brandFilter);
       setCategoryFilter("");
     } else {
-      await load(lastCrumb.query, newTrail);
+      await load(lastCrumb.query, newTrail, "", brandFilter);
       setCategoryFilter("");
     }
+    setBreadcrumbs(newTrail); // Важно обновить breadcrumbs!
   };
 
   // --- Инициализация (по location/search) ---
@@ -164,11 +165,11 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
-  // --- Отслеживание изменений фильтра категорий — вызывает загрузку товаров ---
+  // --- Отслеживание изменений фильтра категорий и бренда — вызывает загрузку товаров ---
   useEffect(() => {
     async function updateProducts() {
-      if (!categoryFilter) {
-        await load();
+      if (!categoryFilter && !brandFilter) {
+        await load("", breadcrumbs, "", brandFilter);
         return;
       }
 
@@ -190,8 +191,7 @@ export default function Home() {
         }
       }
 
-      // Заменяем breadcrumbs на статичный массив для стабилизации ссылки
-      await load("", [{ label: "Main", query: "", exclude: "" }], "", brandFilter, categoryKey, subcategoryKey);
+      await load("", breadcrumbs, "", brandFilter, categoryKey, subcategoryKey);
     }
 
     updateProducts().catch(console.error);
@@ -287,7 +287,7 @@ export default function Home() {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    // не трогаем categoryFilter, чтобы фильтр категории всегда оставался видимым
+    // Не сбрасываем categoryFilter, чтобы фильтр категории не исчезал
   };
 
   // --- Переход на страницу товара ---
