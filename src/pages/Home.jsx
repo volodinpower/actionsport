@@ -63,31 +63,35 @@ export default function Home() {
   }, [categories, categoryFilter]);
 
   // --- Загрузка товаров ---
-  const load = async (
-    query = "",
-    bc = [{ label: "Main", query: "", exclude: "" }],
-    excludeArg = "",
-    brandFilterArg = ""
-  ) => {
-    const lastExclude = bc.length > 0 ? bc[bc.length - 1].exclude || excludeArg : excludeArg;
-    const lastBrand = bc.length > 0 ? bc[bc.length - 1].brand || brandFilterArg : brandFilterArg;
-    let productsList = [];
-    let limit = 150;
-    if (!query && !lastBrand) {
-      productsList = await fetchPopularProducts(20);
-      setIsHome(true);
-      setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
-    } else {
-      productsList = await fetchProducts(query, limit, 0, lastExclude, lastBrand);
-      setIsHome(false);
-      setBreadcrumbs(bc);
-    }
-    setProducts(productsList);
-    setSort("");
-    setSizeFilter("");
-    setBrandFilter(lastBrand || "");
-    setGenderFilter("");
-  };
+const load = async (
+  query = "",
+  bc = [{ label: "Main", query: "", exclude: "" }],
+  excludeArg = "",
+  brandFilterArg = "",
+  categoryKey = "",
+  subcategoryKey = ""
+) => {
+  const lastExclude = bc.length > 0 ? bc[bc.length - 1].exclude || excludeArg : excludeArg;
+  const lastBrand = bc.length > 0 ? bc[bc.length - 1].brand || brandFilterArg : brandFilterArg;
+  let productsList = [];
+  let limit = 150;
+  if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
+    productsList = await fetchPopularProducts(20);
+    setIsHome(true);
+    setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
+  } else {
+    productsList = await fetchProducts(
+      query, limit, 0, lastExclude, lastBrand, "asc", categoryKey, subcategoryKey
+    );
+    setIsHome(false);
+    setBreadcrumbs(bc);
+  }
+  setProducts(productsList);
+  setSort("");
+  setSizeFilter("");
+  setBrandFilter(lastBrand || "");
+  setGenderFilter("");
+};
 
   // --- Клик по меню/подменю ---
 const handleSearch = async (
@@ -98,17 +102,24 @@ const handleSearch = async (
   category = "",
   subcategory = ""
 ) => {
-  // Если это просто категория (меню), query должен быть ПУСТОЙ строкой!
-  let realQuery = "";
+  // Всегда работаем через category/subcategory, query теперь почти не нужен
+  let categoryKey = "";
+  let subcategoryKey = "";
   if (subcategory) {
-    realQuery = ""; // всегда пустой, фильтрация на фронте
+    subcategoryKey = subcategory;
+    // ищем родителя
+    const parent = categories.find(c =>
+      (c.subcategories || []).some(
+        sub =>
+          (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === subcategory
+      )
+    );
+    if (parent) categoryKey = parent.category_key;
   } else if (category) {
-    realQuery = ""; // всегда пустой
-  } else if (query) {
-    realQuery = query;
+    categoryKey = category;
   }
 
-  await load(realQuery, breadcrumbTrail || breadcrumbs, excludeArg, filterBrand);
+  await load("", breadcrumbTrail || breadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey);
 
   if (subcategory) {
     setCategoryFilter(subcategory);
@@ -120,7 +131,6 @@ const handleSearch = async (
   setBrandFilter(filterBrand || "");
   setForceOpenCategory(!!subcategory);
 };
-
 
   // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = async (idx) => {
