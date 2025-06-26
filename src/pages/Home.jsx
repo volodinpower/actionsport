@@ -37,30 +37,26 @@ export default function Home() {
 
   // --- submenuList для FilterBar (важно: вычислять по текущему categoryFilter!) ---
   const submenuList = useMemo(() => {
-    // 1. Если выбранная фильтрация — это категория, вернём все её подкатегории
-    let cat = categories.find(c => c.category_key === categoryFilter);
-    if (cat) {
-      return cat.subcategories.map(sub =>
-        typeof sub === "string"
-          ? sub
-          : sub.subcategory_key || sub.label
-      );
+  // Фильтруем товары по другим фильтрам (brandFilter, sizeFilter, genderFilter)
+  const filteredForCategory = products.filter(p => {
+    if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
+    if (brandFilter) {
+      const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+      if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
     }
-    // 2. Если выбранная фильтрация — это подкатегория, находим родителя и его подкатегории
-    for (let c of categories) {
-      if ((c.subcategories || []).some(sub =>
-        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
-      )) {
-        return c.subcategories.map(sub =>
-          typeof sub === "string"
-            ? sub
-            : sub.subcategory_key || sub.label
-        );
-      }
-    }
-    // 3. Если ничего не найдено, возвращаем []
-    return [];
-  }, [categories, categoryFilter]);
+    if (genderFilter && p.gender !== genderFilter) return false;
+    return true;
+  });
+
+  // Собираем уникальные подкатегории среди отфильтрованных товаров
+  const subs = new Set();
+  filteredForCategory.forEach(p => {
+    if (p.subcategory_key) subs.add(p.subcategory_key);
+  });
+
+  // Вернём массив подкатегорий, которые есть среди товаров
+  return Array.from(subs);
+}, [products, sizeFilter, brandFilter, genderFilter]);
 
   // --- Загрузка товаров ---
 const load = async (
@@ -102,7 +98,6 @@ const handleSearch = async (
   category = "",
   subcategory = ""
 ) => {
-  console.log("HANDLE SEARCH", { query, breadcrumbTrail, excludeArg, filterBrand, category, subcategory });
   // Всегда работаем через category/subcategory, query теперь почти не нужен
   let categoryKey = "";
   let subcategoryKey = "";
@@ -259,7 +254,6 @@ const handleSearch = async (
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    setCategoryFilter("");
   };
 
   const handleCardClick = (productId) => {

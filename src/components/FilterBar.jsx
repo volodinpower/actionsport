@@ -29,11 +29,10 @@ export default function FilterBar({
     }
   }, [forceOpenCategory, setForceOpenCategory]);
 
-  // submenuList теперь просто массив subcategory_key
-  const categoryOptions = submenuList.map(sub => ({
-    value: sub,
-    label: sub // если нужно — тут можно преобразовать в красивое имя
-  }));
+  const categoryOptions = submenuList.length > 0
+    ? submenuList.map(sub => ({ value: sub, label: sub }))
+    : [{ value: "", label: "All categories" }];
+
   const selectedCategory = categoryOptions.find(opt => opt.value === categoryFilter) || null;
 
   const handleBrandChange = (opt) => {
@@ -48,16 +47,15 @@ export default function FilterBar({
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
       {showCategory && categoryOptions.length > 0 && (
-        <Select
-          ref={categorySelectRef}
-          classNamePrefix="react-select"
-          placeholder="Category"
-          isClearable={false}
-          value={selectedCategory}
-          onChange={opt => setCategoryFilter(opt ? opt.value : "")}
-          options={categoryOptions}
-          menuPlacement="auto"
-        />
+      <Select
+        classNamePrefix="react-select"
+        placeholder="Category"
+        isClearable={false}
+        value={selectedCategory}
+        onChange={opt => setCategoryFilter(opt ? opt.value : "")}
+        options={categoryOptions}
+        menuPlacement="auto"
+      />
       )}
       <Select
         classNamePrefix="react-select"
