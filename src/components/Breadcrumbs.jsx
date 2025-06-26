@@ -1,7 +1,8 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import "./Breadcrumbs.css";
 
-export default function Breadcrumbs({ items, onBreadcrumbClick }) {
+function BreadcrumbsComponent({ items, onBreadcrumbClick }) {
   if (!items || items.length < 2) return null;
 
   return (
@@ -31,3 +32,5 @@ export default function Breadcrumbs({ items, onBreadcrumbClick }) {
     </nav>
   );
 }
+
+export default React.memo(BreadcrumbsComponent);

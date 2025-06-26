@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
 import { fetchProducts, fetchPopularProducts, fetchCategories } from "../api";
@@ -18,7 +19,8 @@ export default function Home() {
 
   const [categories, setCategories] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
-  const breadcrumbsRef = useRef(breadcrumbs); // ref для сравнения и предотвращения лишних обновлений
+  const breadcrumbsRef = useRef(breadcrumbs);
+
   const [products, setProducts] = useState([]);
   const [isHome, setIsHome] = useState(true);
 
@@ -29,7 +31,7 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // Обновляем ref, когда меняются breadcrumbs
+  // Синхронизация ref с состоянием breadcrumbs для сравнения
   useEffect(() => {
     breadcrumbsRef.current = breadcrumbs;
   }, [breadcrumbs]);
@@ -41,7 +43,7 @@ export default function Home() {
       .catch(() => setCategories([]));
   }, []);
 
-  // --- submenuList для FilterBar ---
+  // --- submenuList для FilterBar (подкатегории для выбранной категории) ---
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
     if (cat) {
@@ -61,10 +63,10 @@ export default function Home() {
     return [];
   }, [categories, categoryFilter]);
 
-  // --- Загрузка товаров и обновление breadcrumbs с защитой от лишних обновлений ---
+  // --- Загрузка товаров ---
   const load = async (
     query = "",
-    bc = breadcrumbsRef.current,
+    bc = [{ label: "Main", query: "", exclude: "" }],
     excludeArg = "",
     brandFilterArg = "",
     categoryKey = "",
@@ -78,17 +80,20 @@ export default function Home() {
     if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
       productsList = await fetchPopularProducts(20);
       setIsHome(true);
-      // Обновляем breadcrumbs только если изменились
-      setBreadcrumbs(prev => {
-        const def = [{ label: "Main", query: "", exclude: "" }];
-        return JSON.stringify(prev) !== JSON.stringify(def) ? def : prev;
-      });
+
+      // Устанавливаем breadcrumbs только если изменились
+      if (JSON.stringify(breadcrumbsRef.current) !== JSON.stringify([{ label: "Main", query: "", exclude: "" }])) {
+        setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
+      }
     } else {
       productsList = await fetchProducts(
         query, limit, 0, lastExclude, lastBrand, "asc", categoryKey, subcategoryKey
       );
       setIsHome(false);
-      setBreadcrumbs(prev => (JSON.stringify(prev) !== JSON.stringify(bc) ? bc : prev));
+
+      if (JSON.stringify(breadcrumbsRef.current) !== JSON.stringify(bc)) {
+        setBreadcrumbs(bc);
+      }
     }
 
     setProducts(productsList);
@@ -140,10 +145,10 @@ export default function Home() {
     const newTrail = breadcrumbsRef.current.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
     if (lastCrumb.query === "") {
-      await load("", newTrail, "", brandFilter);
+      await load("", [{ label: "Main", query: "", exclude: "" }]);
       setCategoryFilter("");
     } else {
-      await load(lastCrumb.query, newTrail, "", brandFilter);
+      await load(lastCrumb.query, newTrail);
       setCategoryFilter("");
     }
   };
@@ -174,39 +179,7 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
-  // --- Отслеживание изменений фильтра категорий ---
-  useEffect(() => {
-    async function updateProducts() {
-      if (!categoryFilter) {
-        await load();
-        return;
-      }
-
-      let categoryKey = "";
-      let subcategoryKey = "";
-
-      const cat = categories.find(c => c.category_key === categoryFilter);
-      if (cat) {
-        categoryKey = categoryFilter;
-      } else {
-        for (const c of categories) {
-          if ((c.subcategories || []).some(sub =>
-            (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
-          )) {
-            categoryKey = c.category_key;
-            subcategoryKey = categoryFilter;
-            break;
-          }
-        }
-      }
-
-      await load("", breadcrumbsRef.current, "", brandFilter, categoryKey, subcategoryKey);
-    }
-
-    updateProducts().catch(console.error);
-  }, [categoryFilter, categories, brandFilter]);
-
-  // --- Фильтрация по size, brand, gender на клиенте ---
+  // --- Фильтрация на клиенте по size, brand, gender ---
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
@@ -219,7 +192,7 @@ export default function Home() {
     });
   }, [products, sizeFilter, brandFilter, genderFilter]);
 
-  // --- Подготовка опций для фильтров ---
+  // --- Подготовка опций фильтров для FilterBar ---
   const allSizes = useMemo(() =>
     Array.from(
       new Set(filteredProducts.flatMap(p => Array.isArray(p.sizes) ? p.sizes : []).filter(Boolean))
@@ -255,7 +228,7 @@ export default function Home() {
     return options;
   }, [filteredProducts, genderFilter]);
 
-  // --- Сортировка по цене, популярности, скидке ---
+  // --- Вычисление цены для сортировки ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -272,6 +245,7 @@ export default function Home() {
     return discount > 0 ? discount : price;
   };
 
+  // --- Итоговый список отображаемых товаров ---
   const displayedProducts = useMemo(() => {
     let arr = [...filteredProducts];
     if (sort === "asc") {
@@ -295,7 +269,7 @@ export default function Home() {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    // НЕ сбрасываем categoryFilter, чтобы фильтр категорий оставался видимым
+    // НЕ сбрасываем categoryFilter, чтобы фильтр категорий всегда показывался
   };
 
   // --- Переход на страницу товара ---
@@ -312,24 +286,27 @@ export default function Home() {
     });
   };
 
+  // Мемоизация breadcrumbs для передачи в компонент
+  const memoizedBreadcrumbs = useMemo(() => breadcrumbs, [JSON.stringify(breadcrumbs)]);
+
   return (
     <>
       <Header
         onSearch={handleSearch}
-        breadcrumbs={breadcrumbs}
+        breadcrumbs={memoizedBreadcrumbs}
         isHome={isHome}
         setCategoryFilter={setCategoryFilter}
         setForceOpenCategory={setForceOpenCategory}
       />
 
-      {!isHome && breadcrumbs.length > 1 && (
-        <Breadcrumbs items={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />
+      {!isHome && memoizedBreadcrumbs.length > 1 && (
+        <Breadcrumbs items={memoizedBreadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />
       )}
 
       {isHome && <Banner />}
 
       {!isHome && (
-        <>
+        <div>
           <FilterBar
             allSizes={allSizes}
             allBrands={allBrands}
@@ -349,8 +326,10 @@ export default function Home() {
             forceOpenCategory={forceOpenCategory}
             setForceOpenCategory={setForceOpenCategory}
           />
-          <SortControl sort={sort} setSort={setSort} />
-        </>
+          <div>
+            <SortControl sort={sort} setSort={setSort} />
+          </div>
+        </div>
       )}
 
       <div className="mx-auto px-2 pb-12">
@@ -370,7 +349,6 @@ export default function Home() {
           )}
         </div>
       </div>
-
       <Footer />
     </>
   );
