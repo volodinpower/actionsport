@@ -35,102 +35,95 @@ export default function Home() {
       .catch(() => setCategories([]));
   }, []);
 
-  // --- submenuList для FilterBar (важно: вычислять по текущему categoryFilter!) ---
+  // --- submenuList для FilterBar (подкатегории для выбранной категории) ---
   const submenuList = useMemo(() => {
-    // 1. Если выбранная фильтрация — это категория, вернём все её подкатегории
     let cat = categories.find(c => c.category_key === categoryFilter);
     if (cat) {
       return cat.subcategories.map(sub =>
-        typeof sub === "string"
-          ? sub
-          : sub.subcategory_key || sub.label
+        typeof sub === "string" ? sub : sub.subcategory_key || sub.label
       );
     }
-    // 2. Если выбранная фильтрация — это подкатегория, находим родителя и его подкатегории
     for (let c of categories) {
       if ((c.subcategories || []).some(sub =>
         (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
       )) {
         return c.subcategories.map(sub =>
-          typeof sub === "string"
-            ? sub
-            : sub.subcategory_key || sub.label
+          typeof sub === "string" ? sub : sub.subcategory_key || sub.label
         );
       }
     }
-    // 3. Если ничего не найдено, возвращаем []
     return [];
   }, [categories, categoryFilter]);
 
   // --- Загрузка товаров ---
-const load = async (
-  query = "",
-  bc = [{ label: "Main", query: "", exclude: "" }],
-  excludeArg = "",
-  brandFilterArg = "",
-  categoryKey = "",
-  subcategoryKey = ""
-) => {
-  const lastExclude = bc.length > 0 ? bc[bc.length - 1].exclude || excludeArg : excludeArg;
-  const lastBrand = bc.length > 0 ? bc[bc.length - 1].brand || brandFilterArg : brandFilterArg;
-  let productsList = [];
-  let limit = 150;
-  if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
-    productsList = await fetchPopularProducts(20);
-    setIsHome(true);
-    setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
-  } else {
-    productsList = await fetchProducts(
-      query, limit, 0, lastExclude, lastBrand, "asc", categoryKey, subcategoryKey
-    );
-    setIsHome(false);
-    setBreadcrumbs(bc);
-  }
-  setProducts(productsList);
-  setSort("");
-  setSizeFilter("");
-  setBrandFilter(lastBrand || "");
-  setGenderFilter("");
-};
+  const load = async (
+    query = "",
+    bc = [{ label: "Main", query: "", exclude: "" }],
+    excludeArg = "",
+    brandFilterArg = "",
+    categoryKey = "",
+    subcategoryKey = ""
+  ) => {
+    const lastExclude = bc.length > 0 ? bc[bc.length - 1].exclude || excludeArg : excludeArg;
+    const lastBrand = bc.length > 0 ? bc[bc.length - 1].brand || brandFilterArg : brandFilterArg;
+    let productsList = [];
+    let limit = 150;
+
+    if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
+      productsList = await fetchPopularProducts(20);
+      setIsHome(true);
+      setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
+    } else {
+      productsList = await fetchProducts(
+        query, limit, 0, lastExclude, lastBrand, "asc", categoryKey, subcategoryKey
+      );
+      setIsHome(false);
+      setBreadcrumbs(bc);
+    }
+
+    setProducts(productsList);
+    setSort("");
+    setSizeFilter("");
+    setBrandFilter(lastBrand || "");
+    setGenderFilter("");
+  };
 
   // --- Клик по меню/подменю ---
-const handleSearch = async (
-  query,
-  breadcrumbTrail,
-  excludeArg = "",
-  filterBrand = "",
-  category = "",
-  subcategory = ""
-) => {
-  // Всегда работаем через category/subcategory, query теперь почти не нужен
-  let categoryKey = "";
-  let subcategoryKey = "";
-  if (subcategory) {
-    subcategoryKey = subcategory;
-    // ищем родителя
-    const parent = categories.find(c =>
-      (c.subcategories || []).some(
-        sub =>
-          (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === subcategory
-      )
-    );
-    if (parent) categoryKey = parent.category_key;
-  } else if (category) {
-    categoryKey = category;
-  }
+  const handleSearch = async (
+    query,
+    breadcrumbTrail,
+    excludeArg = "",
+    filterBrand = "",
+    category = "",
+    subcategory = ""
+  ) => {
+    let categoryKey = "";
+    let subcategoryKey = "";
+    if (subcategory) {
+      subcategoryKey = subcategory;
+      const parent = categories.find(c =>
+        (c.subcategories || []).some(
+          sub =>
+            (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === subcategory
+        )
+      );
+      if (parent) categoryKey = parent.category_key;
+    } else if (category) {
+      categoryKey = category;
+    }
 
-  await load("", breadcrumbTrail || breadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey);
+    await load("", breadcrumbTrail || breadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey);
 
-  if (subcategory) {
-    setCategoryFilter(subcategory);
-  } else if (category) {
-    setCategoryFilter(category);
-  } else {
-    setCategoryFilter("");
-  }
-  setBrandFilter(filterBrand || "");
-  setForceOpenCategory(!!subcategory);
-};
+    if (subcategory) {
+      setCategoryFilter(subcategory);
+    } else if (category) {
+      setCategoryFilter(category);
+    } else {
+      setCategoryFilter("");
+    }
+    setBrandFilter(filterBrand || "");
+    setForceOpenCategory(!!subcategory);
+  };
 
   // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = async (idx) => {
@@ -171,7 +164,39 @@ const handleSearch = async (
     // eslint-disable-next-line
   }, [location.search]);
 
-  // --- ГЛАВНАЯ ФИЛЬТРАЦИЯ ---
+  // --- Отслеживание изменений фильтра категорий — вызывает загрузку товаров ---
+  useEffect(() => {
+    async function updateProducts() {
+      if (!categoryFilter) {
+        await load();
+        return;
+      }
+
+      let categoryKey = "";
+      let subcategoryKey = "";
+
+      const cat = categories.find(c => c.category_key === categoryFilter);
+      if (cat) {
+        categoryKey = categoryFilter;
+      } else {
+        for (const c of categories) {
+          if ((c.subcategories || []).some(sub =>
+            (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
+          )) {
+            categoryKey = c.category_key;
+            subcategoryKey = categoryFilter;
+            break;
+          }
+        }
+      }
+
+      await load("", breadcrumbs, "", brandFilter, categoryKey, subcategoryKey);
+    }
+
+    updateProducts().catch(console.error);
+  }, [categoryFilter, categories, breadcrumbs, brandFilter]);
+
+  // --- Фильтрация на клиенте по size, brand, gender ---
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
@@ -184,7 +209,7 @@ const handleSearch = async (
     });
   }, [products, sizeFilter, brandFilter, genderFilter]);
 
-  // --- Фильтры для FilterBar ---
+  // --- Подготовка опций фильтров для FilterBar ---
   const allSizes = useMemo(() =>
     Array.from(
       new Set(filteredProducts.flatMap(p => Array.isArray(p.sizes) ? p.sizes : []).filter(Boolean))
@@ -220,6 +245,7 @@ const handleSearch = async (
     return options;
   }, [filteredProducts, genderFilter]);
 
+  // --- Вычисление цены для сортировки ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -236,6 +262,7 @@ const handleSearch = async (
     return discount > 0 ? discount : price;
   };
 
+  // --- Итоговый список отображаемых товаров ---
   const displayedProducts = useMemo(() => {
     let arr = [...filteredProducts];
     if (sort === "asc") {
@@ -254,12 +281,15 @@ const handleSearch = async (
     return arr;
   }, [filteredProducts, sort]);
 
+  // --- Сброс фильтров ---
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
+    // Не сбрасываем categoryFilter, чтобы фильтр категории не исчезал
   };
 
+  // --- Переход на страницу товара ---
   const handleCardClick = (productId) => {
     const lastCrumb = breadcrumbs[breadcrumbs.length - 1] || { query: "", exclude: "" };
     const searchParam = lastCrumb.query ? `?search=${encodeURIComponent(lastCrumb.query)}` : "";
