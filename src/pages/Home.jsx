@@ -301,6 +301,20 @@ useEffect(() => {
     });
   };
 
+  useEffect(() => {
+  const capsProducts = products.filter(p =>
+    typeof p.subcategory_key === "string" &&
+    p.subcategory_key.toLowerCase().includes("cap")
+  );
+  if (capsProducts.length > 0) {
+    console.log("ВСЕ cap* товары:", capsProducts.map(p => ({
+      id: p.id,
+      name: p.name,
+      subcategory_key: p.subcategory_key
+    })));
+  }
+}, [products]);
+
   return (
     <>
       <Header
