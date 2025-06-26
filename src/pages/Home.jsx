@@ -75,7 +75,6 @@ const load = async (
   const lastBrand = bc.length > 0 ? bc[bc.length - 1].brand || brandFilterArg : brandFilterArg;
   let productsList = [];
   let limit = 150;
-  console.log("LOAD", { query, limit, excludeArg, brandFilterArg, categoryKey, subcategoryKey })
   if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
     productsList = await fetchPopularProducts(20);
     setIsHome(true);
@@ -120,7 +119,7 @@ const handleSearch = async (
   } else if (category) {
     categoryKey = category;
   }
-  console.log('categoryKey:', categoryKey, 'subcategoryKey:', subcategoryKey);
+
   await load("", breadcrumbTrail || breadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey);
 
   if (subcategory) {
@@ -256,37 +255,12 @@ const handleSearch = async (
     return arr;
   }, [filteredProducts, sort]);
 
-const clearFilters = () => {
-  setSizeFilter("");
-  setBrandFilter("");
-  setGenderFilter("");
-  // setCategoryFilter("");  // <--- Не трогай!
-};
-
-useEffect(() => {
-  if (categoryFilter) {
-    let parent = categories.find(c =>
-      (c.subcategories || []).some(sub =>
-        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
-      )
-    );
-    if (parent) {
-      handleSearch(
-        "", // query
-        [
-          { label: "Main", query: "", exclude: "" },
-          { label: parent.category_key, query: parent.category_key },
-          { label: categoryFilter, query: categoryFilter }
-        ],
-        "",
-        "",
-        parent.category_key,
-        categoryFilter
-      );
-    }
-  }
-  // eslint-disable-next-line
-}, [categoryFilter]);
+  const clearFilters = () => {
+    setSizeFilter("");
+    setBrandFilter("");
+    setGenderFilter("");
+    setCategoryFilter("");
+  };
 
   const handleCardClick = (productId) => {
     const lastCrumb = breadcrumbs[breadcrumbs.length - 1] || { query: "", exclude: "" };
@@ -301,6 +275,31 @@ useEffect(() => {
     });
   };
 
+  // --- DEBUG (всегда под товарами) ---
+  // Можно убрать после успешной отладки
+  const debugBlock = (
+    <div style={{
+      background: "#222",
+      color: "#fff",
+      padding: "8px",
+      marginBottom: 12,
+      borderRadius: 6,
+      fontSize: 14
+    }}>
+      <div>categoryFilter: {categoryFilter}</div>
+      <div>submenuList: {JSON.stringify(submenuList)}</div>
+      <div>products: {products.length}</div>
+      <div>filteredProducts: {filteredProducts.length}</div>
+      {products[0] && (
+        <details>
+          <summary>Пример товара</summary>
+          <pre style={{ color: "#fff", fontSize: 13 }}>
+            {JSON.stringify(products[0], null, 2)}
+          </pre>
+        </details>
+      )}
+    </div>
+  );
   useEffect(() => {
   const capsProducts = products.filter(p =>
     typeof p.subcategory_key === "string" &&
@@ -359,6 +358,7 @@ useEffect(() => {
       )}
 
       <div className="mx-auto px-2 pb-12">
+        {debugBlock}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
           {displayedProducts.length > 0 ? (
             displayedProducts.map(product => (
