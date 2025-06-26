@@ -102,6 +102,7 @@ const handleSearch = async (
   category = "",
   subcategory = ""
 ) => {
+  console.log("HANDLE SEARCH", { query, breadcrumbTrail, excludeArg, filterBrand, category, subcategory });
   // Всегда работаем через category/subcategory, query теперь почти не нужен
   let categoryKey = "";
   let subcategoryKey = "";
