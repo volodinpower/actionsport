@@ -58,7 +58,7 @@ export default function Home() {
   // --- Загрузка товаров ---
   const load = async (
     query = "",
-    bc = [{ label: "Main", query: "", exclude: "" }],
+    bc = breadcrumbs, // важное исправление — по умолчанию используем текущее состояние breadcrumbs
     excludeArg = "",
     brandFilterArg = "",
     categoryKey = "",
@@ -72,13 +72,18 @@ export default function Home() {
     if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
       productsList = await fetchPopularProducts(20);
       setIsHome(true);
-      setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
+      // Обновляем breadcrumbs только если отличаются
+      setBreadcrumbs(prev => {
+        const def = [{ label: "Main", query: "", exclude: "" }];
+        return JSON.stringify(prev) !== JSON.stringify(def) ? def : prev;
+      });
     } else {
       productsList = await fetchProducts(
         query, limit, 0, lastExclude, lastBrand, "asc", categoryKey, subcategoryKey
       );
       setIsHome(false);
-      setBreadcrumbs(bc);
+      // Аналогично: обновляем breadcrumbs если отличаются
+      setBreadcrumbs(prev => (JSON.stringify(prev) !== JSON.stringify(bc) ? bc : prev));
     }
 
     setProducts(productsList);
@@ -128,15 +133,15 @@ export default function Home() {
   // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
+    setBreadcrumbs(newTrail); // сначала обновляем состояние!
     const lastCrumb = newTrail[newTrail.length - 1];
     if (lastCrumb.query === "") {
-      await load("", [{ label: "Main", query: "", exclude: "" }], "", brandFilter);
+      await load("", newTrail, "", brandFilter);
       setCategoryFilter("");
     } else {
       await load(lastCrumb.query, newTrail, "", brandFilter);
       setCategoryFilter("");
     }
-    setBreadcrumbs(newTrail); // Важно обновить breadcrumbs!
   };
 
   // --- Инициализация (по location/search) ---
@@ -152,24 +157,21 @@ export default function Home() {
     if (urlSearch) {
       load(
         urlSearch,
-        [
-          { label: "Main", query: "", exclude: "" },
-          { label: urlSearch, query: urlSearch, exclude: "" }
-        ]
+        breadcrumbs, // передаем текущее состояние breadcrumbs, чтобы не сбрасывать
       );
       setCategoryFilter("");
     } else {
-      load();
+      load("", breadcrumbs); // не сбрасывать breadcrumbs
       setCategoryFilter("");
     }
     // eslint-disable-next-line
   }, [location.search]);
 
-  // --- Отслеживание изменений фильтра категорий и бренда — вызывает загрузку товаров ---
+  // --- Отслеживание изменений фильтра категорий — вызывает загрузку товаров ---
   useEffect(() => {
     async function updateProducts() {
-      if (!categoryFilter && !brandFilter) {
-        await load("", breadcrumbs, "", brandFilter);
+      if (!categoryFilter) {
+        await load();
         return;
       }
 
@@ -195,7 +197,7 @@ export default function Home() {
     }
 
     updateProducts().catch(console.error);
-  }, [categoryFilter, brandFilter, categories]);
+  }, [categoryFilter, categories, breadcrumbs, brandFilter]);
 
   // --- Фильтрация на клиенте по size, brand, gender ---
   const filteredProducts = useMemo(() => {
