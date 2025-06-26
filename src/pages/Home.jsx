@@ -180,20 +180,9 @@ const handleSearch = async (
         if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
       }
       if (genderFilter && p.gender !== genderFilter) return false;
-      // --- Самое важное:
-      if (categoryFilter) {
-        // Если выбрана подкатегория из submenuList — фильтруем по subcategory_key
-        // Если выбрана категория (основное меню) — фильтруем по category_key
-        const isSub = submenuList.includes(categoryFilter);
-        if (isSub) {
-          return p.subcategory_key === categoryFilter;
-        } else {
-          return p.category_key === categoryFilter;
-        }
-      }
       return true;
     });
-  }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter, submenuList]);
+  }, [products, sizeFilter, brandFilter, genderFilter]);
 
   // --- Фильтры для FilterBar ---
   const allSizes = useMemo(() =>
