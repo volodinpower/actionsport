@@ -27,7 +27,19 @@ export async function syncImagesForGroup(productId) {
 }
 
 // --- Получить список товаров с фильтрацией (поиск, лимит, смещение, фильтр по отсутствию картинок)
-export async function fetchProducts(search = "", limit = 30, offset = 0, exclude = "", brand = "", sort = "asc") {
+export async function fetchProducts(
+  search = "",
+  limit = 30,
+  offset = 0,
+  exclude = "",
+  brand = "",
+  sort = "asc",
+  category_key = "",
+  subcategory_key = ""
+) {
+  console.log("fetchProducts args:", {
+  search, limit, offset, exclude, brand, sort, category_key, subcategory_key
+  });
   const params = new URLSearchParams();
   if (search) params.append("search", search);
   params.append("limit", limit);
@@ -35,6 +47,9 @@ export async function fetchProducts(search = "", limit = 30, offset = 0, exclude
   if (exclude) params.append("exclude", exclude);
   if (brand) params.append("brand", brand);
   if (sort) params.append("sort", sort);
+  if (category_key) params.append("category_key", category_key);
+  if (subcategory_key) params.append("subcategory_key", subcategory_key);
+
   const res = await fetch(apiUrl(`/products?${params}`));
   if (!res.ok) throw new Error(await res.text());
   return await res.json();
