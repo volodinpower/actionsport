@@ -190,11 +190,12 @@ export default function Home() {
         }
       }
 
-      await load("", breadcrumbs, "", brandFilter, categoryKey, subcategoryKey);
+      // Заменяем breadcrumbs на статичный массив для стабилизации ссылки
+      await load("", [{ label: "Main", query: "", exclude: "" }], "", brandFilter, categoryKey, subcategoryKey);
     }
 
     updateProducts().catch(console.error);
-  }, [categoryFilter, categories, breadcrumbs, brandFilter]);
+  }, [categoryFilter, brandFilter, categories]);
 
   // --- Фильтрация на клиенте по size, brand, gender ---
   const filteredProducts = useMemo(() => {
@@ -286,7 +287,7 @@ export default function Home() {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    // Не сбрасываем categoryFilter, чтобы фильтр категории не исчезал
+    // не трогаем categoryFilter, чтобы фильтр категории всегда оставался видимым
   };
 
   // --- Переход на страницу товара ---
