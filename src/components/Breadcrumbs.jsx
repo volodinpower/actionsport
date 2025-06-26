@@ -1,9 +1,9 @@
-import React from "react";
+// Breadcrumbs.jsx
 import { Link } from "react-router-dom";
 import "./Breadcrumbs.css";
 
-function BreadcrumbsComponent({ items, onBreadcrumbClick }) {
-  if (!items || items.length < 2) return null;
+export default function Breadcrumbs({ items, onBreadcrumbClick }) {
+  if (!items || items.length === 0) return null; // показываем, если есть хоть один элемент
 
   return (
     <nav className="breadcrumbs-nav" aria-label="Breadcrumb">
@@ -13,7 +13,7 @@ function BreadcrumbsComponent({ items, onBreadcrumbClick }) {
             <Link
               to="#"
               className="breadcrumb-link"
-              onClick={e => {
+              onClick={(e) => {
                 e.preventDefault();
                 onBreadcrumbClick(idx);
               }}
@@ -32,5 +32,3 @@ function BreadcrumbsComponent({ items, onBreadcrumbClick }) {
     </nav>
   );
 }
-
-export default React.memo(BreadcrumbsComponent);
