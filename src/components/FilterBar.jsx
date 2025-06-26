@@ -47,15 +47,16 @@ export default function FilterBar({
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
       {showCategory && categoryOptions.length > 0 && (
-      <Select
-        classNamePrefix="react-select"
-        placeholder="Category"
-        isClearable={false}
-        value={selectedCategory}
-        onChange={opt => setCategoryFilter(opt ? opt.value : "")}
-        options={categoryOptions}
-        menuPlacement="auto"
-      />
+        <Select
+          classNamePrefix="react-select"
+          placeholder="Category"
+          isClearable={false}
+          value={selectedCategory}
+          onChange={opt => setCategoryFilter(opt ? opt.value : "")}
+          options={categoryOptions}
+          menuPlacement="auto"
+          ref={categorySelectRef}
+        />
       )}
       <Select
         classNamePrefix="react-select"
