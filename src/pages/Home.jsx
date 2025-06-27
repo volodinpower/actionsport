@@ -102,6 +102,8 @@ export default function Home() {
   ) => {
     let categoryKey = "";
     let subcategoryKey = "";
+    let newBreadcrumbs = [];
+
     if (subcategory) {
       subcategoryKey = subcategory;
       const parent = categories.find(c =>
@@ -110,12 +112,34 @@ export default function Home() {
             (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === subcategory
         )
       );
-      if (parent) categoryKey = parent.category_key;
+      if (parent) {
+        categoryKey = parent.category_key;
+        newBreadcrumbs = [
+          { label: "Main", query: "", exclude: "" },
+          { label: parent.label || parent.name, query: parent.category_key }
+        ];
+      } else {
+        newBreadcrumbs = [
+          { label: "Main", query: "", exclude: "" }
+        ];
+      }
     } else if (category) {
       categoryKey = category;
+      const cat = categories.find(c => c.category_key === category);
+      newBreadcrumbs = [
+        { label: "Main", query: "", exclude: "" },
+        { label: cat ? cat.label || cat.name : category, query: category }
+      ];
+    } else if (query) {
+      newBreadcrumbs = [
+        { label: "Main", query: "", exclude: "" },
+        { label: query, query }
+      ];
+    } else {
+      newBreadcrumbs = [{ label: "Main", query: "", exclude: "" }];
     }
 
-    await load("", breadcrumbTrail || breadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey);
+    await load("", newBreadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey, true);
 
     if (subcategory) {
       setCategoryFilter(subcategory);
