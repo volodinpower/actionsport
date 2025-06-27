@@ -13,6 +13,10 @@ export default function AdminPanel() {
     if (!token) {
       navigate("/admin");
     }
+    // Фикс для body, чтобы не было сдвига
+    document.body.style.overflow = "auto";
+    document.body.style.paddingRight = "0px";
+    document.body.classList.remove("overflow-hidden");
   }, [navigate]);
 
   // Авто-logout при уходе со страницы/обновлении/закрытии вкладки
@@ -33,7 +37,17 @@ export default function AdminPanel() {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 1200, margin: "auto" }}>
+    <div
+      style={{
+        width: "100vw",
+        minHeight: "100vh",
+        margin: 0,
+        padding: 20,
+        overflow: "hidden",
+        background: "#fafbfc",
+        boxSizing: "border-box"
+      }}
+    >
       <nav style={{ marginBottom: 20, display: "flex", gap: 20 }}>
         <button
           onClick={() => setActiveTab("products")}
