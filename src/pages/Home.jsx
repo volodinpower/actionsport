@@ -346,29 +346,13 @@ export default function Home() {
     return arr;
   }, [filteredProducts, sort]);
 
-  // --- ВАЖНО! --- ВОТ ТУТ ВСЁ РАБОТАЕТ КОРРЕКТНО ДЛЯ SALE:
+  // --- Исправленный сброс фильтров: ---
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    if (categoryFilter === "sale") {
-      // Дополнительно подгружаем sale-запрос (и крошки)
-      load(
-        "",
-        [
-          { label: "Main", query: "", exclude: "" },
-          { label: "Sale", query: "sale" }
-        ],
-        "",
-        "",
-        "sale",
-        "",
-        true
-      );
-    }
-    // для остальных категорий фильтры сбрасываются локально
+    // НЕ вызываем load для sale или других категорий — всё фильтруется локально!
   };
-
 
   const handleCardClick = (productId) => {
     const lastCrumb = breadcrumbs[breadcrumbs.length - 1] || { query: "", exclude: "" };
