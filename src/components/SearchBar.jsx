@@ -26,7 +26,6 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
           setSearchResults(Array.isArray(data) ? data : []);
         } catch (err) {
           setSearchResults([]);
-          console.error("Search error:", err);
         }
         setLoading(false);
       } else {
@@ -37,15 +36,12 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
   }, [searchText]);
 
   const handleSearch = () => {
-    // ВАЖНО: пробрасываем поиск только как query (в label можно 'Main' или 'Главная')
     const trimmed = searchText.trim();
-    onSearch(
-      trimmed,
-      [{ label: "Main", query: trimmed, exclude: "" }],
-      ""
-    );
-    if (searchInputRef.current) searchInputRef.current.blur();
-    if (onClose) onClose();
+    if (trimmed) {
+      onSearch(trimmed);
+      if (searchInputRef.current) searchInputRef.current.blur();
+      if (onClose) onClose();
+    }
   };
 
   return (
@@ -87,7 +83,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
               onClick={() => {
                 setSearchText("");
                 setSearchResults([]);
-                onSearch("", [{ label: "Main", query: "", exclude: "" }], "");
+                onSearch(""); // очищает поиск
                 if (searchInputRef.current) searchInputRef.current.focus();
               }}
             >
@@ -108,12 +104,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
                     onClick={() => {
                       setSearchText(item.sitename);
                       setSearchResults([]);
-                      onSearch(
-                        "",
-                        [{ label: "Brand", query: "", brand: item.sitename }],
-                        "",
-                        item.sitename
-                      );
+                      onSearch(item.sitename);
                       if (onClose) onClose();
                     }}
                   >
