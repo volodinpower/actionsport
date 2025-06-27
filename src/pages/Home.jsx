@@ -92,7 +92,7 @@ export default function Home() {
     await load("", breadcrumbs, "", brandFilter, newCategory, "", false);
   };
 
-  const handleSearch = async (
+    const handleSearch = async (
     query,
     breadcrumbTrail,
     excludeArg = "",
@@ -151,6 +151,7 @@ export default function Home() {
     setBrandFilter(filterBrand || "");
     setForceOpenCategory(!!subcategory);
   };
+
 
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
