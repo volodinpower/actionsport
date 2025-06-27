@@ -9,6 +9,20 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
+// Универсальная функция получения названия категории
+function getCategoryLabel(cat) {
+  if (!cat) return "";
+  return (
+    cat.label ||
+    cat.name ||
+    cat.title ||
+    cat.category_title ||
+    cat.category_name ||
+    cat.category_key ||
+    "Категория"
+  );
+}
+
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,7 +106,7 @@ export default function Home() {
     await load("", breadcrumbs, "", brandFilter, newCategory, "", false);
   };
 
-    const handleSearch = async (
+  const handleSearch = async (
     query,
     breadcrumbTrail,
     excludeArg = "",
@@ -116,7 +130,7 @@ export default function Home() {
         categoryKey = parent.category_key;
         newBreadcrumbs = [
           { label: "Main", query: "", exclude: "" },
-          { label: parent.label || parent.name, query: parent.category_key }
+          { label: getCategoryLabel(parent), query: parent.category_key }
         ];
       } else {
         newBreadcrumbs = [
@@ -128,7 +142,7 @@ export default function Home() {
       const cat = categories.find(c => c.category_key === category);
       newBreadcrumbs = [
         { label: "Main", query: "", exclude: "" },
-        { label: cat ? cat.label || cat.name : category, query: category }
+        { label: cat ? getCategoryLabel(cat) : category, query: category }
       ];
     } else if (query) {
       newBreadcrumbs = [
@@ -152,7 +166,6 @@ export default function Home() {
     setForceOpenCategory(!!subcategory);
   };
 
-
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
@@ -167,37 +180,37 @@ export default function Home() {
     }
   };
 
- useEffect(() => {
-  async function initialize() {
-    // 1. Если есть breadcrumbs в location.state
-    if (location.state && location.state.breadcrumbs) {
-      if (location.state.query) {
-        await load(location.state.query, location.state.breadcrumbs, "", "", "", "", true);
-      } else {
-        await load("", location.state.breadcrumbs, "", "", "", "", true);
+  useEffect(() => {
+    async function initialize() {
+      // 1. Если есть breadcrumbs в location.state
+      if (location.state && location.state.breadcrumbs) {
+        if (location.state.query) {
+          await load(location.state.query, location.state.breadcrumbs, "", "", "", "", true);
+        } else {
+          await load("", location.state.breadcrumbs, "", "", "", "", true);
+        }
+        setCategoryFilter("");
+        return;
       }
-      setCategoryFilter("");
-      return;
-    }
 
-    // 2. Если есть search в url
-    if (urlSearch) {
-      const initialBreadcrumbs = [
-        { label: "Main", query: "", exclude: "" },
-        { label: urlSearch, query: urlSearch, exclude: "" }
-      ];
-      await load(urlSearch, initialBreadcrumbs, "", "", "", "", true);
-      setCategoryFilter("");
-      return;
-    }
+      // 2. Если есть search в url
+      if (urlSearch) {
+        const initialBreadcrumbs = [
+          { label: "Main", query: "", exclude: "" },
+          { label: urlSearch, query: urlSearch, exclude: "" }
+        ];
+        await load(urlSearch, initialBreadcrumbs, "", "", "", "", true);
+        setCategoryFilter("");
+        return;
+      }
 
-    // 3. Обычная главная страница
-    await load("", [{ label: "Main", query: "", exclude: "" }], "", "", "", "", true);
-    setCategoryFilter("");
-  }
-  initialize();
-  // eslint-disable-next-line
-}, [location.search]);
+      // 3. Обычная главная страница
+      await load("", [{ label: "Main", query: "", exclude: "" }], "", "", "", "", true);
+      setCategoryFilter("");
+    }
+    initialize();
+    // eslint-disable-next-line
+  }, [location.search]);
 
   useEffect(() => {
     async function updateProducts() {
@@ -340,9 +353,9 @@ export default function Home() {
         setForceOpenCategory={setForceOpenCategory}
       />
 
-        {!isHome && (
-          <Breadcrumbs items={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />
-        )}
+      {!isHome && (
+        <Breadcrumbs items={breadcrumbs} onBreadcrumbClick={handleBreadcrumbClick} />
+      )}
 
       {isHome && <Banner />}
 
