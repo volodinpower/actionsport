@@ -36,6 +36,18 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
     return () => clearTimeout(delay);
   }, [searchText]);
 
+  const handleSearch = () => {
+    // ВАЖНО: пробрасываем поиск только как query (в label можно 'Main' или 'Главная')
+    const trimmed = searchText.trim();
+    onSearch(
+      trimmed,
+      [{ label: "Main", query: trimmed, exclude: "" }],
+      ""
+    );
+    if (searchInputRef.current) searchInputRef.current.blur();
+    if (onClose) onClose();
+  };
+
   return (
     <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
       <div className="searchbar-modal-inner">
@@ -50,12 +62,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                onSearch(
-                  searchText.trim(),
-                  [{ label: "Home", query: "", exclude: "" }],
-                  ""
-                );
-                if (searchInputRef.current) searchInputRef.current.blur();
+                handleSearch();
               }
               if (e.key === "Escape" && onClose) {
                 onClose();
@@ -80,7 +87,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
               onClick={() => {
                 setSearchText("");
                 setSearchResults([]);
-                onSearch("", [{ label: "Главная", query: "", exclude: "" }], "");
+                onSearch("", [{ label: "Main", query: "", exclude: "" }], "");
                 if (searchInputRef.current) searchInputRef.current.focus();
               }}
             >
@@ -103,7 +110,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
                       setSearchResults([]);
                       onSearch(
                         "",
-                        [{ label: "Бренд", query: "", brand: item.sitename }],
+                        [{ label: "Brand", query: "", brand: item.sitename }],
                         "",
                         item.sitename
                       );
