@@ -225,11 +225,15 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
-  // Обновление товаров при смене категории/бренда
+  // --- КОРРЕКТНЫЙ useEffect: товары подгружаются только при смене категории ---
   useEffect(() => {
     async function updateProducts() {
       if (!categoryFilter) {
         await load();
+        return;
+      }
+      if (categoryFilter === "sale") {
+        // В sale не делаем load при смене фильтров!
         return;
       }
 
@@ -255,9 +259,11 @@ export default function Home() {
     }
 
     updateProducts().catch(console.error);
-  }, [categoryFilter, categories, brandFilter]);
+    // ТОЛЬКО при смене категории!
+    // eslint-disable-next-line
+  }, [categoryFilter, categories]);
 
-  // Фильтрация товаров
+  // Фильтрация товаров (только на клиенте)
   const filteredProducts = useMemo(() => {
     let list = products;
     if (categoryFilter === "sale") {
@@ -346,29 +352,14 @@ export default function Home() {
     return arr;
   }, [filteredProducts, sort]);
 
-  // --- ВАЖНО! --- ВОТ ТУТ ВСЁ РАБОТАЕТ КОРРЕКТНО ДЛЯ SALE:
+  // --- Корректный reset фильтров: просто сбрасываем, никакой загрузки sale! ---
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    if (categoryFilter === "sale") {
-      // Дополнительно подгружаем sale-запрос (и крошки)
-      load(
-        "",
-        [
-          { label: "Main", query: "", exclude: "" },
-          { label: "Sale", query: "sale" }
-        ],
-        "",
-        "",
-        "sale",
-        "",
-        true
-      );
-    }
-    // для остальных категорий фильтры сбрасываются локально
+    // для sale не делаем load, просто убираем фильтры (products уже загружен)
+    // для остальных категорий тоже только убираем фильтры
   };
-
 
   const handleCardClick = (productId) => {
     const lastCrumb = breadcrumbs[breadcrumbs.length - 1] || { query: "", exclude: "" };
