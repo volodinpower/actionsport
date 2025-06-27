@@ -59,18 +59,6 @@ export default function FilterBar({
           ref={categorySelectRef}
         />
       )}
-      {/* GENDER */}
-      {shouldShowGender && (
-        <Select
-          classNamePrefix="react-select"
-          placeholder="Gender"
-          isClearable
-          value={genderOptions.find(opt => opt.value === genderFilter) || null}
-          onChange={opt => setGenderFilter(opt ? opt.value : "")}
-          options={genderOptions}
-          menuPlacement="auto"
-        />
-      )}
       {/* BRAND */}
       <Select
         classNamePrefix="react-select"
@@ -91,6 +79,18 @@ export default function FilterBar({
         options={allSizes.map(size => ({ value: size, label: size }))}
         menuPlacement="auto"
       />
+      {/* GENDER */}
+      {shouldShowGender && (
+        <Select
+          classNamePrefix="react-select"
+          placeholder="Gender"
+          isClearable
+          value={genderOptions.find(opt => opt.value === genderFilter) || null}
+          onChange={opt => setGenderFilter(opt ? opt.value : "")}
+          options={genderOptions}
+          menuPlacement="auto"
+        />
+      )}
       {/* RESET */}
       {(sizeFilter || brandFilter || genderFilter || categoryFilter) && (
         <button
