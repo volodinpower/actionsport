@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Header.css";
 
-// Желаемый порядок категорий (без new, с Sale в конце)
+// Вынеси этот порядок в верх, можешь переименовать под твои реальные key
 const MENU_ORDER = [
   "snowboard",
   "skateboard",
@@ -10,10 +10,9 @@ const MENU_ORDER = [
   "shoes",
   "clothes",
   "accessories",
-  "sale", // виртуальная категория
+  "sale",
 ];
 
-// Виртуальный объект категории Sale
 const SALE_CATEGORY = {
   category_key: "sale",
   label: "Sale",
@@ -41,25 +40,33 @@ export default function NavMenu({
     fetch(import.meta.env.VITE_API_URL + "/categories")
       .then(res => res.json())
       .then(data => {
-        // Преобразуем в объект по ключу для сортировки
+        console.log("Категории с бэка:", data); // Посмотри в консоль!
+        if (!Array.isArray(data) || data.length === 0) {
+          setCategories([SALE_CATEGORY]);
+          return;
+        }
+        // Собери мапу по ключам
         const dict = Object.fromEntries(
-          (data || []).map(cat => [
-            cat.category_key,
+          data.map(cat => [
+            (cat.category_key || cat.key || cat.name).toLowerCase(),
             {
               ...cat,
+              label: cat.label || cat.name || cat.title || cat.category_title || cat.category_key,
               subcategories: (cat.subcategories || []).map(sub =>
                 typeof sub === "string"
                   ? { label: sub, query: sub, subcategory_key: sub }
                   : { ...sub, query: sub.subcategory_key || sub.query, subcategory_key: sub.subcategory_key || sub.query }
               ),
-            },
+            }
           ])
         );
-        // Добавляем виртуальный Sale
-        dict["sale"] = SALE_CATEGORY;
-        // Сортируем как нам нужно
+        dict["sale"] = SALE_CATEGORY; // Добавь Sale
+        // Фильтруй только те, что реально есть
         const ordered = MENU_ORDER.map(key => dict[key]).filter(Boolean);
-        setCategories(ordered);
+        setCategories(ordered.length ? ordered : [SALE_CATEGORY]);
+      })
+      .catch(() => {
+        setCategories([SALE_CATEGORY]);
       });
   }, []);
 
@@ -92,7 +99,7 @@ export default function NavMenu({
                   onClick={() => {
                     if (cat.category_key === "sale") {
                       onMenuSearch(
-                        "", // query
+                        "",
                         [
                           { label: "Main", query: "", exclude: "" },
                           { label: "Sale", query: "sale" }
@@ -208,7 +215,7 @@ export default function NavMenu({
                   onClick={() => {
                     if (cat.category_key === "sale") {
                       onMenuSearch(
-                        "", // query
+                        "",
                         [
                           { label: "Main", query: "", exclude: "" },
                           { label: "Sale", query: "sale" }
