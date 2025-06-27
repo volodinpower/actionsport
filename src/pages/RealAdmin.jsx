@@ -10,7 +10,6 @@ import {
   syncImagesForGroup,
 } from "../api";
 
-
 function formatDate(date) {
   if (!date) return "";
   return date.toLocaleString("ru-RU", {
@@ -75,6 +74,15 @@ const RealAdmin = () => {
   });
 
   const listRef = useRef(null);
+
+  // --- ФИКС для сдвига body после логина/модалок ---
+  useEffect(() => {
+    document.body.style.paddingRight = "";
+    document.body.style.overflow = "";
+    document.body.style.marginRight = "";
+    document.body.classList.remove('overflow-hidden');
+    document.body.classList.remove('pr-[15px]');
+  }, []);
 
   useEffect(() => {
     fetchProductsCount()
