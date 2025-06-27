@@ -9,7 +9,6 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-// Универсальная функция получения названия категории
 function getCategoryLabel(cat) {
   if (!cat) return "";
   return (
@@ -102,7 +101,6 @@ export default function Home() {
       if (shouldSetBreadcrumbs) setBreadcrumbs(bc);
     }
     setProducts(productsList);
-    // Больше никаких setSizeFilter/BrandFilter/GenderFilter тут!
   };
 
   // Обработчик для фильтра категории
@@ -120,7 +118,6 @@ export default function Home() {
     category = "",
     subcategory = ""
   ) => {
-    // Если это категория или подкатегория — грузим как раньше
     if (category || subcategory) {
       let categoryKey = "";
       let subcategoryKey = "";
@@ -240,6 +237,7 @@ export default function Home() {
       await load("", undefined, "", brandFilter, categoryKey, subcategoryKey, false);
     }
     updateProducts().catch(console.error);
+    // eslint-disable-next-line
   }, [categoryFilter, categories, brandFilter]);
 
   // Фильтрация товаров
@@ -331,11 +329,13 @@ export default function Home() {
     return arr;
   }, [filteredProducts, sort]);
 
+  // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
+  // Этот reset просто сбрасывает только фильтры, НЕ вызывает load!
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    // НЕ трогаем categoryFilter!
+    // Не трогаем categoryFilter и не вызываем load!
   };
 
   const handleCardClick = (productId) => {
