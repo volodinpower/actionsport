@@ -346,10 +346,26 @@ export default function Home() {
     return arr;
   }, [filteredProducts, sort]);
 
+  // --- ВАЖНО! --- ВОТ ТУТ ВСЁ РАБОТАЕТ КОРРЕКТНО ДЛЯ SALE:
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
+    if (categoryFilter === "sale") {
+      load(
+        "",
+        [
+          { label: "Main", query: "", exclude: "" },
+          { label: "Sale", query: "sale" }
+        ],
+        "",
+        "",
+        "sale",
+        "",
+        true
+      );
+    }
+    // для остальных категорий ничего не меняем
   };
 
   const handleCardClick = (productId) => {
