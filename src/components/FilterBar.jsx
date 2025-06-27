@@ -46,6 +46,7 @@ export default function FilterBar({
 
   return (
     <div className="filter-bar flex flex-wrap items-center gap-2 mb-4">
+      {/* CATEGORY */}
       {showCategory && categoryOptions.length > 0 && (
         <Select
           classNamePrefix="react-select"
@@ -58,15 +59,7 @@ export default function FilterBar({
           ref={categorySelectRef}
         />
       )}
-      <Select
-        classNamePrefix="react-select"
-        placeholder="Size"
-        isClearable
-        value={sizeFilter ? { value: sizeFilter, label: sizeFilter } : null}
-        onChange={opt => setSizeFilter(opt ? opt.value : "")}
-        options={allSizes.map(size => ({ value: size, label: size }))}
-        menuPlacement="auto"
-      />
+      {/* GENDER */}
       {shouldShowGender && (
         <Select
           classNamePrefix="react-select"
@@ -78,6 +71,7 @@ export default function FilterBar({
           menuPlacement="auto"
         />
       )}
+      {/* BRAND */}
       <Select
         classNamePrefix="react-select"
         placeholder="Brand"
@@ -87,6 +81,17 @@ export default function FilterBar({
         options={allBrands.map(brand => ({ value: brand, label: brand }))}
         menuPlacement="auto"
       />
+      {/* SIZE */}
+      <Select
+        classNamePrefix="react-select"
+        placeholder="Size"
+        isClearable
+        value={sizeFilter ? { value: sizeFilter, label: sizeFilter } : null}
+        onChange={opt => setSizeFilter(opt ? opt.value : "")}
+        options={allSizes.map(size => ({ value: size, label: size }))}
+        menuPlacement="auto"
+      />
+      {/* RESET */}
       {(sizeFilter || brandFilter || genderFilter || categoryFilter) && (
         <button
           onClick={clearFilters}
