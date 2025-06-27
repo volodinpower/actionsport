@@ -101,18 +101,14 @@ export default function Home() {
       setIsHome(false);
       if (shouldSetBreadcrumbs) setBreadcrumbs(bc);
     }
-
     setProducts(productsList);
-    setSort("");
-    setSizeFilter("");
-    setBrandFilter(lastBrand || "");
-    setGenderFilter("");
+    // Больше никаких setSizeFilter/BrandFilter/GenderFilter тут!
   };
 
   // Обработчик для фильтра категории
   const handleCategoryFilterChange = async (newCategory) => {
     setCategoryFilter(newCategory);
-    // Загрузка теперь только через useEffect!
+    await load("", breadcrumbs, "", brandFilter, newCategory, "", false);
   };
 
   // ГЛАВНЫЙ обработчик поиска
@@ -124,6 +120,7 @@ export default function Home() {
     category = "",
     subcategory = ""
   ) => {
+    // Если это категория или подкатегория — грузим как раньше
     if (category || subcategory) {
       let categoryKey = "";
       let subcategoryKey = "";
@@ -200,7 +197,6 @@ export default function Home() {
         setCategoryFilter("");
         return;
       }
-
       if (urlSearch) {
         const initialBreadcrumbs = [
           { label: "Main", query: "", exclude: "" },
@@ -210,7 +206,6 @@ export default function Home() {
         setCategoryFilter("");
         return;
       }
-
       await load("", [{ label: "Main", query: "", exclude: "" }], "", "", "", "", true);
       setCategoryFilter("");
     }
@@ -218,31 +213,13 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
-  // Обновление товаров при смене фильтров и categoryFilter
+  // Обновление товаров при смене категории/бренда
   useEffect(() => {
     async function updateProducts() {
-      // sale: фильтрация только по скидке, фильтры сбрасываем
-      if (categoryFilter === "sale") {
-        await load(
-          "",
-          [
-            { label: "Main", query: "", exclude: "" },
-            { label: "Sale", query: "sale" }
-          ],
-          "",
-          "",
-          "sale",
-          "",
-          true
-        );
-        return;
-      }
-
       if (!categoryFilter) {
         await load();
         return;
       }
-
       let categoryKey = "";
       let subcategoryKey = "";
 
@@ -260,12 +237,9 @@ export default function Home() {
           }
         }
       }
-
       await load("", undefined, "", brandFilter, categoryKey, subcategoryKey, false);
     }
-
     updateProducts().catch(console.error);
-    // eslint-disable-next-line
   }, [categoryFilter, categories, brandFilter]);
 
   // Фильтрация товаров
@@ -357,14 +331,11 @@ export default function Home() {
     return arr;
   }, [filteredProducts, sort]);
 
-  // RESET FILTERS — без вызова load!
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    if (categoryFilter === "sale") {
-      setCategoryFilter("sale"); // чтобы useEffect сработал
-    }
+    // НЕ трогаем categoryFilter!
   };
 
   const handleCardClick = (productId) => {
