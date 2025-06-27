@@ -1,6 +1,25 @@
 import { useState, useEffect } from "react";
 import "./Header.css";
 
+// Желаемый порядок категорий (без new, с Sale в конце)
+const MENU_ORDER = [
+  "snowboard",
+  "skateboard",
+  "wake",
+  "sup",
+  "shoes",
+  "clothes",
+  "accessories",
+  "sale", // виртуальная категория
+];
+
+// Виртуальный объект категории Sale
+const SALE_CATEGORY = {
+  category_key: "sale",
+  label: "Sale",
+  subcategories: [],
+};
+
 export default function NavMenu({
   onMenuSearch,
   activeMenu, setActiveMenu,
@@ -22,16 +41,25 @@ export default function NavMenu({
     fetch(import.meta.env.VITE_API_URL + "/categories")
       .then(res => res.json())
       .then(data => {
-        setCategories(
-          (data || []).map(cat => ({
-            ...cat,
-            subcategories: (cat.subcategories || []).map(sub =>
-              typeof sub === "string"
-                ? { label: sub, query: sub, subcategory_key: sub }
-                : { ...sub, query: sub.subcategory_key || sub.query, subcategory_key: sub.subcategory_key || sub.query }
-            )
-          }))
+        // Преобразуем в объект по ключу для сортировки
+        const dict = Object.fromEntries(
+          (data || []).map(cat => [
+            cat.category_key,
+            {
+              ...cat,
+              subcategories: (cat.subcategories || []).map(sub =>
+                typeof sub === "string"
+                  ? { label: sub, query: sub, subcategory_key: sub }
+                  : { ...sub, query: sub.subcategory_key || sub.query, subcategory_key: sub.subcategory_key || sub.query }
+              ),
+            },
+          ])
         );
+        // Добавляем виртуальный Sale
+        dict["sale"] = SALE_CATEGORY;
+        // Сортируем как нам нужно
+        const ordered = MENU_ORDER.map(key => dict[key]).filter(Boolean);
+        setCategories(ordered);
       });
   }, []);
 
@@ -62,25 +90,44 @@ export default function NavMenu({
                 <button
                   className="mobile-menu-item"
                   onClick={() => {
-                    onMenuSearch(
-                      cat.category_key,
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: cat.category_key, query: cat.category_key }
-                      ],
-                      "",
-                      "",
-                      cat.category_key,
-                      null
-                    );
-                    setMobileMenuOpen(false);
-                    setOpenSubmenus([]);
-                    setCategoryFilter?.(cat.category_key);
+                    if (cat.category_key === "sale") {
+                      onMenuSearch(
+                        "", // query
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: "Sale", query: "sale" }
+                        ],
+                        "",
+                        "",
+                        "sale",
+                        ""
+                      );
+                      setCategoryFilter?.("sale");
+                      setMobileMenuOpen(false);
+                      setOpenSubmenus([]);
+                      setForceOpenCategory?.(false);
+                    } else {
+                      onMenuSearch(
+                        cat.category_key,
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: cat.label, query: cat.category_key }
+                        ],
+                        "",
+                        "",
+                        cat.category_key,
+                        null
+                      );
+                      setCategoryFilter?.(cat.category_key);
+                      setMobileMenuOpen(false);
+                      setOpenSubmenus([]);
+                      setForceOpenCategory?.(false);
+                    }
                   }}
                 >
-                  {cat.category_key}
+                  {cat.label}
                 </button>
-                {cat.subcategories.length > 0 && (
+                {cat.category_key !== "sale" && cat.subcategories.length > 0 && (
                   <button
                     className="mobile-menu-plus"
                     onClick={e => {
@@ -93,7 +140,7 @@ export default function NavMenu({
                   </button>
                 )}
               </div>
-              {openSubmenus.includes(cat.category_key) && (
+              {cat.category_key !== "sale" && openSubmenus.includes(cat.category_key) && (
                 <ul className="mobile-submenu-list" style={{ paddingLeft: 14 }}>
                   {cat.subcategories.map((sub) => (
                     <li key={sub.subcategory_key}>
@@ -102,9 +149,9 @@ export default function NavMenu({
                         style={{ fontSize: "1.05em" }}
                         onClick={() => {
                           onMenuSearch(
-                            sub.subcategory_key, // <-- filter по subcategory_key!
+                            sub.subcategory_key,
                             [
-                              { label: cat.category_key, query: cat.category_key },
+                              { label: cat.label, query: cat.category_key },
                               { label: sub.label, query: sub.subcategory_key }
                             ],
                             "",
@@ -152,36 +199,52 @@ export default function NavMenu({
                 className="cursor-pointer h-10 flex items-center"
                 style={{ color: "#fff" }}
                 onMouseEnter={() =>
-                  cat.subcategories.length > 0
+                  cat.category_key !== "sale" && cat.subcategories.length > 0
                     ? setActiveMenu(cat.category_key)
                     : setActiveMenu(null)
                 }
               >
                 <span
                   onClick={() => {
-                    onMenuSearch(
-                      cat.category_key,
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: cat.category_key, query: cat.category_key }
-                      ],
-                      "",
-                      "",
-                      cat.category_key,
-                      null
-                    );
-                    setCategoryFilter?.(cat.category_key);
-                    setForceOpenCategory?.(false);
+                    if (cat.category_key === "sale") {
+                      onMenuSearch(
+                        "", // query
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: "Sale", query: "sale" }
+                        ],
+                        "",
+                        "",
+                        "sale",
+                        ""
+                      );
+                      setCategoryFilter?.("sale");
+                      setForceOpenCategory?.(false);
+                    } else {
+                      onMenuSearch(
+                        cat.category_key,
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: cat.label, query: cat.category_key }
+                        ],
+                        "",
+                        "",
+                        cat.category_key,
+                        null
+                      );
+                      setCategoryFilter?.(cat.category_key);
+                      setForceOpenCategory?.(false);
+                    }
                   }}
                   style={{ display: "inline-block", width: "100%" }}
                 >
-                  {cat.category_key}
+                  {cat.label}
                 </span>
               </li>
             ))}
           </ul>
         </nav>
-        {activeMenu && (
+        {activeMenu && activeMenu !== "sale" && (
           <div
             className="absolute left-0 right-0 bg-black text-gray-400 z-40"
             style={{
@@ -206,7 +269,7 @@ export default function NavMenu({
                           onMenuSearch(
                             sub.subcategory_key,
                             [
-                              { label: activeMenu, query: activeMenu },
+                              { label: categories.find(c => c.category_key === activeMenu)?.label, query: activeMenu },
                               { label: sub.label, query: sub.subcategory_key }
                             ],
                             "",

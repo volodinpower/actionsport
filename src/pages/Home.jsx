@@ -243,17 +243,26 @@ export default function Home() {
     updateProducts().catch(console.error);
   }, [categoryFilter, categories, brandFilter]);
 
+
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      if (sizeFilter && (!Array.isArray(p.sizes) || !p.sizes.includes(sizeFilter))) return false;
-      if (brandFilter) {
-        const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
-        if (!p.brand || !brandVariants.includes(p.brand.trim().toLowerCase())) return false;
-      }
-      if (genderFilter && p.gender !== genderFilter) return false;
-      return true;
-    });
-  }, [products, sizeFilter, brandFilter, genderFilter]);
+    let list = products;
+    // Для SALE показывать только товары со скидкой
+    if (categoryFilter === "sale") {
+      list = list.filter(
+        (p) =>
+          Number(p.discount) > 0 ||
+          (Number(p.discount_price) > 0 && Number(p.discount_price) < Number(p.price))
+      );
+    }
+    if (sizeFilter && (!Array.isArray(list[0]?.sizes) || !list.some(p => Array.isArray(p.sizes) && p.sizes.includes(sizeFilter)))) return [];
+    if (sizeFilter) list = list.filter(p => Array.isArray(p.sizes) && p.sizes.includes(sizeFilter));
+    if (brandFilter) {
+      const brandVariants = brandFilter.split(",").map(x => x.trim().toLowerCase());
+      list = list.filter(p => p.brand && brandVariants.includes(p.brand.trim().toLowerCase()));
+    }
+    if (genderFilter) list = list.filter(p => p.gender === genderFilter);
+    return list;
+  }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter]);
 
   const allSizes = useMemo(() =>
     Array.from(
