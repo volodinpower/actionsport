@@ -81,7 +81,17 @@ export default function Home() {
     let productsList = [];
     let limit = 150;
 
-    if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
+    if (categoryKey === "sale") {
+      // Грузим ВСЕ товары (или большим лимитом), фильтруем по скидке
+      productsList = await fetchProducts("", 500, 0, "", "", "asc", "", "");
+      // Отфильтруем только те, где есть скидка
+      productsList = productsList.filter(p =>
+        (p.discount && Number(p.discount) > 0) ||
+        (p.discount_price && Number(p.discount_price) > 0 && Number(p.discount_price) < Number(p.price))
+      );
+      setIsHome(false);
+      if (shouldSetBreadcrumbs) setBreadcrumbs([{ label: "Main", query: "", exclude: "" }, { label: "Sale", query: "sale" }]);
+    } else if (!query && !lastBrand && !categoryKey && !subcategoryKey) {
       productsList = await fetchPopularProducts(20);
       setIsHome(true);
       if (shouldSetBreadcrumbs) setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
@@ -99,6 +109,7 @@ export default function Home() {
     setBrandFilter(lastBrand || "");
     setGenderFilter("");
   };
+
 
   // Обработчик для фильтра категории — чтобы фильтр менял товары без изменения хлебных крошек
   const handleCategoryFilterChange = async (newCategory) => {
