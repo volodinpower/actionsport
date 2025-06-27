@@ -199,11 +199,11 @@ export default function Home() {
         }
       }
 
-      await load("", breadcrumbs, "", brandFilter, categoryKey, subcategoryKey, false);
+      await load("", undefined, "", brandFilter, categoryKey, subcategoryKey, false);
     }
 
     updateProducts().catch(console.error);
-  }, [categoryFilter, categories, breadcrumbs, brandFilter]);
+  }, [categoryFilter, categories, brandFilter]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
