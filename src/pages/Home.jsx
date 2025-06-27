@@ -396,7 +396,7 @@ export default function Home() {
             setCategoryFilter={handleCategoryFilterChange}
             clearFilters={clearFilters}
             showGender={showGenderOption}
-            showCategory={true}
+            showCategory={categoryFilter !== "sale"}  // <--- Вот тут!
             forceOpenCategory={forceOpenCategory}
             setForceOpenCategory={setForceOpenCategory}
           />
