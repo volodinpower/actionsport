@@ -135,21 +135,18 @@ body {
 .sort-bar span {
   color: #888;
   font-size: 13px;
-  font-weight: 500;
   flex-shrink: 0;
 }
 
 .sort-btn {
   flex-shrink: 0;
   padding: 6px 14px;
-  border-radius: 6px;
   border: 1px solid #ccc;
   background-color: #fff;
   color: #000;
   cursor: pointer;
   white-space: nowrap;
   font-size: 14px;
-  font-weight: 600;
   transition: all 0.2s ease;
 }
 
@@ -197,7 +194,6 @@ body {
   flex: 1;
   font-size: 18px;
   padding: 8px 12px;
-  border-radius: 8px;
   border: 1px solid #ddd;
   background: #f7f7f7;
 }
