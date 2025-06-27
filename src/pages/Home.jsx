@@ -83,7 +83,6 @@ export default function Home() {
     let limit = 150;
 
     if (categoryKey === "sale") {
-      // Грузим ВСЕ товары, фильтруем по скидке
       productsList = await fetchProducts("", 500, 0, "", "", "asc", "", "");
       productsList = productsList.filter(p =>
         (p.discount && Number(p.discount) > 0) ||
@@ -113,7 +112,7 @@ export default function Home() {
   // Обработчик для фильтра категории
   const handleCategoryFilterChange = async (newCategory) => {
     setCategoryFilter(newCategory);
-    await load("", breadcrumbs, "", brandFilter, newCategory, "", false);
+    // Загрузка теперь только через useEffect!
   };
 
   // ГЛАВНЫЙ обработчик поиска
@@ -125,7 +124,6 @@ export default function Home() {
     category = "",
     subcategory = ""
   ) => {
-    // Если это категория или подкатегория — грузим как раньше
     if (category || subcategory) {
       let categoryKey = "";
       let subcategoryKey = "";
@@ -159,7 +157,6 @@ export default function Home() {
         ];
       }
 
-      // Загружаем товары из категории
       load("", newBreadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey, true);
 
       if (subcategory) {
@@ -172,7 +169,6 @@ export default function Home() {
       setBrandFilter(filterBrand || "");
       setForceOpenCategory(!!subcategory);
     } else if (query) {
-      // Это обычный текстовый поиск — просто обновляем URL!
       navigate(`/?search=${encodeURIComponent(query)}`);
     }
   };
@@ -195,7 +191,6 @@ export default function Home() {
   // Первичная инициализация
   useEffect(() => {
     async function initialize() {
-      // Если есть breadcrumbs в location.state
       if (location.state && location.state.breadcrumbs) {
         if (location.state.query) {
           await load(location.state.query, location.state.breadcrumbs, "", "", "", "", true);
@@ -206,7 +201,6 @@ export default function Home() {
         return;
       }
 
-      // Если есть search в url
       if (urlSearch) {
         const initialBreadcrumbs = [
           { label: "Main", query: "", exclude: "" },
@@ -217,7 +211,6 @@ export default function Home() {
         return;
       }
 
-      // Обычная главная страница
       await load("", [{ label: "Main", query: "", exclude: "" }], "", "", "", "", true);
       setCategoryFilter("");
     }
@@ -225,9 +218,26 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
-  // Обновление товаров при смене категории/бренда
+  // Обновление товаров при смене фильтров и categoryFilter
   useEffect(() => {
     async function updateProducts() {
+      // sale: фильтрация только по скидке, фильтры сбрасываем
+      if (categoryFilter === "sale") {
+        await load(
+          "",
+          [
+            { label: "Main", query: "", exclude: "" },
+            { label: "Sale", query: "sale" }
+          ],
+          "",
+          "",
+          "sale",
+          "",
+          true
+        );
+        return;
+      }
+
       if (!categoryFilter) {
         await load();
         return;
@@ -255,6 +265,7 @@ export default function Home() {
     }
 
     updateProducts().catch(console.error);
+    // eslint-disable-next-line
   }, [categoryFilter, categories, brandFilter]);
 
   // Фильтрация товаров
@@ -346,26 +357,14 @@ export default function Home() {
     return arr;
   }, [filteredProducts, sort]);
 
-  // --- ВАЖНО! --- ВОТ ТУТ ВСЁ РАБОТАЕТ КОРРЕКТНО ДЛЯ SALE:
+  // RESET FILTERS — без вызова load!
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
     if (categoryFilter === "sale") {
-      load(
-        "",
-        [
-          { label: "Main", query: "", exclude: "" },
-          { label: "Sale", query: "sale" }
-        ],
-        "",
-        "",
-        "sale",
-        "",
-        true
-      );
+      setCategoryFilter("sale"); // чтобы useEffect сработал
     }
-    // для остальных категорий ничего не меняем
   };
 
   const handleCardClick = (productId) => {
