@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Header.css";
 
+// Вынеси этот порядок в верх, можешь переименовать под твои реальные key
 const MENU_ORDER = [
   "snowboard",
   "skateboard",
@@ -39,11 +40,12 @@ export default function NavMenu({
     fetch(import.meta.env.VITE_API_URL + "/categories")
       .then(res => res.json())
       .then(data => {
+        console.log("Категории с бэка:", data); // Посмотри в консоль!
         if (!Array.isArray(data) || data.length === 0) {
           setCategories([SALE_CATEGORY]);
           return;
         }
-        // Мапа по ключам
+        // Собери мапу по ключам
         const dict = Object.fromEntries(
           data.map(cat => [
             (cat.category_key || cat.key || cat.name).toLowerCase(),
@@ -58,7 +60,8 @@ export default function NavMenu({
             }
           ])
         );
-        dict["sale"] = SALE_CATEGORY;
+        dict["sale"] = SALE_CATEGORY; // Добавь Sale
+        // Фильтруй только те, что реально есть
         const ordered = MENU_ORDER.map(key => dict[key]).filter(Boolean);
         setCategories(ordered.length ? ordered : [SALE_CATEGORY]);
       })
@@ -93,10 +96,6 @@ export default function NavMenu({
               <div className="mobile-menu-row">
                 <button
                   className="mobile-menu-item"
-                  style={{
-                    color: cat.category_key === "sale" ? "#e53935" : undefined,
-                    fontWeight: "normal",
-                  }}
                   onClick={() => {
                     if (cat.category_key === "sale") {
                       onMenuSearch(
@@ -205,10 +204,7 @@ export default function NavMenu({
               <li
                 key={cat.category_key}
                 className="cursor-pointer h-10 flex items-center"
-                style={{
-                  color: cat.category_key === "sale" ? "#e53935" : "#fff",
-                  fontWeight: "normal",
-                }}
+                style={{ color: "#fff" }}
                 onMouseEnter={() =>
                   cat.category_key !== "sale" && cat.subcategories.length > 0
                     ? setActiveMenu(cat.category_key)
