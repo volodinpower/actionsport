@@ -190,9 +190,10 @@ export async function fetchProductsRaw(search = "", limit = 30, offset = 0, only
 
 // --- Получить список брендов для меню ---
 export async function fetchBrands() {
-  const res = await fetch(apiUrl("/brands"));
-  if (!res.ok) throw new Error(await res.text());
-  return await res.json();
+  const url = (import.meta.env.VITE_API_URL || "") + "/brands";
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  return res.json();
 }
 
 // --- Получить баннеры для главной страницы ---

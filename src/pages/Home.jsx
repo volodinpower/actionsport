@@ -42,6 +42,15 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
+  // --- NEW: brands из базы
+  const [allBrands, setAllBrands] = useState([]);
+  useEffect(() => {
+    fetch((import.meta.env.VITE_API_URL || "") + "/brands")
+      .then(res => res.json())
+      .then(brands => setAllBrands(brands || []))
+      .catch(() => setAllBrands([]));
+  }, []);
+
   useEffect(() => {
     fetchCategories()
       .then(data => setCategories(data || []))
@@ -259,7 +268,6 @@ export default function Home() {
     }
 
     updateProducts().catch(console.error);
-    // ТОЛЬКО при смене категории!
     // eslint-disable-next-line
   }, [categoryFilter, categories]);
 
@@ -295,11 +303,8 @@ export default function Home() {
 
   const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
 
-  const allBrands = useMemo(() =>
-    Array.from(
-      new Set(filteredProducts.map(p => p.brand).filter(Boolean))
-    ).sort()
-  , [filteredProducts]);
+  // -- ВНИМАНИЕ: allBrands теперь берём из useState, а не useMemo! --
+  // (old useMemo для брендов — удалён)
 
   const genderOptions = useMemo(() => {
     const variants = Array.from(
