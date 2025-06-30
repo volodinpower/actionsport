@@ -25,6 +25,7 @@ export async function syncImagesForGroup(productId) {
   return await res.json();
 }
 
+// --- ГЛАВНАЯ функция получения товаров с фильтрами ---
 export async function fetchProducts(
   search = "",
   limit = 30,
@@ -33,7 +34,9 @@ export async function fetchProducts(
   brand = "",
   sort = "asc",
   category_key = "",
-  subcategory_key = ""
+  subcategory_key = "",
+  gender = "",
+  size = ""
 ) {
   const params = new URLSearchParams();
   if (search) params.append("search", search);
@@ -44,6 +47,8 @@ export async function fetchProducts(
   if (sort) params.append("sort", sort);
   if (category_key) params.append("category_key", category_key);
   if (subcategory_key) params.append("subcategory_key", subcategory_key);
+  if (gender) params.append("gender", gender);
+  if (size) params.append("size", size);
 
   const res = await fetch(apiUrl(`/products?${params}`));
   if (!res.ok) throw new Error(await res.text());

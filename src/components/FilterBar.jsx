@@ -35,9 +35,9 @@ export default function FilterBar({
 
   const selectedCategory = categoryOptions.find(opt => opt.value === categoryFilter) || null;
 
-  const handleBrandChange = (opt) => {
-    setBrandFilter(opt ? opt.value : "");
-  };
+  const handleBrandChange = (opt) => setBrandFilter(opt ? opt.value : "");
+  const handleSizeChange = (opt) => setSizeFilter(opt ? opt.value : "");
+  const handleGenderChange = (opt) => setGenderFilter(opt ? opt.value : "");
 
   const shouldShowGender =
     showGender &&
@@ -75,7 +75,7 @@ export default function FilterBar({
         placeholder="Size"
         isClearable
         value={sizeFilter ? { value: sizeFilter, label: sizeFilter } : null}
-        onChange={opt => setSizeFilter(opt ? opt.value : "")}
+        onChange={handleSizeChange}
         options={allSizes.map(size => ({ value: size, label: size }))}
         menuPlacement="auto"
       />
@@ -86,7 +86,7 @@ export default function FilterBar({
           placeholder="Gender"
           isClearable
           value={genderOptions.find(opt => opt.value === genderFilter) || null}
-          onChange={opt => setGenderFilter(opt ? opt.value : "")}
+          onChange={handleGenderChange}
           options={genderOptions}
           menuPlacement="auto"
         />
