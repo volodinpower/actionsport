@@ -23,9 +23,12 @@ function normalize(val) {
 
 function extractSizes(product) {
   if (!product) return [];
-  if (Array.isArray(product.sizes)) return product.sizes.filter(Boolean);
+  if (Array.isArray(product.sizes)) return product.sizes.filter(Boolean).filter(s => s && s.toLowerCase() !== "нет");
   if (typeof product.sizes === "string")
-    return product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
+    return product.sizes
+      .split(",")
+      .map((s) => s.trim())
+      .filter(s => s && s.toLowerCase() !== "нет");
   return [];
 }
 
@@ -71,7 +74,7 @@ export default function ProductDetails() {
   }, [id]);
 
   // --- Главное отличие: размеры только по name+color ---
-  useEffect(() => {
+    useEffect(() => {
     if (!product || !product.name || !product.color) {
       setAvailableSizes([]);
       return;
@@ -84,12 +87,12 @@ export default function ProductDetails() {
           normalize(item.name) === nameNorm &&
           normalize(item.color) === colorNorm
       );
-      // Собираем все размеры и делаем set
       let sizes = [];
       filtered.forEach((item) => {
         sizes.push(...extractSizes(item));
       });
-      setAvailableSizes(Array.from(new Set(sizes)));
+      const filteredSizes = Array.from(new Set(sizes));
+      setAvailableSizes(filteredSizes);
     });
   }, [product]);
 
