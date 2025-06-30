@@ -19,7 +19,9 @@ export default defineConfig(({ mode }) => {
         '/banners': 'http://localhost:8000',
         '/token': 'http://localhost:8000',
         '/search_smart': 'http://localhost:8000',
-        '/categories': 'http://localhost:8000'
+        '/categories': 'http://localhost:8000',
+        '/sizes': 'http://localhost:8000',            // <--- добавь!
+        '/genders': 'http://localhost:8000',          // <--- добавь!
       },
     },
   };
