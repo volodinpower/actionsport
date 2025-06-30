@@ -31,9 +31,14 @@ export default function Header({
   ) => {
     if (onSearch)
       onSearch(query, crumbs, exclude, brand, category, subcategory);
+
     setActiveMenu(null);
     setMobileMenuOpen(false);
-    setShowSearch(false);
+
+    // Закрываем поиск только если реально был поиск/выбор (а не очистка)
+    if (query && query.trim().length > 0) {
+      setShowSearch(false);
+    }
   };
 
   if (isMobile) {
