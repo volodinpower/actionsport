@@ -274,7 +274,7 @@ export default function Home() {
   const genderOptions = useMemo(() =>
     gendersInFilter.map(g => ({
       value: g,
-      label: g === "m" ? "Men" : g === "w" ? "Women" : g === "kids" ? "Kids" : g
+      label: g === "m" ? "Men" : g === "w" ? "Women" : g === "k" ? "Kids" : g
     })),
     [gendersInFilter]
   );
