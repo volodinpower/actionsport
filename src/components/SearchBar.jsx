@@ -86,7 +86,7 @@ export default function SearchBar({
                 onClick={() => {
                   setSearchText("");
                   setSearchResults([]);
-                  onSearch(""); // очищает поиск
+                  onSearch(""); // только очистить, не закрывать!
                   if (searchInputRef.current) searchInputRef.current.focus();
                 }}
               >
