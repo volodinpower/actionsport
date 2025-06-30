@@ -2,7 +2,14 @@ import { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
-import { fetchProducts, fetchPopularProducts, fetchCategories, fetchFilteredBrands } from "../api";
+import {
+  fetchProducts,
+  fetchPopularProducts,
+  fetchCategories,
+  fetchFilteredBrands,
+  fetchFilteredSizes,
+  fetchFilteredGenders,
+} from "../api";
 import Banner from "../components/Banner";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -41,7 +48,12 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // Фильтрация для подменю (subcategory)
+  // Серверные фильтры для опций
+  const [brandsInFilter, setBrandsInFilter] = useState([]);
+  const [sizesInFilter, setSizesInFilter] = useState([]);
+  const [gendersInFilter, setGendersInFilter] = useState([]);
+
+  // Получение списка подкатегорий для выпадающего фильтра
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
     if (cat) {
@@ -61,9 +73,6 @@ export default function Home() {
     return [];
   }, [categories, categoryFilter]);
 
-  // Состояние брендов
-  const [brandsInFilter, setBrandsInFilter] = useState([]);
-
   // Загрузка категорий
   useEffect(() => {
     fetchCategories()
@@ -71,13 +80,11 @@ export default function Home() {
       .catch(() => setCategories([]));
   }, []);
 
-  // Всегда подгружаем brands по всем текущим фильтрам
+  // Серверные опции для фильтров — при любом изменении фильтров/категории
   useEffect(() => {
-    async function updateBrands() {
-      // categoryKey = parent если выбрана подкатегория!
+    async function updateOptions() {
       let realCategoryKey = categoryFilter;
       let subcategoryKey = "";
-      // Если выбрана подкатегория — найдем parent
       if (categoryFilter && !categories.find(c => c.category_key === categoryFilter)) {
         for (const c of categories) {
           if ((c.subcategories || []).some(sub =>
@@ -89,6 +96,7 @@ export default function Home() {
           }
         }
       }
+      // Бренды
       const brands = await fetchFilteredBrands({
         categoryKey: realCategoryKey,
         subcategoryKey,
@@ -97,10 +105,28 @@ export default function Home() {
         search: urlSearch,
       });
       setBrandsInFilter(brands);
+      // Размеры
+      const sizes = await fetchFilteredSizes({
+        categoryKey: realCategoryKey,
+        subcategoryKey,
+        brand: brandFilter,
+        gender: genderFilter,
+        search: urlSearch,
+      });
+      setSizesInFilter(sizes);
+      // Гендеры
+      const genders = await fetchFilteredGenders({
+        categoryKey: realCategoryKey,
+        subcategoryKey,
+        brand: brandFilter,
+        size: sizeFilter,
+        search: urlSearch,
+      });
+      setGendersInFilter(genders);
     }
-    updateBrands();
+    updateOptions();
     // eslint-disable-next-line
-  }, [categoryFilter, genderFilter, sizeFilter, urlSearch, categories]);
+  }, [categoryFilter, brandFilter, genderFilter, sizeFilter, urlSearch, categories]);
 
   // Основная загрузка товаров
   const load = async (
@@ -116,7 +142,6 @@ export default function Home() {
   ) => {
     let productsList = [];
     let limit = 150;
-    // Если выбрана категория или подкатегория — грузим ВСЕ подходящие товары
     if (categoryKey || subcategoryKey || brandFilterArg || genderArg || sizeArg || query) {
       productsList = await fetchProducts(
         query, limit, 0, excludeArg, brandFilterArg, "asc", categoryKey, subcategoryKey, genderArg, sizeArg
@@ -124,7 +149,6 @@ export default function Home() {
       setIsHome(false);
       if (shouldSetBreadcrumbs) setBreadcrumbs(bc);
     } else {
-      // Если ничего не выбрано — показываем популярные
       productsList = await fetchPopularProducts(20);
       setIsHome(true);
       if (shouldSetBreadcrumbs) setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
@@ -149,13 +173,11 @@ export default function Home() {
     genderArg = "",
     sizeArg = ""
   ) => {
-    // category — это category_key, subcategory — subcategory_key
     let newBreadcrumbs = breadcrumbTrail;
     let categoryKey = "";
     let subcategoryKey = "";
     if (subcategory) {
       subcategoryKey = subcategory;
-      // ищем parent для categoryKey
       const parent = categories.find(c =>
         (c.subcategories || []).some(
           sub => (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === subcategory
@@ -247,33 +269,16 @@ export default function Home() {
   }, [categoryFilter, brandFilter, genderFilter, sizeFilter, urlSearch, categories]);
 
   // --- НЕ ФИЛЬТРУЕМ НА КЛИЕНТЕ! Просто выводим products ---
-  const allSizes = useMemo(() =>
-    Array.from(
-      new Set(products.flatMap(p => Array.isArray(p.sizes) ? p.sizes : []).filter(Boolean))
-    ).sort((a, b) => a.localeCompare(b, "ru", { numeric: true }))
-  , [products]);
-
-  const uniqueGenders = useMemo(() =>
-    Array.from(new Set(products.map(p => p.gender).filter(g => ["m", "w", "kids"].includes(g))))
-  , [products]);
-
-  const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
   const allBrands = useMemo(() => brandsInFilter, [brandsInFilter]);
-
-  const genderOptions = useMemo(() => {
-    const variants = Array.from(new Set(products.map(p => p.gender).filter(g => ["m", "w", "kids"].includes(g))));
-    const options = [];
-    if (variants.length > 1 || !genderFilter) {
-      options.push({ value: "", label: "All genders" });
-    }
-    variants.forEach(g => {
-      options.push({
-        value: g,
-        label: g === "m" ? "Men" : g === "w" ? "Women" : "Kids"
-      });
-    });
-    return options;
-  }, [products, genderFilter]);
+  const allSizes = useMemo(() => sizesInFilter, [sizesInFilter]);
+  const genderOptions = useMemo(() =>
+    gendersInFilter.map(g => ({
+      value: g,
+      label: g === "m" ? "Men" : g === "w" ? "Women" : g === "kids" ? "Kids" : g
+    })),
+    [gendersInFilter]
+  );
+  const showGenderOption = gendersInFilter.length > 1 || !!genderFilter;
 
   const getEffectivePrice = (item) => {
     const fix = val => {
