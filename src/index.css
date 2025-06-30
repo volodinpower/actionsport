@@ -159,56 +159,6 @@ body {
   min-width: 110px;
 }
 
-.search-trigger {
-  margin-left: auto;
-}
-.search-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  padding: 8px;
-}
-.search-flyout {
-  position: absolute;
-  left: 0;
-  top: 100%;
-  width: 100vw;
-  background: #fff;
-  box-shadow: 0 6px 24px 0 rgba(0,0,0,0.12);
-  z-index: 60;
-  animation: fadeInSearch .23s;
-}
-@keyframes fadeInSearch { from { opacity: 0; transform: translateY(-16px);} to { opacity: 1; transform: none;} }
-.search-flyout-inner {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 18px 18px 12px 18px;
-}
-.search-input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.search-input {
-  flex: 1;
-  font-size: 18px;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background: #f7f7f7;
-}
-.search-close {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-}
-.search-results {
-  margin-top: 14px;
-  list-style: none;
-  padding: 0;
-  color: #333;
-}
 @media (max-width: 640px) {
   .swiper-button-next, .swiper-button-prev {
     width: 28px !important;
