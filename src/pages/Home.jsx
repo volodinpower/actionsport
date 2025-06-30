@@ -48,12 +48,12 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // Опции для фильтров (серверные)
+  // Серверные фильтры для опций
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
-  // Список подкатегорий для select'а
+  // Получение списка подкатегорий для выпадающего фильтра
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
     if (cat) {
@@ -80,7 +80,7 @@ export default function Home() {
       .catch(() => setCategories([]));
   }, []);
 
-  // Опции фильтров (brands, sizes, genders)
+  // Серверные опции для фильтров — при любом изменении фильтров/категории
   useEffect(() => {
     async function updateOptions() {
       let realCategoryKey = categoryFilter;
@@ -96,6 +96,7 @@ export default function Home() {
           }
         }
       }
+      // Бренды
       const brands = await fetchFilteredBrands({
         categoryKey: realCategoryKey,
         subcategoryKey,
@@ -104,7 +105,7 @@ export default function Home() {
         search: urlSearch,
       });
       setBrandsInFilter(brands);
-
+      // Размеры
       const sizes = await fetchFilteredSizes({
         categoryKey: realCategoryKey,
         subcategoryKey,
@@ -113,7 +114,7 @@ export default function Home() {
         search: urlSearch,
       });
       setSizesInFilter(sizes);
-
+      // Гендеры
       const genders = await fetchFilteredGenders({
         categoryKey: realCategoryKey,
         subcategoryKey,
@@ -128,25 +129,25 @@ export default function Home() {
   }, [categoryFilter, brandFilter, genderFilter, sizeFilter, urlSearch, categories]);
 
   // Основная загрузка товаров
-  const loadProducts = async ({
+  const load = async (
     query = "",
-    breadcrumbsArg = [{ label: "Main", query: "", exclude: "" }],
+    bc = [{ label: "Main", query: "", exclude: "" }],
     excludeArg = "",
-    brand = "",
+    brandFilterArg = "",
     categoryKey = "",
     subcategoryKey = "",
-    gender = "",
-    size = "",
-    shouldSetBreadcrumbs = true,
-  }) => {
+    genderArg = "",
+    sizeArg = "",
+    shouldSetBreadcrumbs = true
+  ) => {
     let productsList = [];
     let limit = 150;
-    if (categoryKey || subcategoryKey || brand || gender || size || query) {
+    if (categoryKey || subcategoryKey || brandFilterArg || genderArg || sizeArg || query) {
       productsList = await fetchProducts(
-        query, limit, 0, excludeArg, brand, "asc", categoryKey, subcategoryKey, gender, size
+        query, limit, 0, excludeArg, brandFilterArg, "asc", categoryKey, subcategoryKey, genderArg, sizeArg
       );
       setIsHome(false);
-      if (shouldSetBreadcrumbs) setBreadcrumbs(breadcrumbsArg);
+      if (shouldSetBreadcrumbs) setBreadcrumbs(bc);
     } else {
       productsList = await fetchPopularProducts(20);
       setIsHome(true);
@@ -155,13 +156,13 @@ export default function Home() {
     setProducts(productsList);
   };
 
-  // Выбор категории или подкатегории
-  const handleCategoryFilterChange = (newCategory) => {
+  // Меняется фильтр категории (или подкатегории)
+  const handleCategoryFilterChange = async (newCategory) => {
     setCategoryFilter(newCategory);
-    // Не вызываем load! Всё сработает через useEffect.
+    await load("", breadcrumbs, "", brandFilter, newCategory, "", genderFilter, sizeFilter, false);
   };
 
-  // Главный обработчик поиска и кликов в меню
+  // ГЛАВНЫЙ обработчик поиска и кликов в меню
   const handleSearch = (
     query,
     breadcrumbTrail,
@@ -190,7 +191,7 @@ export default function Home() {
     setBrandFilter(filterBrand || "");
     setGenderFilter(genderArg || "");
     setSizeFilter(sizeArg || "");
-    // Всё остальное сделает useEffect
+    load(query, newBreadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey, genderArg, sizeArg, true);
     setForceOpenCategory(!!subcategory);
   };
 
@@ -204,21 +205,21 @@ export default function Home() {
     setSizeFilter("");
     if (lastCrumb.query === "") {
       setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
-      await loadProducts({});
+      await load("", [{ label: "Main", query: "", exclude: "" }], "", "", "", "", "", "", false);
     } else {
       setBreadcrumbs(newTrail);
-      await loadProducts({ query: lastCrumb.query, breadcrumbsArg: newTrail });
+      await load(lastCrumb.query, newTrail, "", "", "", "", "", "", false);
     }
   };
 
-  // Первичная загрузка (при открытии страницы/поиске)
+  // Первичная загрузка
   useEffect(() => {
     async function initialize() {
       if (location.state && location.state.breadcrumbs) {
         if (location.state.query) {
-          await loadProducts({ query: location.state.query, breadcrumbsArg: location.state.breadcrumbs });
+          await load(location.state.query, location.state.breadcrumbs);
         } else {
-          await loadProducts({ breadcrumbsArg: location.state.breadcrumbs });
+          await load("", location.state.breadcrumbs);
         }
         setCategoryFilter("");
         return;
@@ -228,46 +229,46 @@ export default function Home() {
           { label: "Main", query: "", exclude: "" },
           { label: urlSearch, query: urlSearch, exclude: "" }
         ];
-        await loadProducts({ query: urlSearch, breadcrumbsArg: initialBreadcrumbs });
+        await load(urlSearch, initialBreadcrumbs);
         setCategoryFilter("");
         return;
       }
-      await loadProducts({});
+      await load("", [{ label: "Main", query: "", exclude: "" }]);
       setCategoryFilter("");
     }
     initialize();
     // eslint-disable-next-line
   }, [location.search]);
 
-  // Перезагружать товары при изменении любого фильтра
+  // Перезагружать товары при изменении фильтра
   useEffect(() => {
-    let realCategoryKey = categoryFilter;
-    let subcategoryKey = "";
-    if (categoryFilter && !categories.find(c => c.category_key === categoryFilter)) {
-      for (const c of categories) {
-        if ((c.subcategories || []).some(sub =>
-          (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
-        )) {
-          realCategoryKey = c.category_key;
-          subcategoryKey = categoryFilter;
-          break;
+    async function updateProducts() {
+      let realCategoryKey = categoryFilter;
+      let subcategoryKey = "";
+      if (categoryFilter && !categories.find(c => c.category_key === categoryFilter)) {
+        for (const c of categories) {
+          if ((c.subcategories || []).some(sub =>
+            (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
+          )) {
+            realCategoryKey = c.category_key;
+            subcategoryKey = categoryFilter;
+            break;
+          }
         }
       }
+      await load(
+        urlSearch, breadcrumbs, "", brandFilter, realCategoryKey, subcategoryKey, genderFilter, sizeFilter, false
+      );
     }
-    loadProducts({
-      query: urlSearch,
-      breadcrumbsArg: breadcrumbs,
-      brand: brandFilter,
-      categoryKey: realCategoryKey,
-      subcategoryKey,
-      gender: genderFilter,
-      size: sizeFilter,
-      shouldSetBreadcrumbs: false,
-    });
+    if (
+      categoryFilter || brandFilter || genderFilter || sizeFilter || urlSearch
+    ) {
+      updateProducts().catch(console.error);
+    }
     // eslint-disable-next-line
   }, [categoryFilter, brandFilter, genderFilter, sizeFilter, urlSearch, categories]);
 
-  // Преобразование фильтров в опции для селектов
+  // --- НЕ ФИЛЬТРУЕМ НА КЛИЕНТЕ! Просто выводим products ---
   const allBrands = useMemo(() => brandsInFilter, [brandsInFilter]);
   const allSizes = useMemo(() => sizesInFilter, [sizesInFilter]);
   const genderOptions = useMemo(() =>
@@ -279,7 +280,6 @@ export default function Home() {
   );
   const showGenderOption = gendersInFilter.length > 1 || !!genderFilter;
 
-  // Сортировка товаров
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
