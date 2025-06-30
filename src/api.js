@@ -184,6 +184,32 @@ export async function fetchFilteredBrands({ categoryKey, subcategoryKey, gender,
   return await res.json();
 }
 
+export async function fetchFilteredGenders({ categoryKey, subcategoryKey, brand, size, search }) {
+  const params = new URLSearchParams();
+  if (categoryKey) params.append("category_key", categoryKey);
+  if (subcategoryKey) params.append("subcategory_key", subcategoryKey);
+  if (brand) params.append("brand", brand);
+  if (size) params.append("size", size);
+  if (search) params.append("search", search);
+  const url = `/genders/filtered?${params.toString()}`;
+  const res = await fetch(import.meta.env.VITE_API_URL + url);
+  if (!res.ok) return [];
+  return await res.json();
+}
+
+export async function fetchFilteredSizes({ categoryKey, subcategoryKey, brand, gender, search }) {
+  const params = new URLSearchParams();
+  if (categoryKey) params.append("category_key", categoryKey);
+  if (subcategoryKey) params.append("subcategory_key", subcategoryKey);
+  if (brand) params.append("brand", brand);
+  if (gender) params.append("gender", gender);
+  if (search) params.append("search", search);
+  const url = `/sizes/filtered?${params.toString()}`;
+  const res = await fetch(import.meta.env.VITE_API_URL + url);
+  if (!res.ok) return [];
+  return await res.json();
+}
+
 // --- Старый (все бренды без фильтра, можешь не использовать) ---
 export async function fetchBrands() {
   const res = await fetch(apiUrl("/brands"));
