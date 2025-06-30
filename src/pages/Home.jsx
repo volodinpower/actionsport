@@ -42,15 +42,6 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // --- NEW: brands из базы
-  const [allBrands, setAllBrands] = useState([]);
-  useEffect(() => {
-    fetch((import.meta.env.VITE_API_URL || "") + "/brands")
-      .then(res => res.json())
-      .then(brands => setAllBrands(brands || []))
-      .catch(() => setAllBrands([]));
-  }, []);
-
   useEffect(() => {
     fetchCategories()
       .then(data => setCategories(data || []))
@@ -268,6 +259,7 @@ export default function Home() {
     }
 
     updateProducts().catch(console.error);
+    // ТОЛЬКО при смене категории!
     // eslint-disable-next-line
   }, [categoryFilter, categories]);
 
@@ -291,6 +283,15 @@ export default function Home() {
     return list;
   }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter]);
 
+  // Только бренды, которые реально есть в выбранной категории/фильтрации
+  const brandsInThisCategory = useMemo(
+    () =>
+      Array.from(
+        new Set(filteredProducts.map(p => p.brand).filter(Boolean))
+      ).sort(),
+    [filteredProducts]
+  );
+
   const allSizes = useMemo(() =>
     Array.from(
       new Set(filteredProducts.flatMap(p => Array.isArray(p.sizes) ? p.sizes : []).filter(Boolean))
@@ -302,9 +303,6 @@ export default function Home() {
   , [filteredProducts]);
 
   const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
-
-  // -- ВНИМАНИЕ: allBrands теперь берём из useState, а не useMemo! --
-  // (old useMemo для брендов — удалён)
 
   const genderOptions = useMemo(() => {
     const variants = Array.from(
@@ -399,7 +397,7 @@ export default function Home() {
         <div>
           <FilterBar
             allSizes={allSizes}
-            allBrands={allBrands}
+            allBrands={brandsInThisCategory} // <<--- только бренды из фильтрованных товаров!
             submenuList={submenuList}
             sizeFilter={sizeFilter}
             setSizeFilter={setSizeFilter}
