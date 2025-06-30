@@ -42,7 +42,6 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // --- Новый стейт для брендов после всех фильтров ---
   const [brandsInFilter, setBrandsInFilter] = useState([]);
 
   useEffect(() => {
@@ -51,20 +50,41 @@ export default function Home() {
       .catch(() => setCategories([]));
   }, []);
 
-  // ---- Обновляем brandsInFilter при любом изменении фильтра ----
-  useEffect(() => {
-    async function updateBrands() {
-      const brands = await fetchFilteredBrands({
-        categoryKey: categoryFilter,
-        gender: genderFilter,
-        size: sizeFilter,
-        search: urlSearch,
-        // subcategoryKey: если используешь, то подставь сюда
-      });
-      setBrandsInFilter(brands);
+  // Получаем актуальные {categoryKey, subcategoryKey}
+  function getCategoryAndSubcategory() {
+    let categoryKey = "";
+    let subcategoryKey = "";
+
+    const cat = categories.find(c =>
+      (c.subcategories || []).some(
+        sub =>
+          (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
+      )
+    );
+    if (cat) {
+      categoryKey = cat.category_key;
+      subcategoryKey = categoryFilter;
+    } else {
+      categoryKey = categoryFilter;
     }
-    updateBrands();
-  }, [categoryFilter, genderFilter, sizeFilter, urlSearch]);
+    return { categoryKey, subcategoryKey };
+  }
+
+  // --- Динамически обновляем список брендов для фильтра ---
+  useEffect(() => {
+    const { categoryKey, subcategoryKey } = getCategoryAndSubcategory();
+    const hasActiveFilter = !!sizeFilter || !!genderFilter;
+
+    fetchFilteredBrands({
+      categoryKey,
+      subcategoryKey,
+      gender: hasActiveFilter ? genderFilter : "",
+      size: hasActiveFilter ? sizeFilter : "",
+      search: urlSearch
+    }).then(setBrandsInFilter);
+
+    // eslint-disable-next-line
+  }, [categoryFilter, genderFilter, sizeFilter, urlSearch, categories]);
 
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
@@ -85,7 +105,7 @@ export default function Home() {
     return [];
   }, [categories, categoryFilter]);
 
-  // Основная загрузка товаров
+  // --- Основная загрузка товаров ---
   const load = async (
     query = "",
     bc = [{ label: "Main", query: "", exclude: "" }],
@@ -127,13 +147,13 @@ export default function Home() {
     setGenderFilter("");
   };
 
-  // Обработчик для фильтра категории
+  // --- Смена категории через фильтр ---
   const handleCategoryFilterChange = async (newCategory) => {
     setCategoryFilter(newCategory);
     await load("", breadcrumbs, "", brandFilter, newCategory, "", false);
   };
 
-  // ГЛАВНЫЙ обработчик поиска
+  // --- Поиск / клик по меню ---
   const handleSearch = (
     query,
     breadcrumbTrail,
@@ -191,7 +211,7 @@ export default function Home() {
     }
   };
 
-  // Клик по хлебным крошкам
+  // --- Хлебные крошки ---
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
@@ -206,6 +226,7 @@ export default function Home() {
     }
   };
 
+  // --- Инициализация (навигация/поиск) ---
   useEffect(() => {
     async function initialize() {
       if (location.state && location.state.breadcrumbs) {
@@ -235,6 +256,7 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
+  // --- Обновляем товары при смене подкатегории ---
   useEffect(() => {
     async function updateProducts() {
       if (!categoryFilter) {
@@ -270,7 +292,7 @@ export default function Home() {
     // eslint-disable-next-line
   }, [categoryFilter, categories]);
 
-  // --- Фильтрация товаров на клиенте ---
+  // --- КЛИЕНТСКАЯ фильтрация товаров ---
   const filteredProducts = useMemo(() => {
     let list = products;
     if (categoryFilter === "sale") {
@@ -302,7 +324,6 @@ export default function Home() {
 
   const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
 
-  // Бренды теперь берём не из товаров, а из brandsInFilter!
   const allBrands = useMemo(() => brandsInFilter, [brandsInFilter]);
 
   const genderOptions = useMemo(() => {

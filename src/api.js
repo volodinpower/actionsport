@@ -171,13 +171,7 @@ export async function fetchProductsRaw(search = "", limit = 30, offset = 0, only
 }
 
 // --- Новый: Фильтр брендов по всем активным фильтрам ---
-export async function fetchFilteredBrands({
-  categoryKey = "",
-  subcategoryKey = "",
-  gender = "",
-  size = "",
-  search = ""
-} = {}) {
+export async function fetchFilteredBrands({ categoryKey, subcategoryKey, gender, size, search }) {
   const params = new URLSearchParams();
   if (categoryKey) params.append("category_key", categoryKey);
   if (subcategoryKey) params.append("subcategory_key", subcategoryKey);
@@ -185,7 +179,7 @@ export async function fetchFilteredBrands({
   if (size) params.append("size", size);
   if (search) params.append("search", search);
   const url = `/brands/filtered?${params.toString()}`;
-  const res = await fetch(apiUrl(url));
+  const res = await fetch(import.meta.env.VITE_API_URL + url);
   if (!res.ok) return [];
   return await res.json();
 }
