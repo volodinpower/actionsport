@@ -27,7 +27,7 @@ export default function SearchBar({
       if (query.length > 0) {
         setLoading(true);
         try {
-          // --- Исправлено: поиск теперь по /products, работает с несколькими словами ---
+          // Поиск работает по нескольким словам!
           const res = await fetch(
             `${API_URL}/products?search=${encodeURIComponent(query)}&limit=15`
           );
@@ -49,8 +49,6 @@ export default function SearchBar({
     if (trimmed) {
       onSearch(trimmed);
       if (searchInputRef.current) searchInputRef.current.blur();
-      // По UX поиск не должен закрывать окно!
-      // if (onClose) onClose();
     }
   };
 
@@ -61,7 +59,7 @@ export default function SearchBar({
       }`}
     >
       <div className="searchbar-modal-inner">
-        {/* Крестик закрытия поиска — вне input, в углу модалки */}
+        {/* Крестик закрытия поиска — вне input, всегда в правом верхнем углу */}
         {onClose && (
           <button
             className="search-close"
@@ -72,43 +70,46 @@ export default function SearchBar({
             ×
           </button>
         )}
-        <div className="search-input-row">
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search..."
-            className={`search-input${fullWidth ? " search-input-full" : ""}`}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleSearch();
-              }
-              if (e.key === "Escape" && onClose) {
-                onClose();
-              }
-            }}
-            style={{
-              paddingRight: searchText ? 64 : 16, // место для "Clear"
-            }}
-          />
-          {/* Кнопка очистки — только очищает input, не закрывает окно */}
-          {searchText && (
-            <button
-              type="button"
-              aria-label="Clear search"
-              className="search-clear-btn"
-              onClick={() => {
-                setSearchText("");
-                setSearchResults([]);
-                onSearch(""); // очищает поиск
-                if (searchInputRef.current) searchInputRef.current.focus();
+        {/* Контейнер фиксированной ширины для поля поиска */}
+        <div className="searchbar-input-wrap">
+          <div className="search-input-row">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search..."
+              className={`search-input${fullWidth ? " search-input-full" : ""}`}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSearch();
+                }
+                if (e.key === "Escape" && onClose) {
+                  onClose();
+                }
               }}
-            >
-              Clear
-            </button>
-          )}
+              style={{
+                paddingRight: searchText ? 64 : 16, // место для "Clear"
+              }}
+            />
+            {/* Кнопка очистки — только очищает поле, не закрывает окно */}
+            {searchText && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                className="search-clear-btn"
+                onClick={() => {
+                  setSearchText("");
+                  setSearchResults([]);
+                  onSearch(""); // очищает поиск
+                  if (searchInputRef.current) searchInputRef.current.focus();
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
         {(searchText || loading) && (
           <div className="search-results-list">
