@@ -16,6 +16,19 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
+function getCategoryLabel(cat) {
+  if (!cat) return "";
+  return (
+    cat.label ||
+    cat.name ||
+    cat.title ||
+    cat.category_title ||
+    cat.category_name ||
+    cat.category_key ||
+    "Category"
+  );
+}
+
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -142,12 +155,10 @@ export default function Home() {
     setProducts(productsList);
   };
 
-  // --- Сброс фильтров при смене категории! ---
+  // Выбор категории или подкатегории
   const handleCategoryFilterChange = (newCategory) => {
     setCategoryFilter(newCategory);
-    setBrandFilter("");
-    setSizeFilter("");
-    setGenderFilter("");
+    // Не вызываем load! Всё сработает через useEffect.
   };
 
   // Главный обработчик поиска и кликов в меню
@@ -179,6 +190,7 @@ export default function Home() {
     setBrandFilter(filterBrand || "");
     setGenderFilter(genderArg || "");
     setSizeFilter(sizeArg || "");
+    // Всё остальное сделает useEffect
     setForceOpenCategory(!!subcategory);
   };
 
