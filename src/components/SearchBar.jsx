@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./SearchBar.css"
+import './SearchBar.css'
 
-export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWidth = false }) {
+export default function SearchBar({
+  onSearch,
+  autoFocus = false,
+  onClose,
+  fullWidth = false
+}) {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,7 +27,9 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
       if (query.length > 0) {
         setLoading(true);
         try {
-          const res = await fetch(`${API_URL}/search_smart?q=${encodeURIComponent(query)}`);
+          const res = await fetch(
+            `${API_URL}/search_smart?q=${encodeURIComponent(query)}`
+          );
           const data = await res.json();
           setSearchResults(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -47,30 +54,19 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
 
   return (
     <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
-      <div className="searchbar-modal-inner" style={{ position: "relative" }}>
-        {/* Крестик — только для закрытия поиска */}
+      <div className="searchbar-modal-inner">
+        {/* Крестик закрытия поиска (в правом верхнем углу, вне input) */}
         {onClose && (
           <button
             className="search-close"
             onClick={onClose}
             tabIndex={-1}
             aria-label="Close search"
-            style={{
-              position: "absolute",
-              right: 16,
-              top: 16,
-              fontSize: "1.5rem",
-              background: "none",
-              border: "none",
-              color: "#888",
-              cursor: "pointer",
-              zIndex: 2
-            }}
           >
             ×
           </button>
         )}
-        <div className="search-input-row" style={{ position: "relative" }}>
+        <div className="search-input-row">
           <input
             ref={searchInputRef}
             type="text"
@@ -87,27 +83,16 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
                 onClose();
               }
             }}
-            style={{ paddingRight: searchText ? 60 : 16 }} // чтобы "Clear" не налезал на текст
+            style={{
+              paddingRight: searchText ? 64 : 16 // место для "Clear"
+            }}
           />
-          {/* Кнопка очистки появляется только если есть текст */}
+          {/* Кнопка очистки — "Clear" */}
           {searchText && (
             <button
               type="button"
               aria-label="Clear search"
               className="search-clear-btn"
-              style={{
-                position: "absolute",
-                right: 8,
-                top: "50%",
-                transform: "translateY(-50%)",
-                background: "none",
-                border: "none",
-                color: "#888",
-                fontSize: "0.95rem",
-                padding: "2px 10px",
-                cursor: "pointer",
-                zIndex: 1
-              }}
               onClick={() => {
                 setSearchText("");
                 setSearchResults([]);
@@ -153,9 +138,9 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
                     <img
                       src={
                         item.main_img
-                          ? (item.main_img.startsWith("http")
-                              ? item.main_img
-                              : `${API_URL}${item.main_img}`)
+                          ? item.main_img.startsWith("http")
+                            ? item.main_img
+                            : `${API_URL}${item.main_img}`
                           : "/no-image.jpg"
                       }
                       alt=""
@@ -166,9 +151,7 @@ export default function SearchBar({ onSearch, autoFocus = false, onClose, fullWi
                 )
               )
             ) : (
-              <div className="search-no-results">
-                No results
-              </div>
+              <div className="search-no-results">No results</div>
             )}
           </div>
         )}
