@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
-import { fetchProducts, fetchPopularProducts, fetchCategories } from "../api";
+import { fetchProducts, fetchPopularProducts, fetchCategories, fetchFilteredBrands } from "../api";
 import Banner from "../components/Banner";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -42,11 +42,29 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
+  // --- Новый стейт для брендов после всех фильтров ---
+  const [brandsInFilter, setBrandsInFilter] = useState([]);
+
   useEffect(() => {
     fetchCategories()
       .then(data => setCategories(data || []))
       .catch(() => setCategories([]));
   }, []);
+
+  // ---- Обновляем brandsInFilter при любом изменении фильтра ----
+  useEffect(() => {
+    async function updateBrands() {
+      const brands = await fetchFilteredBrands({
+        categoryKey: categoryFilter,
+        gender: genderFilter,
+        size: sizeFilter,
+        search: urlSearch,
+        // subcategoryKey: если используешь, то подставь сюда
+      });
+      setBrandsInFilter(brands);
+    }
+    updateBrands();
+  }, [categoryFilter, genderFilter, sizeFilter, urlSearch]);
 
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
@@ -83,7 +101,6 @@ export default function Home() {
     let limit = 150;
 
     if (categoryKey === "sale") {
-      // Грузим ВСЕ товары, фильтруем по скидке
       productsList = await fetchProducts("", 500, 0, "", "", "asc", "", "");
       productsList = productsList.filter(p =>
         (p.discount && Number(p.discount) > 0) ||
@@ -125,7 +142,6 @@ export default function Home() {
     category = "",
     subcategory = ""
   ) => {
-    // Если это категория или подкатегория — грузим как раньше
     if (category || subcategory) {
       let categoryKey = "";
       let subcategoryKey = "";
@@ -159,7 +175,6 @@ export default function Home() {
         ];
       }
 
-      // Загружаем товары из категории
       load("", newBreadcrumbs, excludeArg, filterBrand, categoryKey, subcategoryKey, true);
 
       if (subcategory) {
@@ -172,7 +187,6 @@ export default function Home() {
       setBrandFilter(filterBrand || "");
       setForceOpenCategory(!!subcategory);
     } else if (query) {
-      // Это обычный текстовый поиск — просто обновляем URL!
       navigate(`/?search=${encodeURIComponent(query)}`);
     }
   };
@@ -192,10 +206,8 @@ export default function Home() {
     }
   };
 
-  // Первичная инициализация
   useEffect(() => {
     async function initialize() {
-      // Если есть breadcrumbs в location.state
       if (location.state && location.state.breadcrumbs) {
         if (location.state.query) {
           await load(location.state.query, location.state.breadcrumbs, "", "", "", "", true);
@@ -206,7 +218,6 @@ export default function Home() {
         return;
       }
 
-      // Если есть search в url
       if (urlSearch) {
         const initialBreadcrumbs = [
           { label: "Main", query: "", exclude: "" },
@@ -217,7 +228,6 @@ export default function Home() {
         return;
       }
 
-      // Обычная главная страница
       await load("", [{ label: "Main", query: "", exclude: "" }], "", "", "", "", true);
       setCategoryFilter("");
     }
@@ -225,7 +235,6 @@ export default function Home() {
     // eslint-disable-next-line
   }, [location.search]);
 
-  // --- КОРРЕКТНЫЙ useEffect: товары подгружаются только при смене категории ---
   useEffect(() => {
     async function updateProducts() {
       if (!categoryFilter) {
@@ -233,7 +242,6 @@ export default function Home() {
         return;
       }
       if (categoryFilter === "sale") {
-        // В sale не делаем load при смене фильтров!
         return;
       }
 
@@ -259,11 +267,10 @@ export default function Home() {
     }
 
     updateProducts().catch(console.error);
-    // ТОЛЬКО при смене категории!
     // eslint-disable-next-line
   }, [categoryFilter, categories]);
 
-  // Фильтрация товаров (только на клиенте)
+  // --- Фильтрация товаров на клиенте ---
   const filteredProducts = useMemo(() => {
     let list = products;
     if (categoryFilter === "sale") {
@@ -283,15 +290,6 @@ export default function Home() {
     return list;
   }, [products, sizeFilter, brandFilter, genderFilter, categoryFilter]);
 
-  // Только бренды, которые реально есть в выбранной категории/фильтрации
-  const brandsInThisCategory = useMemo(
-    () =>
-      Array.from(
-        new Set(filteredProducts.map(p => p.brand).filter(Boolean))
-      ).sort(),
-    [filteredProducts]
-  );
-
   const allSizes = useMemo(() =>
     Array.from(
       new Set(filteredProducts.flatMap(p => Array.isArray(p.sizes) ? p.sizes : []).filter(Boolean))
@@ -303,6 +301,9 @@ export default function Home() {
   , [filteredProducts]);
 
   const showGenderOption = uniqueGenders.length > 1 || !!genderFilter;
+
+  // Бренды теперь берём не из товаров, а из brandsInFilter!
+  const allBrands = useMemo(() => brandsInFilter, [brandsInFilter]);
 
   const genderOptions = useMemo(() => {
     const variants = Array.from(
@@ -355,13 +356,10 @@ export default function Home() {
     return arr;
   }, [filteredProducts, sort]);
 
-  // --- Корректный reset фильтров: просто сбрасываем, никакой загрузки sale! ---
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
-    // для sale не делаем load, просто убираем фильтры (products уже загружен)
-    // для остальных категорий тоже только убираем фильтры
   };
 
   const handleCardClick = (productId) => {
@@ -397,7 +395,7 @@ export default function Home() {
         <div>
           <FilterBar
             allSizes={allSizes}
-            allBrands={brandsInThisCategory} // <<--- только бренды из фильтрованных товаров!
+            allBrands={allBrands}
             submenuList={submenuList}
             sizeFilter={sizeFilter}
             setSizeFilter={setSizeFilter}

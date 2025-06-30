@@ -4,7 +4,6 @@ function getAdminToken() {
   return localStorage.getItem("admin_token");
 }
 
-// Вспомогательная функция для формирования полного URL
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
   return `${base}${path.startsWith("/") ? path : "/" + path}`;
@@ -26,7 +25,6 @@ export async function syncImagesForGroup(productId) {
   return await res.json();
 }
 
-// --- Получить список товаров с фильтрацией (поиск, лимит, смещение, фильтр по отсутствию картинок)
 export async function fetchProducts(
   search = "",
   limit = 30,
@@ -37,9 +35,6 @@ export async function fetchProducts(
   category_key = "",
   subcategory_key = ""
 ) {
-  console.log("fetchProducts args:", {
-  search, limit, offset, exclude, brand, sort, category_key, subcategory_key
-  });
   const params = new URLSearchParams();
   if (search) params.append("search", search);
   params.append("limit", limit);
@@ -55,14 +50,12 @@ export async function fetchProducts(
   return await res.json();
 }
 
-// --- Получить случайные товары с картинками для главной страницы
 export async function fetchRandomProducts(limit = 20) {
   const res = await fetch(apiUrl(`/random-products?limit=${limit}`));
   if (!res.ok) throw new Error("Failed to fetch random products");
   return await res.json();
 }
 
-// --- Загрузить XLSX (основной импорт каталога)
 export async function uploadXlsx(file) {
   const formData = new FormData();
   formData.append("file", file);
@@ -81,14 +74,12 @@ export async function uploadXlsx(file) {
   return await res.json();
 }
 
-// --- Получить данные одного товара по id (подробно для модалки/деталей)
 export async function fetchProductById(id) {
   const res = await fetch(apiUrl(`/api/product/${id}`));
   if (!res.ok) throw new Error("Failed to fetch product");
   return await res.json();
 }
 
-// --- Установить ссылку на картинку для товара (вручную, если нужно)
 export async function setProductImageUrl(id, imageUrl) {
   const token = getAdminToken();
   const res = await fetch(apiUrl(`/admin/product/${id}/set_image_url`), {
@@ -108,7 +99,6 @@ export async function setProductImageUrl(id, imageUrl) {
   return await res.json();
 }
 
-// --- Загрузить картинку для товара (с поддержкой name: _main, _prev, _1, _2 ...)
 export async function uploadProductImage(id, file, name = "") {
   const formData = new FormData();
   formData.append("file", file);
@@ -128,9 +118,7 @@ export async function uploadProductImage(id, file, name = "") {
   return await res.json();
 }
 
-// --- Удалить картинку у товара (отправлять FormData, иначе FastAPI не примет)
 export async function deleteProductImage(productId, imageUrl) {
-  // Обрезаем абсолютный путь до относительного, если нужно
   let relativeUrl = imageUrl;
   if (relativeUrl.startsWith("http")) {
     const idx = relativeUrl.indexOf("/static/");
@@ -153,30 +141,24 @@ export async function deleteProductImage(productId, imageUrl) {
   return await res.json();
 }
 
-
-// --- Получить отчёт после загрузки XLSX (по сути дублирует uploadXlsx, оставь если хочешь как алиас)
 export async function getXlsxImportReport(file) {
   return await uploadXlsx(file);
 }
 
-// --- Получить подробную инфу о товаре (например, для карточки, если потребуется)
 export async function fetchProductDetails(id) {
   return await fetchProductById(id);
 }
 
-// --- Получить товары без картинок (отдельно, если понадобится в админке)
 export async function fetchProductsWithoutImages(limit = 30, offset = 0) {
   return await fetchProducts("", limit, offset, true);
 }
 
-// Получить общее количество товаров в базе
 export async function fetchProductsCount() {
   const res = await fetch(apiUrl("/products/count"));
   if (!res.ok) throw new Error(await res.text());
   return await res.json();
 }
 
-// --- Получить "сырые" товары для админки (без группировки)
 export async function fetchProductsRaw(search = "", limit = 30, offset = 0, onlyWithoutImages = false) {
   const params = new URLSearchParams();
   if (search) params.append("search", search);
@@ -188,22 +170,39 @@ export async function fetchProductsRaw(search = "", limit = 30, offset = 0, only
   return await res.json();
 }
 
-// --- Получить список брендов для меню ---
-export async function fetchBrands() {
-  const url = (import.meta.env.VITE_API_URL || "") + "/brands";
-  const res = await fetch(url);
+// --- Новый: Фильтр брендов по всем активным фильтрам ---
+export async function fetchFilteredBrands({
+  categoryKey = "",
+  subcategoryKey = "",
+  gender = "",
+  size = "",
+  search = ""
+} = {}) {
+  const params = new URLSearchParams();
+  if (categoryKey) params.append("category_key", categoryKey);
+  if (subcategoryKey) params.append("subcategory_key", subcategoryKey);
+  if (gender) params.append("gender", gender);
+  if (size) params.append("size", size);
+  if (search) params.append("search", search);
+  const url = `/brands/filtered?${params.toString()}`;
+  const res = await fetch(apiUrl(url));
   if (!res.ok) return [];
-  return res.json();
+  return await res.json();
 }
 
-// --- Получить баннеры для главной страницы ---
+// --- Старый (все бренды без фильтра, можешь не использовать) ---
+export async function fetchBrands() {
+  const res = await fetch(apiUrl("/brands"));
+  if (!res.ok) return [];
+  return await res.json();
+}
+
 export async function fetchBanners() {
   const res = await fetch(apiUrl("/banners"));
   if (!res.ok) throw new Error(await res.text());
   return await res.json();
 }
 
-// --- Загрузить новый баннер (image — файл, link — ссылка на страницу, alt — alt-текст) ---
 export async function uploadBanner(imageFile, link = "", alt = "") {
   const formData = new FormData();
   formData.append("file", imageFile);
@@ -224,7 +223,6 @@ export async function uploadBanner(imageFile, link = "", alt = "") {
   return await res.json();
 }
 
-// --- Удалить баннер по id ---
 export async function deleteBanner(bannerId) {
   const formData = new FormData();
   formData.append("banner_id", bannerId);
@@ -244,7 +242,6 @@ export async function deleteBanner(bannerId) {
 }
 
 export async function updateBanner(bannerId, fields) {
-  // fields: { link, alt }
   const token = getAdminToken();
   const res = await fetch(apiUrl(`/admin/update_banner/${bannerId}`), {
     method: "POST",
@@ -298,7 +295,5 @@ export async function fetchCategories() {
   const res = await fetch(apiUrl("/categories"));
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();
-  // Если вдруг backend вернул не массив — возвращай []
   return Array.isArray(data) ? data : [];
 }
-
