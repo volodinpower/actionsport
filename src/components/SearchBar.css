@@ -25,27 +25,22 @@
   border-radius: 9px;
 }
 
-/* Новый контейнер! */
-.searchbar-input-wrap {
-  width: 100%;
-  max-width: 460px;
-  margin: 0 auto 0 auto;
+/* Инпут и крестик в одной строке, занимают всю ширину */
+.search-input-and-close-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding-top: 8px;
-  padding-bottom: 4px;
+  width: 100%;
+  margin-bottom: 10px;
+  gap: 0;
 }
-
 .search-input-row {
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
   position: relative;
-  width: 100%;
 }
 .search-input, .search-input-full {
-  flex: 1;
+  width: 100%;
   font-size: 18px;
   padding: 10px 16px;
   border: 1px solid #ddd;
@@ -58,7 +53,6 @@
   border: 1.5px solid #2b6cb0;
   background: #fff;
 }
-
 .search-clear-btn {
   position: absolute;
   right: 8px;
@@ -81,25 +75,26 @@
   background: #f3f3f3;
   text-decoration: underline;
 }
-
-/* Крестик для закрытия поиска */
-.search-close {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  z-index: 10;
+/* Крестик закрытия — справа от инпута */
+.search-close-inline {
+  flex: 0 0 auto;
+  margin-left: 8px;
   background: none;
   border: none;
   color: #aaa;
-  font-size: 1.55rem;
+  font-size: 1.6rem;
   cursor: pointer;
-  padding: 0 7px 0 7px;
+  padding: 2px 12px 2px 8px;
   transition: color 0.17s;
+  border-radius: 7px;
   user-select: none;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
 }
-.search-close:hover, .search-close:focus {
+.search-close-inline:hover, .search-close-inline:focus {
   color: #ff4747;
-  background: none;
+  background: #f3f3f3;
 }
 
 /* Результаты поиска */
@@ -145,6 +140,7 @@
   font-style: italic;
 }
 
+/* ----------- Мобилка ----------- */
 @media (max-width: 900px) {
   .searchbar-modal-outer,
   .searchbar-modal-inner {
@@ -153,9 +149,6 @@
     border-radius: 0 !important;
     margin: 0 !important;
     z-index: 10002 !important;
-  }
-  .searchbar-input-wrap {
-    max-width: 98vw;
   }
   .search-input, .search-input-full {
     font-size: 17px;
@@ -169,6 +162,9 @@
     right: 7px;
     font-size: 1.08rem;
     padding: 4px 15px 4px 9px;
+  }
+  .search-input-and-close-row {
+    margin-bottom: 8px;
   }
 }
 @media (max-width: 600px) {

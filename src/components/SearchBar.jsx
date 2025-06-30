@@ -27,7 +27,6 @@ export default function SearchBar({
       if (query.length > 0) {
         setLoading(true);
         try {
-          // Поиск работает по нескольким словам!
           const res = await fetch(
             `${API_URL}/products?search=${encodeURIComponent(query)}&limit=15`
           );
@@ -53,25 +52,10 @@ export default function SearchBar({
   };
 
   return (
-    <div
-      className={`searchbar-modal-outer${
-        fullWidth ? " searchbar-modal-outer-full" : ""
-      }`}
-    >
+    <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
       <div className="searchbar-modal-inner">
-        {/* Крестик закрытия поиска — вне input, всегда в правом верхнем углу */}
-        {onClose && (
-          <button
-            className="search-close"
-            onClick={onClose}
-            tabIndex={-1}
-            aria-label="Close search"
-          >
-            ×
-          </button>
-        )}
-        {/* Контейнер фиксированной ширины для поля поиска */}
-        <div className="searchbar-input-wrap">
+        {/* Ряд с инпутом и крестиком */}
+        <div className="search-input-and-close-row">
           <div className="search-input-row">
             <input
               ref={searchInputRef}
@@ -93,7 +77,7 @@ export default function SearchBar({
                 paddingRight: searchText ? 64 : 16, // место для "Clear"
               }}
             />
-            {/* Кнопка очистки — только очищает поле, не закрывает окно */}
+            {/* Кнопка очистки */}
             {searchText && (
               <button
                 type="button"
@@ -110,6 +94,17 @@ export default function SearchBar({
               </button>
             )}
           </div>
+          {/* Крестик закрытия — справа от инпута */}
+          {onClose && (
+            <button
+              className="search-close-inline"
+              onClick={onClose}
+              tabIndex={-1}
+              aria-label="Close search"
+            >
+              ×
+            </button>
+          )}
         </div>
         {(searchText || loading) && (
           <div className="search-results-list">
