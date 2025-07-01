@@ -53,12 +53,7 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // Серверные фильтры для опций
-  const [brandsInFilter, setBrandsInFilter] = useState([]);
-  const [sizesInFilter, setSizesInFilter] = useState([]);
-  const [gendersInFilter, setGendersInFilter] = useState([]);
-
-  // Вычисляем подкатегорию (subcategoryKey) если categoryFilter — это на самом деле подкатегория
+  // Вычисляем подкатегорию (subcategoryKey), если categoryFilter — это подкатегория
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
     for (const c of categories) {
@@ -71,7 +66,7 @@ export default function Home() {
     return "";
   }, [categoryFilter, categories]);
 
-  // Собираем фильтры в один объект
+  // Собираем фильтры в один объект для удобства
   const filters = useMemo(() => ({
     query: urlSearch,
     categoryKey: subcategoryKey ? "" : categoryFilter,
@@ -81,7 +76,7 @@ export default function Home() {
     size: sizeFilter,
   }), [urlSearch, categoryFilter, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  // Получение списка подкатегорий для фильтра
+  // Получение списка подкатегорий для выпадающего фильтра
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
     if (cat) {
@@ -101,21 +96,21 @@ export default function Home() {
     return [];
   }, [categories, categoryFilter]);
 
-  // Загрузка категорий
+  // Загрузка категорий при монтировании
   useEffect(() => {
     fetchCategories()
       .then(data => setCategories(data || []))
       .catch(() => setCategories([]));
   }, []);
 
-  // Обновление опций фильтров при изменении фильтров и категории
+  // Серверные опции фильтров — обновляем при изменении фильтров
   useEffect(() => {
     async function updateOptions() {
       let realCategoryKey = filters.categoryKey;
       let realSubcategoryKey = filters.subcategoryKey;
 
       if (realSubcategoryKey) {
-        // Если есть подкатегория, realCategoryKey сбрасываем в пустую строку, уже учтен в фильтрах
+        // Если подкатегория указана, то сбрасываем основную категорию
         realCategoryKey = "";
       }
 
@@ -149,9 +144,9 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // Загрузка товаров (с пагинацией)
+  // Загрузка товаров с пагинацией
   const loadProducts = useCallback(async ({ reset = false, pageParam = 0, ...opts } = {}) => {
-    if (isLoading) return;
+    if (isLoading) return; // Предотвращаем параллельные запросы
     setIsLoading(true);
 
     const {
@@ -188,12 +183,13 @@ export default function Home() {
 
       if (reset) {
         setProducts(fetched);
+        setHasMore(fetched.length === LIMIT);
       } else {
         setProducts(prev => [...prev, ...fetched]);
+        setHasMore(fetched.length === LIMIT);
       }
 
       setPage(pageParam);
-      setHasMore(fetched.length === LIMIT);
     } catch (err) {
       console.error(err);
     } finally {
@@ -201,12 +197,12 @@ export default function Home() {
     }
   }, [filters, isLoading]);
 
-  // При изменении фильтров сбрасываем список товаров и загружаем первую страницу
+  // Сброс товаров и загрузка первой страницы при смене фильтров
   useEffect(() => {
     loadProducts({ reset: true, pageParam: 0 });
   }, [filters, loadProducts]);
 
-  // Обработчик скролла для бесконечной прокрутки
+  // Обработчик скролла — бесконечная прокрутка
   useEffect(() => {
     const onScroll = () => {
       if (isLoading || !hasMore) return;
@@ -218,12 +214,12 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [page, hasMore, isLoading, loadProducts]);
 
-  // Обновление фильтра категории (или подкатегории)
+  // Обработка смены фильтра категории
   const handleCategoryFilterChange = (newCategory) => {
     setCategoryFilter(newCategory);
   };
 
-  // Главный обработчик поиска и кликов в меню
+  // Главный обработчик поиска и кликов по меню
   const handleSearch = (
     query,
     breadcrumbTrail,
@@ -237,6 +233,7 @@ export default function Home() {
     let newBreadcrumbs = breadcrumbTrail;
     let categoryKey = "";
     let subcategoryKey = "";
+
     if (subcategory) {
       subcategoryKey = subcategory;
       const parent = categories.find(c =>
@@ -248,6 +245,7 @@ export default function Home() {
     } else if (category) {
       categoryKey = category;
     }
+
     setBreadcrumbs(newBreadcrumbs);
     setCategoryFilter(subcategory || category || "");
     setBrandFilter(filterBrand || "");
@@ -260,10 +258,12 @@ export default function Home() {
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
+
     setCategoryFilter("");
     setBrandFilter("");
     setGenderFilter("");
     setSizeFilter("");
+
     if (lastCrumb.query === "") {
       setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
       await loadProducts({ reset: true, pageParam: 0 });
@@ -273,9 +273,12 @@ export default function Home() {
     }
   };
 
-  // --- НЕ ФИЛЬТРУЕМ НА КЛИЕНТЕ! Просто выводим products ---
-  const allBrands = useMemo(() => brandsInFilter, [brandsInFilter]);
-  const allSizes = useMemo(() => sizesInFilter, [sizesInFilter]);
+  // Серверные опции для фильтров
+  const [brandsInFilter, setBrandsInFilter] = useState([]);
+  const [sizesInFilter, setSizesInFilter] = useState([]);
+  const [gendersInFilter, setGendersInFilter] = useState([]);
+
+  // Опции для фильтра по полу
   const genderOptions = useMemo(() =>
     gendersInFilter.map(g => ({
       value: g,
@@ -285,6 +288,7 @@ export default function Home() {
   );
   const showGenderOption = gendersInFilter.length > 1 || !!genderFilter;
 
+  // Фильтры — сортировка по цене, просмотрам, скидкам
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -357,8 +361,8 @@ export default function Home() {
       {!isHome && (
         <div>
           <FilterBar
-            allSizes={allSizes}
-            allBrands={allBrands}
+            allSizes={sizesInFilter}
+            allBrands={brandsInFilter}
             submenuList={submenuList}
             sizeFilter={sizeFilter}
             setSizeFilter={setSizeFilter}
@@ -397,9 +401,11 @@ export default function Home() {
             </div>
           )}
         </div>
+
         {isLoading && (
           <div className="text-center text-gray-600 py-4">Loading more products...</div>
         )}
+
         {!hasMore && !isLoading && (
           <div className="text-center text-gray-600 py-4">No more products</div>
         )}
