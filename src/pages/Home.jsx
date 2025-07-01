@@ -16,7 +16,6 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-const LIMIT = 20;
 const RAW_FETCH_MULTIPLIER = 3;
 
 function groupProducts(rawProducts) {
@@ -35,9 +34,9 @@ export default function Home() {
 
   // Категории (из API)
   const [categories, setCategories] = useState([]);
-  const [categoryKey, setCategoryKey] = useState("");      // выбранная категория (главное меню)
-  const [categoryLabel, setCategoryLabel] = useState("");  // её подпись
-  const [subcategoryKey, setSubcategoryKey] = useState(""); // подкатегория (если выбрана)
+  const [categoryKey, setCategoryKey] = useState("");
+  const [categoryLabel, setCategoryLabel] = useState("");
+  const [subcategoryKey, setSubcategoryKey] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
@@ -49,13 +48,30 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [sort, setSort] = useState("");
 
-  // --- Новый: следим за изменением URL для поиска ---
-  useEffect(() => {
-    const urlSearchParams = new URLSearchParams(location.search);
-    const urlSearch = urlSearchParams.get("search") || "";
-    setSearchQuery(urlSearch);
-  }, [location.search]);
+  // Лимит по умолчанию
+  const [limit, setLimit] = useState(20);
 
+  // Следим за изменением ширины экрана и меняем лимит
+  useEffect(() => {
+    function updateLimit() {
+      const width = window.innerWidth;
+      let columns;
+      if (width >= 1280) columns = 5;
+      else if (width >= 1024) columns = 4;
+      else if (width >= 768) columns = 3;
+      else if (width >= 640) columns = 2;
+      else columns = 2;
+
+      // Если 3 карточки в ряд, показываем 21
+      if (columns === 3) setLimit(21);
+      else setLimit(20);
+    }
+    updateLimit();
+    window.addEventListener("resize", updateLimit);
+    return () => window.removeEventListener("resize", updateLimit);
+  }, []);
+
+  // Новый isHome, основанный на searchQuery и фильтрах
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
@@ -136,7 +152,7 @@ export default function Home() {
     setIsLoading(true);
     try {
       let offset = reset ? 0 : rawProducts.length;
-      let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
+      let rawLimit = limit * RAW_FETCH_MULTIPLIER;
       let fetchedRaw = [];
 
       if (isHome) {
@@ -160,7 +176,7 @@ export default function Home() {
       setRawProducts(updatedRaw);
 
       const grouped = groupProducts(updatedRaw);
-      const showCount = reset ? LIMIT : products.length + LIMIT;
+      const showCount = reset ? limit : products.length + limit;
       const paged = grouped.slice(0, showCount);
 
       setProducts(paged);
@@ -170,7 +186,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, rawProducts, isHome, products.length]);
+  }, [filters, isLoading, rawProducts, isHome, products.length, limit]);
 
   // --- Сброс данных при смене фильтра/поиска/категории
   useEffect(() => {
@@ -179,7 +195,7 @@ export default function Home() {
     setHasMore(true);
     loadProducts({ reset: true });
     // eslint-disable-next-line
-  }, [filters, isHome]);
+  }, [filters, isHome, limit]);
 
   // --- Пагинация при скролле ---
   useEffect(() => {
@@ -194,56 +210,9 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // --- Основной поиск и обработка кликов меню/поиска ---
-  const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
-    setCategoryKey(catKey);
-    setCategoryLabel(catLabel);
-    setSubcategoryKey(subKey || "");
-    setSizeFilter("");
-    setBrandFilter("");
-    setGenderFilter("");
-    setForceOpenCategory(!!subKey);
-    setSearchQuery(""); // <<-- вот это сбрасывает текущий поисковый запрос!
-    navigate("/");
-  };
+  // Остальной код — без изменений, рендер, обработчики и т.д.
 
-  const handleSearch = (
-    query = "",
-    crumbs = [{ label: "Main", query: "", exclude: "" }],
-    _exclude = "",
-    _brand = "",
-    _category = "",
-    _subcategory = "",
-    _gender = "",
-    _size = ""
-  ) => {
-    setCategoryKey("");
-    setCategoryLabel("");
-    setSubcategoryKey("");
-    setBrandFilter("");
-    setGenderFilter("");
-    setSizeFilter("");
-    setForceOpenCategory(false);
-    setSearchQuery(query); // <<-- вот это и выставляет актуальный поисковый запрос!
-    navigate(query ? `/?search=${encodeURIComponent(query)}` : "/");
-  };
-
-  // --- FilterBar ---
-  const onCategoryChange = (newSubKey) => {
-    setSubcategoryKey(newSubKey);
-    setForceOpenCategory(false);
-  };
-  const onBrandChange = setBrandFilter;
-  const onSizeChange = setSizeFilter;
-  const onGenderChange = setGenderFilter;
-  const clearFilters = () => {
-    setSizeFilter("");
-    setBrandFilter("");
-    setGenderFilter("");
-    setSubcategoryKey("");
-    setForceOpenCategory(false);
-  };
-
+  // Определяем список подкатегорий для FilterBar
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
@@ -265,7 +234,7 @@ export default function Home() {
     return discount > 0 ? discount : price;
   };
 
-  const displayedProducts = useMemo(() => {
+  const displayedProductsSorted = useMemo(() => {
     let arr = [...products];
     if (sort === "asc") arr.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
     else if (sort === "desc") arr.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
@@ -274,10 +243,12 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
+  // Карточка товара
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`);
   };
 
+  // Клик по хлебным крошкам
   const handleBreadcrumbClick = idx => {
     if (idx === 0) {
       setCategoryKey("");
@@ -292,7 +263,49 @@ export default function Home() {
     }
   };
 
-  // --- render ---
+  // Обработчики меню и поиска
+  const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
+    setCategoryKey(catKey);
+    setCategoryLabel(catLabel);
+    setSubcategoryKey(subKey || "");
+    setSizeFilter("");
+    setBrandFilter("");
+    setGenderFilter("");
+    setForceOpenCategory(!!subKey);
+    setSearchQuery(""); // сбрасываем поиск при выборе категории
+    navigate("/");
+  };
+
+  const handleSearch = (query = "") => {
+    setCategoryKey("");
+    setCategoryLabel("");
+    setSubcategoryKey("");
+    setBrandFilter("");
+    setGenderFilter("");
+    setSizeFilter("");
+    setForceOpenCategory(false);
+    setSearchQuery(query);
+    navigate(query ? `/?search=${encodeURIComponent(query)}` : "/");
+  };
+
+  // FilterBar
+  const onCategoryChange = (newSubKey) => {
+    setSubcategoryKey(newSubKey);
+    setForceOpenCategory(false);
+  };
+  const onBrandChange = setBrandFilter;
+  const onSizeChange = setSizeFilter;
+  const onGenderChange = setGenderFilter;
+
+  const clearFilters = () => {
+    setSizeFilter("");
+    setBrandFilter("");
+    setGenderFilter("");
+    setSubcategoryKey("");
+    setForceOpenCategory(false);
+  };
+
+  // Рендер
   return (
     <>
       <Header
@@ -335,16 +348,14 @@ export default function Home() {
             onSizeChange={onSizeChange}
             onGenderChange={onGenderChange}
           />
-          <div>
-            <SortControl sort={sort} setSort={setSort} />
-          </div>
+          <SortControl sort={sort} setSort={setSort} />
         </div>
       )}
 
       <div className="mx-auto px-2 pb-12">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
-          {displayedProducts.length > 0 ? (
-            displayedProducts.map(product => (
+          {displayedProductsSorted.length > 0 ? (
+            displayedProductsSorted.map(product => (
               <ProductCard
                 key={product.id || product.name + product.color}
                 product={product}
