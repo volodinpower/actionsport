@@ -348,7 +348,7 @@ export default function Home() {
         isHome={isHome}
         setCategoryFilter={setCategoryFilter}
         setForceOpenCategory={setForceOpenCategory}
-        navigate={navigate}   {/* ВАЖНО! */}
+        navigate={navigate}  
       />
 
       {!isHome && (
