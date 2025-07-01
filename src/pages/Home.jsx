@@ -17,7 +17,6 @@ import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
 const LIMIT = 20;
-const RAW_FETCH_MULTIPLIER = 3;
 
 export default function Home() {
   const location = useLocation();
@@ -38,11 +37,11 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
+  const [sort, setSort] = useState("asc");
+
   const isHome = useMemo(() => {
     return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
   }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
-
-  const [sort, setSort] = useState("");
 
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
@@ -115,42 +114,40 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // --- Загрузка товаров (группированных)
+  // --- Загрузка товаров (группированных) с offset/limit по группам
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
       let offset = reset ? 0 : products.length;
-      let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
       let fetched = [];
 
       if (isHome) {
-        fetched = await fetchPopularProducts(rawLimit); // popular-products возвращает массив с sizes
-        offset = 0;
+        fetched = await fetchPopularProducts(LIMIT);
       } else {
         fetched = await fetchProductsGrouped(
           filters.query,
-          rawLimit,
+          LIMIT,
           offset,
           filters.brand,
+          filters.gender,
           filters.categoryKey,
           filters.subcategoryKey,
-          filters.gender,
-          filters.size
+          filters.size,
+          sort || "asc"
         );
       }
 
       const updated = reset ? fetched : [...products, ...fetched];
-      const showCount = reset ? LIMIT : products.length + LIMIT;
-      setProducts(updated.slice(0, showCount));
-      setHasMore(fetched.length === rawLimit);
+      setProducts(updated);
+      setHasMore(fetched.length === LIMIT); // если меньше LIMIT — конец
     } catch (err) {
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, products.length, isHome]);
+  }, [filters, isLoading, products, isHome, sort]);
 
   // --- Сброс при смене фильтров или isHome
   useEffect(() => {
@@ -158,7 +155,7 @@ export default function Home() {
     setHasMore(true);
     loadProducts({ reset: true });
     // eslint-disable-next-line
-  }, [filters, isHome]);
+  }, [filters, isHome, sort]);
 
   // --- Скролл для подгрузки
   useEffect(() => {
