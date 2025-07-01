@@ -12,7 +12,6 @@ export default function FilterBar({
   allBrands = [],
   forceOpenCategory = false,
   setForceOpenCategory = () => {},
-  clearFilters,
   showGender = true,
   showCategory = true,
   onCategoryChange,
@@ -47,7 +46,7 @@ export default function FilterBar({
         <Select
           classNamePrefix="react-select"
           placeholder="Category"
-          isClearable={false}
+          isClearable={true}  // <--- здесь включён сброс категории
           isSearchable={false}
           value={selectedCategory}
           onChange={opt => onCategoryChange(opt ? opt.value : "")}
@@ -60,7 +59,7 @@ export default function FilterBar({
       <Select
         classNamePrefix="react-select"
         placeholder="Brand"
-        isClearable
+        isClearable={true}
         isSearchable={false}
         value={brandFilter ? { value: brandFilter, label: brandFilter } : null}
         onChange={opt => onBrandChange(opt ? opt.value : "")}
@@ -71,7 +70,7 @@ export default function FilterBar({
       <Select
         classNamePrefix="react-select"
         placeholder="Size"
-        isClearable
+        isClearable={true}
         isSearchable={false}
         value={sizeFilter ? { value: sizeFilter, label: sizeFilter } : null}
         onChange={opt => onSizeChange(opt ? opt.value : "")}
@@ -83,24 +82,13 @@ export default function FilterBar({
         <Select
           classNamePrefix="react-select"
           placeholder="Gender"
-          isClearable
+          isClearable={true}
           isSearchable={false}
           value={genderOptions.find(opt => opt.value === genderFilter) || null}
           onChange={opt => onGenderChange(opt ? opt.value : "")}
           options={genderOptions}
           menuPlacement="auto"
         />
-      )}
-      {/* RESET */}
-      {(sizeFilter || brandFilter || genderFilter || categoryFilter) && (
-        <button
-          onClick={clearFilters}
-          className="px-3 py-[6px] rounded border border-gray-300 bg-white text-xs font-medium hover:bg-gray-100 ml-2"
-          type="button"
-          style={{ minHeight: 36, minWidth: 80 }}
-        >
-          Reset filters
-        </button>
       )}
     </div>
   );
