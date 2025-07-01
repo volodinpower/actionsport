@@ -26,11 +26,31 @@ function groupProducts(rawProducts) {
     if (!grouped[key]) {
       grouped[key] = { ...p, sizes: [] };
     }
-    if (p.size && p.size.toLowerCase() !== "нет" && !grouped[key].sizes.includes(p.size)) {
-      grouped[key].sizes.push(p.size);
+    // p.size (например, "42" или "L")
+    if (typeof p.size === "string" && p.size.toLowerCase() !== "нет" && p.size) {
+      if (!grouped[key].sizes.includes(p.size)) {
+        grouped[key].sizes.push(p.size);
+      }
+    }
+    // p.sizes как строка "S, M, L"
+    if (typeof p.sizes === "string" && p.sizes.trim()) {
+      p.sizes.split(",").map(s => s.trim()).forEach(s => {
+        if (s && s.toLowerCase() !== "нет" && !grouped[key].sizes.includes(s)) {
+          grouped[key].sizes.push(s);
+        }
+      });
+    }
+    // p.sizes как массив
+    if (Array.isArray(p.sizes)) {
+      p.sizes.forEach(s => {
+        if (s && s.toLowerCase() !== "нет" && !grouped[key].sizes.includes(s)) {
+          grouped[key].sizes.push(s);
+        }
+      });
     }
   }
   for (const key in grouped) {
+    grouped[key].sizes = grouped[key].sizes.filter(Boolean);
     grouped[key].sizes.sort((a, b) => a.localeCompare(b));
   }
   return Object.values(grouped);
