@@ -208,14 +208,14 @@ export default function Home() {
   const handleCategoryFilterChange = (newCategory) => setCategoryFilter(newCategory);
 
   const handleSearch = (
-    query,
-    breadcrumbTrail,
-    excludeArg = "",
-    filterBrand = "",
-    category = "",
-    subcategory = "",
-    genderArg = "",
-    sizeArg = ""
+      query = "",
+      breadcrumbTrail = [{ label: "Main", query: query, exclude: "" }],
+      excludeArg = "",
+      filterBrand = "",
+      category = "",
+      subcategory = "",
+      genderArg = "",
+      sizeArg = ""
   ) => {
     let newBreadcrumbs = breadcrumbTrail;
     let categoryKey = "";
@@ -348,6 +348,7 @@ export default function Home() {
         isHome={isHome}
         setCategoryFilter={setCategoryFilter}
         setForceOpenCategory={setForceOpenCategory}
+        navigate={navigate}   {/* ВАЖНО! */}
       />
 
       {!isHome && (
