@@ -257,8 +257,15 @@ export default function Home() {
   }, [products, sort]);
 
   const handleCardClick = (productId) => {
-    navigate(`/product/${productId}`);
+    navigate(`/product/${productId}`, {
+      state: {
+        from: location.pathname + location.search,
+        breadcrumbs,
+        query: searchQuery,
+      }
+    });
   };
+
 
   const handleBreadcrumbClick = idx => {
     if (idx === 0) {
