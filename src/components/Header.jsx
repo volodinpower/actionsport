@@ -9,6 +9,7 @@ export default function Header({
   isHome,
   setCategoryFilter,
   setForceOpenCategory,
+  navigate, // <--- добавь!
 }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,27 +23,32 @@ export default function Header({
   }, []);
 
   const runSearch = (
-    query,
+    query = "",
     crumbs = [{ label: "Main", query: query, exclude: "" }],
     exclude = "",
     brand = "",
     category = "",
-    subcategory = ""
+    subcategory = "",
+    gender = "",
+    size = ""
   ) => {
     if (onSearch)
-      onSearch(
-        query,
-        crumbs,
-        exclude || "",
-        brand || "",
-        category || "",
-        subcategory || ""
-      );
+      onSearch(query, crumbs, exclude, brand, category, subcategory, gender, size);
     setActiveMenu(null);
     setMobileMenuOpen(false);
     if (query && query.trim().length > 0) setShowSearch(false);
+
+    // --- Вот это ключевая часть! Меняем URL чтобы Home увидел новый поиск ---
+    if (navigate) {
+      if (query) {
+        navigate(`/?search=${encodeURIComponent(query)}`);
+      } else {
+        navigate(`/`);
+      }
+    }
   };
 
+  // --- Мобильная версия ---
   if (isMobile) {
     return (
       <header className="main-header">
@@ -106,7 +112,7 @@ export default function Header({
     );
   }
 
-  // --- Десктоп ---
+  // --- Десктоп версия ---
   return (
     <header className="main-header">
       <div className="logo-bar">
