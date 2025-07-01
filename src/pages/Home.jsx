@@ -365,16 +365,7 @@ useEffect(() => {
             </div>
           )}
         </div>
-
-        {isLoading && (
-          <div className="text-center text-gray-600 py-4">Loading more products...</div>
-        )}
-
-        {!hasMore && !isLoading && !isHome && (
-          <div className="text-center text-gray-600 py-4">No more products</div>
-        )}
       </div>
-
       <Footer />
     </>
   );
