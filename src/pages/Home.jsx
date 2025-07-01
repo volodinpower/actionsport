@@ -26,28 +26,6 @@ function groupProducts(rawProducts) {
   }));
 }
 
-// Хук для динамического подсчёта колонок по ширине окна
-function useColumnsCount() {
-  const getCount = () => {
-    const width = window.innerWidth;
-    if (width >= 1280) return 5;
-    if (width >= 1024) return 4;
-    if (width >= 768) return 3;
-    if (width >= 640) return 2;
-    return 2;
-  };
-
-  const [columns, setColumns] = useState(getCount());
-
-  useEffect(() => {
-    const onResize = () => setColumns(getCount());
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  return columns;
-}
-
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -153,9 +131,6 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // --- Количество колонок ---
-  const columnsCount = useColumnsCount();
-
   // --- Загрузка товаров ---
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
@@ -163,11 +138,7 @@ export default function Home() {
 
     try {
       let offset = reset ? 0 : rawProducts.length;
-
-      // Вычисляем количество товаров, кратное количеству колонок
-      const neededCount = Math.ceil(LIMIT / columnsCount) * columnsCount;
-      let rawLimit = neededCount * RAW_FETCH_MULTIPLIER;
-
+      let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
       let fetchedRaw = [];
 
       if (isHome) {
@@ -191,9 +162,7 @@ export default function Home() {
       setRawProducts(updatedRaw);
 
       const grouped = groupProducts(updatedRaw);
-
-      // Показать кратное columnsCount число карточек
-      const showCount = reset ? neededCount : products.length + neededCount;
+      const showCount = reset ? LIMIT : products.length + LIMIT;
       const paged = grouped.slice(0, showCount);
 
       setProducts(paged);
@@ -203,7 +172,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, rawProducts, isHome, products.length, columnsCount]);
+  }, [filters, isLoading, rawProducts, isHome, products.length]);
 
   // Сброс данных при смене фильтра/поиска/категории
   useEffect(() => {
@@ -211,8 +180,7 @@ export default function Home() {
     setProducts([]);
     setHasMore(true);
     loadProducts({ reset: true });
-    // eslint-disable-next-line
-  }, [filters, isHome, columnsCount]);
+  }, [filters, isHome, loadProducts]);
 
   // --- Пагинация при скролле ---
   useEffect(() => {
@@ -226,6 +194,16 @@ export default function Home() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
+
+  // --- Определяем количество колонок в сетке по ширине экрана ---
+  const columnsCount = useMemo(() => {
+    const width = window.innerWidth;
+    if (width >= 1280) return 5;   // xl:grid-cols-5
+    if (width >= 1024) return 4;   // lg:grid-cols-4
+    if (width >= 768) return 3;    // md:grid-cols-3
+    if (width >= 640) return 2;    // sm:grid-cols-2
+    return 2;                     // default grid-cols-2
+  }, []);
 
   // --- Добавляем пустые карточки для ровного последнего ряда ---
   const displayedProductsWithFiller = useMemo(() => {
@@ -298,6 +276,7 @@ export default function Home() {
 
   // Основной поиск и меню
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
+    // При клике по категории сбрасываем поиск
     setCategoryKey(catKey);
     setCategoryLabel(catLabel);
     setSubcategoryKey(subKey);
@@ -305,7 +284,11 @@ export default function Home() {
     setBrandFilter("");
     setGenderFilter("");
     setForceOpenCategory(!!subKey);
-    navigate("/");
+    if (urlSearch) {
+      navigate(`/`);
+    } else {
+      navigate(`/`);
+    }
   };
 
   const handleSearch = (
@@ -318,6 +301,7 @@ export default function Home() {
     _gender = "",
     _size = ""
   ) => {
+    // При поиске сбрасываем категорию
     setCategoryKey("");
     setCategoryLabel("");
     setSubcategoryKey("");
