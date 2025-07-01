@@ -19,19 +19,6 @@ import SortControl from "../components/SortControl";
 const HOME_LIMIT = 20;
 const OTHER_LIMIT = 30;
 
-function getCategoryLabel(cat) {
-  if (!cat) return "";
-  return (
-    cat.label ||
-    cat.name ||
-    cat.title ||
-    cat.category_title ||
-    cat.category_name ||
-    cat.category_key ||
-    "Category"
-  );
-}
-
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,27 +40,7 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  const subcategoryKey = useMemo(() => {
-    if (!categoryFilter) return "";
-    for (const c of categories) {
-      if ((c.subcategories || []).some(sub =>
-        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
-      )) {
-        return categoryFilter;
-      }
-    }
-    return "";
-  }, [categoryFilter, categories]);
-
-  const filters = useMemo(() => ({
-    query: urlSearch,
-    categoryKey: subcategoryKey ? "" : categoryFilter,
-    subcategoryKey,
-    brand: brandFilter,
-    gender: genderFilter,
-    size: sizeFilter,
-  }), [urlSearch, categoryFilter, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
-
+  // Подмассив подкатегорий для фильтра
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
     if (cat) {
@@ -140,11 +107,37 @@ export default function Home() {
         });
         setGendersInFilter(genders);
       } catch {
-        // Ошибки игнорируем
+        // Игнорируем ошибки
       }
     }
     updateOptions();
   }, [filters, categories]);
+
+  const filters = useMemo(() => ({
+    query: urlSearch,
+    categoryKey: categoryFilter,
+    subcategoryKey: "",
+    brand: brandFilter,
+    gender: genderFilter,
+    size: sizeFilter,
+  }), [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
+
+  // Функция группировки товаров по name+color с объединением размеров
+  function groupProducts(productsList) {
+    const map = new Map();
+    productsList.forEach(p => {
+      const key = p.name + "||" + p.color;
+      if (!map.has(key)) {
+        map.set(key, { ...p, sizes: p.size ? [p.size] : [] });
+      } else {
+        const existing = map.get(key);
+        if (p.size && !existing.sizes.includes(p.size)) {
+          existing.sizes.push(p.size);
+        }
+      }
+    });
+    return Array.from(map.values());
+  }
 
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
@@ -155,43 +148,15 @@ export default function Home() {
     const offset = reset ? 0 : products.length;
 
     try {
-      let fetched;
+      let fetchedRaw = [];
       if (isMainPage) {
-        // Для главной: запрашиваем в 3 раза больше и группируем
-        const rawLimit = limit * 3;
-        fetched = await fetchPopularProducts(rawLimit);
+        fetchedRaw = await fetchPopularProducts(limit * 3); // много для группировки
         setIsHome(true);
-
-        // Группируем по name+color
-        const groupedMap = new Map();
-        fetched.forEach(p => {
-          const key = p.name + "||" + p.color;
-          if (!groupedMap.has(key)) {
-            groupedMap.set(key, { ...p, sizes: [p.size || ""] });
-          } else {
-            const existing = groupedMap.get(key);
-            if (p.size && !existing.sizes.includes(p.size)) {
-              existing.sizes.push(p.size);
-            }
-          }
-        });
-        const grouped = Array.from(groupedMap.values());
-
-        const result = grouped.slice(0, limit);
-
-        if (reset) {
-          setProducts(result);
-        } else {
-          setProducts(prev => [...prev, ...result]);
-        }
-
-        setHasMore(fetched.length === rawLimit);
       } else {
-        // Для остальных страниц — пагинация по offset и limit
-        fetched = await fetchProducts(
+        fetchedRaw = await fetchProducts(
           filters.query,
-          limit,
-          offset,
+          OTHER_LIMIT * 10,
+          0, // всегда offset=0, смещение сделаем вручную
           "",
           filters.brand,
           "asc",
@@ -201,14 +166,20 @@ export default function Home() {
           filters.size
         );
         setIsHome(false);
-
-        if (reset) {
-          setProducts(fetched);
-        } else {
-          setProducts(prev => [...prev, ...fetched]);
-        }
-        setHasMore(fetched.length === limit);
       }
+
+      const grouped = groupProducts(fetchedRaw);
+
+      const pagedProducts = grouped.slice(offset, offset + limit);
+
+      if (reset) {
+        setProducts(pagedProducts);
+      } else {
+        setProducts(prev => [...prev, ...pagedProducts]);
+      }
+
+      // На главной пагинация отключена
+      setHasMore(!isMainPage && grouped.length > offset + limit);
     } catch {
       setHasMore(false);
     } finally {
@@ -221,7 +192,7 @@ export default function Home() {
   }, [filters, loadProducts]);
 
   useEffect(() => {
-    if (isHome) return;
+    if (isHome) return;  // На главной пагинация по скроллу отключена
 
     const onScroll = () => {
       if (isLoading || !hasMore) return;
