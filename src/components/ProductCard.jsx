@@ -5,15 +5,16 @@ export default function ProductCard({ product, onClick }) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Собираем массив картинок
   let urls = [];
   if (typeof product.image_url === "string") {
-    urls = product.image_url.split(",").map((url) => url && url.trim()).filter(Boolean);
+    urls = product.image_url.split(",").map(url => url && url.trim()).filter(Boolean);
   } else if (Array.isArray(product.image_url)) {
-    urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
+    urls = product.image_url.map(url => url && String(url).trim()).filter(Boolean);
   }
 
-  const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
-  const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
+  const mainImg = urls.find(url => url.toLowerCase().includes("_main")) || urls[0];
+  const prevImg = urls.find(url => url.toLowerCase().includes("_prev")) || mainImg;
 
   function makeAbsUrl(url) {
     if (!url) return "/no-image.jpg";
@@ -31,11 +32,12 @@ export default function ProductCard({ product, onClick }) {
     ? Math.ceil((price * (1 - discount / 100)) / 100) * 100
     : null;
 
+  // Всегда массив sizes, даже если пустой
   let sizes = [];
   if (Array.isArray(product.sizes)) {
     sizes = product.sizes;
   } else if (typeof product.sizes === "string" && product.sizes.trim()) {
-    sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
+    sizes = product.sizes.split(",").map(s => s.trim()).filter(Boolean);
   }
 
   return (
@@ -60,18 +62,14 @@ export default function ProductCard({ product, onClick }) {
       <div className="product-content">
         <h2 className="product-title">{product.sitename}</h2>
         <div className="desc-group">
-          {/* color */}
           {product.color && (
-            <div className="desc-row" style={{ color: "#888", fontSize: "0.98em" }}>
-              color: {product.color}
+            <div className="desc-row">
+              {`color: ${product.color}`}
             </div>
           )}
-          {/* sizes */}
-          {sizes.length > 0 && (
-            <div className="desc-row" style={{ color: "#555", fontSize: "0.97em" }}>
-              size: {sizes.join(", ")}
-            </div>
-          )}
+          <div className="desc-row">
+            {`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}
+          </div>
         </div>
         <div className="price-block">
           {showDiscount ? (
