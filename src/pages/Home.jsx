@@ -25,6 +25,19 @@ function groupProducts(rawProducts) {
   }));
 }
 
+function getColumnsCount() {
+  const width = window.innerWidth;
+  if (width >= 1280) return 5;   // xl:grid-cols-5
+  if (width >= 1024) return 4;   // lg:grid-cols-4
+  if (width >= 768) return 3;    // md:grid-cols-3
+  if (width >= 640) return 2;    // sm:grid-cols-2
+  return 2;                     // default grid-cols-2
+}
+
+function getLimitByColumns(columns) {
+  return columns === 3 ? 21 : 20;
+}
+
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -34,9 +47,9 @@ export default function Home() {
 
   // Категории (из API)
   const [categories, setCategories] = useState([]);
-  const [categoryKey, setCategoryKey] = useState("");
-  const [categoryLabel, setCategoryLabel] = useState("");
-  const [subcategoryKey, setSubcategoryKey] = useState("");
+  const [categoryKey, setCategoryKey] = useState("");      // выбранная категория (главное меню)
+  const [categoryLabel, setCategoryLabel] = useState("");  // её подпись
+  const [subcategoryKey, setSubcategoryKey] = useState(""); // подкатегория (если выбрана)
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
@@ -48,30 +61,31 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [sort, setSort] = useState("");
 
-  // Лимит по умолчанию
-  const [limit, setLimit] = useState(20);
+  // --- Считаем изначально число колонок и лимит ---
+  const [limit, setLimit] = useState(() => {
+    const initialColumns = getColumnsCount();
+    return getLimitByColumns(initialColumns);
+  });
 
-  // Следим за изменением ширины экрана и меняем лимит
+  // --- Следим за изменение размера окна для лимита ---
   useEffect(() => {
     function updateLimit() {
-      const width = window.innerWidth;
-      let columns;
-      if (width >= 1280) columns = 5;
-      else if (width >= 1024) columns = 4;
-      else if (width >= 768) columns = 3;
-      else if (width >= 640) columns = 2;
-      else columns = 2;
-
-      // Если 3 карточки в ряд, показываем 21
-      if (columns === 3) setLimit(21);
-      else setLimit(20);
+      const columns = getColumnsCount();
+      const newLimit = getLimitByColumns(columns);
+      setLimit(newLimit);
     }
     updateLimit();
     window.addEventListener("resize", updateLimit);
     return () => window.removeEventListener("resize", updateLimit);
   }, []);
 
-  // Новый isHome, основанный на searchQuery и фильтрах
+  // --- Новый: следим за изменением URL для поиска ---
+  useEffect(() => {
+    const urlSearchParams = new URLSearchParams(location.search);
+    const urlSearch = urlSearchParams.get("search") || "";
+    setSearchQuery(urlSearch);
+  }, [location.search]);
+
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
@@ -210,9 +224,7 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // Остальной код — без изменений, рендер, обработчики и т.д.
-
-  // Определяем список подкатегорий для FilterBar
+  // --- Список подкатегорий для FilterBar ---
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
@@ -221,6 +233,7 @@ export default function Home() {
     );
   }, [categories, categoryKey]);
 
+  // --- Для сортировки ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -234,7 +247,7 @@ export default function Home() {
     return discount > 0 ? discount : price;
   };
 
-  const displayedProductsSorted = useMemo(() => {
+  const displayedProducts = useMemo(() => {
     let arr = [...products];
     if (sort === "asc") arr.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
     else if (sort === "desc") arr.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
@@ -243,12 +256,10 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
-  // Карточка товара
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`);
   };
 
-  // Клик по хлебным крошкам
   const handleBreadcrumbClick = idx => {
     if (idx === 0) {
       setCategoryKey("");
@@ -263,7 +274,7 @@ export default function Home() {
     }
   };
 
-  // Обработчики меню и поиска
+  // --- Основной поиск и обработка кликов меню/поиска ---
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     setCategoryKey(catKey);
     setCategoryLabel(catLabel);
@@ -272,11 +283,20 @@ export default function Home() {
     setBrandFilter("");
     setGenderFilter("");
     setForceOpenCategory(!!subKey);
-    setSearchQuery(""); // сбрасываем поиск при выборе категории
+    setSearchQuery("");
     navigate("/");
   };
 
-  const handleSearch = (query = "") => {
+  const handleSearch = (
+    query = "",
+    crumbs = [{ label: "Main", query: "", exclude: "" }],
+    _exclude = "",
+    _brand = "",
+    _category = "",
+    _subcategory = "",
+    _gender = "",
+    _size = ""
+  ) => {
     setCategoryKey("");
     setCategoryLabel("");
     setSubcategoryKey("");
@@ -288,7 +308,7 @@ export default function Home() {
     navigate(query ? `/?search=${encodeURIComponent(query)}` : "/");
   };
 
-  // FilterBar
+  // --- FilterBar handlers ---
   const onCategoryChange = (newSubKey) => {
     setSubcategoryKey(newSubKey);
     setForceOpenCategory(false);
@@ -296,7 +316,6 @@ export default function Home() {
   const onBrandChange = setBrandFilter;
   const onSizeChange = setSizeFilter;
   const onGenderChange = setGenderFilter;
-
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
@@ -305,7 +324,7 @@ export default function Home() {
     setForceOpenCategory(false);
   };
 
-  // Рендер
+  // --- render ---
   return (
     <>
       <Header
@@ -348,14 +367,16 @@ export default function Home() {
             onSizeChange={onSizeChange}
             onGenderChange={onGenderChange}
           />
-          <SortControl sort={sort} setSort={setSort} />
+          <div>
+            <SortControl sort={sort} setSort={setSort} />
+          </div>
         </div>
       )}
 
       <div className="mx-auto px-2 pb-12">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
-          {displayedProductsSorted.length > 0 ? (
-            displayedProductsSorted.map(product => (
+          {displayedProducts.length > 0 ? (
+            displayedProducts.map(product => (
               <ProductCard
                 key={product.id || product.name + product.color}
                 product={product}
