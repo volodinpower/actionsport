@@ -39,25 +39,8 @@ export default function Home() {
 
   // Фильтры и состояние
   const [categoryKey, setCategoryKey] = useState("");      // выбранная категория (главное меню)
-  const [categoryLabel, setCategoryLabel] = useState("");  // её подпись
+  const [categoryLabel, setCategoryLabel] = useState("");  // подпись
   const [subcategoryKey, setSubcategoryKey] = useState(""); // подкатегория (если выбрана)
-
-  // breadcrumbs: [{label, query}], всегда Main / Категория
-  const breadcrumbs = useMemo(() => {
-    if (urlSearch) {
-      return [
-        { label: "Main", query: "" },
-        { label: `Search: ${urlSearch}`, query: urlSearch }
-      ];
-    }
-    if (categoryKey) {
-      return [
-        { label: "Main", query: "" },
-        { label: categoryLabel || categoryKey, query: categoryKey }
-      ];
-    }
-    return [{ label: "Main", query: "" }];
-  }, [urlSearch, categoryKey, categoryLabel]);
 
   // Селекторные фильтры
   const [sizeFilter, setSizeFilter] = useState("");
@@ -65,7 +48,7 @@ export default function Home() {
   const [genderFilter, setGenderFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // Для товара
+  // Для товаров
   const [rawProducts, setRawProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
@@ -78,6 +61,30 @@ export default function Home() {
     () => !urlSearch && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
     [urlSearch, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
+
+  // breadcrumbs: [{label, query}]
+  const breadcrumbs = useMemo(() => {
+    if (urlSearch) {
+      return [
+        { label: "Main", query: "" },
+        { label: `Search: ${urlSearch}`, query: urlSearch }
+      ];
+    }
+    if (categoryKey) {
+      if (subcategoryKey) {
+        return [
+          { label: "Main", query: "" },
+          { label: categoryLabel || categoryKey, query: categoryKey },
+          { label: subcategoryKey, query: subcategoryKey }
+        ];
+      }
+      return [
+        { label: "Main", query: "" },
+        { label: categoryLabel || categoryKey, query: categoryKey }
+      ];
+    }
+    return [{ label: "Main", query: "" }];
+  }, [urlSearch, categoryKey, subcategoryKey, categoryLabel]);
 
   // Filters для API
   const filters = useMemo(() => ({
@@ -99,48 +106,46 @@ export default function Home() {
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
-useEffect(() => {
-  async function updateOptions() {
-    let realCategoryKey = filters.categoryKey;
-    let realSubcategoryKey = filters.subcategoryKey;
-    if (realSubcategoryKey) realCategoryKey = "";
-    try {
-      setBrandsInFilter(await fetchFilteredBrands({
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        gender: filters.gender,
-        size: filters.size,
-        search: filters.query, // <-- ДОЛЖЕН БЫТЬ АКТУАЛЬНЫЙ ПОИСК!
-      }));
-      setSizesInFilter(await fetchFilteredSizes({
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        brand: filters.brand,
-        gender: filters.gender,
-        search: filters.query, // <-- ДОЛЖЕН БЫТЬ АКТУАЛЬНЫЙ ПОИСК!
-      }));
-      setGendersInFilter(await fetchFilteredGenders({
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        brand: filters.brand,
-        size: filters.size,
-        search: filters.query, // <-- ДОЛЖЕН БЫТЬ АКТУАЛЬНЫЙ ПОИСК!
-      }));
-    } catch { /* no-op */ }
-  }
-  updateOptions();
-}, [filters, categories]);
+  useEffect(() => {
+    async function updateOptions() {
+      let realCategoryKey = filters.categoryKey;
+      let realSubcategoryKey = filters.subcategoryKey;
+      if (realSubcategoryKey) realCategoryKey = "";
+      try {
+        setBrandsInFilter(await fetchFilteredBrands({
+          categoryKey: realCategoryKey,
+          subcategoryKey: realSubcategoryKey,
+          gender: filters.gender,
+          size: filters.size,
+          search: filters.query,
+        }));
+        setSizesInFilter(await fetchFilteredSizes({
+          categoryKey: realCategoryKey,
+          subcategoryKey: realSubcategoryKey,
+          brand: filters.brand,
+          gender: filters.gender,
+          search: filters.query,
+        }));
+        setGendersInFilter(await fetchFilteredGenders({
+          categoryKey: realCategoryKey,
+          subcategoryKey: realSubcategoryKey,
+          brand: filters.brand,
+          size: filters.size,
+          search: filters.query,
+        }));
+      } catch { /* no-op */ }
+    }
+    updateOptions();
+  }, [filters, categories]);
 
   // --- Загрузка товаров ---
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
     setIsLoading(true);
-
     try {
       let offset = reset ? 0 : rawProducts.length;
       let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
       let fetchedRaw = [];
-
       if (isHome) {
         fetchedRaw = await fetchPopularProducts(rawLimit);
         offset = 0;
@@ -196,30 +201,27 @@ useEffect(() => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // --- Основной поиск и обработка кликов меню/поиска ---
+  // --- Обработка клика по меню/категории/подкатегории ---
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     setCategoryKey(catKey);
     setCategoryLabel(catLabel);
-    setSubcategoryKey(subKey);
+    setSubcategoryKey(subKey || "");
     setSizeFilter("");
     setBrandFilter("");
     setGenderFilter("");
     setForceOpenCategory(!!subKey);
-    // Breadcrumbs — только Main/Категория!
-    navigate("/");
+    // При клике по меню - сбрасываем поиск
+    if (urlSearch) {
+      navigate("/");
+    }
   };
 
+  // --- Поиск по Enter ---
   const handleSearch = (
     query = "",
-    crumbs = [{ label: "Main", query: "", exclude: "" }],
-    _exclude = "",
-    _brand = "",
-    _category = "",
-    _subcategory = "",
-    _gender = "",
-    _size = ""
+    crumbs = [{ label: "Main", query: "", exclude: "" }]
   ) => {
-    // Поиск всегда Main / Search: query
+    // Поиск сбрасывает все фильтры
     setCategoryKey("");
     setCategoryLabel("");
     setSubcategoryKey("");
@@ -230,16 +232,12 @@ useEffect(() => {
     navigate(query ? `/?search=${encodeURIComponent(query)}` : "/");
   };
 
-  // FilterBar — только подкатегории, НЕ меняет хлебные крошки!
-  const onCategoryChange = (newSubKey) => {
-    setSubcategoryKey(newSubKey);
-    setForceOpenCategory(false);
-  };
+  // --- Фильтры ---
+  const onCategoryChange = (newSubKey) => setSubcategoryKey(newSubKey);
   const onBrandChange = setBrandFilter;
   const onSizeChange = setSizeFilter;
   const onGenderChange = setGenderFilter;
 
-  // Сброс фильтров (но не breadcrumbs)
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
@@ -248,7 +246,7 @@ useEffect(() => {
     setForceOpenCategory(false);
   };
 
-  // Список подкатегорий для FilterBar
+  // --- Список подкатегорий ---
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
@@ -257,7 +255,7 @@ useEffect(() => {
     );
   }, [categories, categoryKey]);
 
-  // Для сортировки
+  // --- Для сортировки ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -280,12 +278,12 @@ useEffect(() => {
     return arr;
   }, [products, sort]);
 
-  // Карточка товара
+  // --- Переход в карточку товара ---
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`);
   };
 
-  // Breadcrumbs клик
+  // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = idx => {
     // Main всегда первый
     if (idx === 0) {
@@ -297,6 +295,26 @@ useEffect(() => {
       setSizeFilter("");
       setForceOpenCategory(false);
       navigate("/");
+    }
+    // Если по поиску (вторая крошка)
+    else if (idx === 1 && urlSearch) {
+      setCategoryKey("");
+      setCategoryLabel("");
+      setSubcategoryKey("");
+      setBrandFilter("");
+      setGenderFilter("");
+      setSizeFilter("");
+      setForceOpenCategory(false);
+      navigate(`/?search=${encodeURIComponent(urlSearch)}`);
+    }
+    // Если по категории
+    else if (idx === 1 && categoryKey) {
+      setSubcategoryKey("");
+      setForceOpenCategory(false);
+    }
+    // Если по подкатегории
+    else if (idx === 2 && subcategoryKey) {
+      setForceOpenCategory(false);
     }
   };
 
