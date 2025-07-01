@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
 import {
-  fetchProductsGrouped,
+  fetchProducts,
   fetchPopularProducts,
   fetchCategories,
   fetchFilteredBrands,
@@ -17,6 +17,24 @@ import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
 const LIMIT = 20;
+const RAW_FETCH_MULTIPLIER = 3;
+
+function groupProducts(rawProducts) {
+  const grouped = {};
+  for (const p of rawProducts) {
+    const key = (p.name || "") + "|" + (p.color || "");
+    if (!grouped[key]) {
+      grouped[key] = { ...p, sizes: [] };
+    }
+    if (p.size && p.size.toLowerCase() !== "нет" && !grouped[key].sizes.includes(p.size)) {
+      grouped[key].sizes.push(p.size);
+    }
+  }
+  for (const key in grouped) {
+    grouped[key].sizes.sort((a, b) => a.localeCompare(b));
+  }
+  return Object.values(grouped);
+}
 
 export default function Home() {
   const location = useLocation();
@@ -37,11 +55,13 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  const [sort, setSort] = useState("asc");
-
+  // isHome рассчитываем по зависимостям фильтров
   const isHome = useMemo(() => {
     return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
   }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
+
+  const [sort, setSort] = useState("");
+  const rawCountRef = useRef(0); // храним rawCount в useRef, чтобы не вызывать ререндер
 
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
@@ -114,52 +134,80 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // --- Загрузка товаров (группированных) с offset/limit по группам
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("[loadProducts] Ignored, loading in progress");
+      return;
+    }
     setIsLoading(true);
 
     try {
-      let offset = reset ? 0 : products.length;
-      let fetched = [];
+      let fetchedRaw = [];
 
       if (isHome) {
-        fetched = await fetchPopularProducts(LIMIT);
+        console.log("[loadProducts] Home load, reset:", reset);
+        fetchedRaw = await fetchPopularProducts(LIMIT * RAW_FETCH_MULTIPLIER);
+        rawCountRef.current = 0;
+        setHasMore(false);
       } else {
-        fetched = await fetchProductsGrouped(
+        const offset = reset ? 0 : rawCountRef.current;
+        const rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
+        console.log("[loadProducts] Non-home load, reset:", reset, "offset:", offset);
+
+        fetchedRaw = await fetchProducts(
           filters.query,
-          LIMIT,
+          rawLimit,
           offset,
+          "",
           filters.brand,
-          filters.gender,
+          "asc",
           filters.categoryKey,
           filters.subcategoryKey,
-          filters.size,
-          sort || "asc"
+          filters.gender,
+          filters.size
         );
+
+        if (reset) rawCountRef.current = fetchedRaw.length;
+        else rawCountRef.current += fetchedRaw.length;
+
+        setHasMore(fetchedRaw.length === rawLimit);
       }
 
-      const updated = reset ? fetched : [...products, ...fetched];
-      setProducts(updated);
-      setHasMore(fetched.length === LIMIT); // если меньше LIMIT — конец
+      console.log("[loadProducts] Fetched raw count:", fetchedRaw.length);
+
+      const grouped = groupProducts(fetchedRaw);
+      console.log("[loadProducts] Grouped count:", grouped.length);
+
+      const startIdx = reset ? 0 : products.length;
+      const paged = grouped.slice(startIdx, startIdx + LIMIT);
+
+      if (reset) {
+        console.log("[loadProducts] Reset products count:", paged.length);
+        setProducts(paged);
+      } else {
+        console.log("[loadProducts] Append products count:", paged.length);
+        setProducts(prev => [...prev, ...paged]);
+      }
     } catch (err) {
+      console.error("[loadProducts] Error:", err);
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, products, isHome, sort]);
+  }, [filters, isLoading, products.length, isHome]);
 
-  // --- Сброс при смене фильтров или isHome
   useEffect(() => {
-    setProducts([]);
-    setHasMore(true);
+    console.log("[useEffect] filters or isHome changed, loading products");
     loadProducts({ reset: true });
-    // eslint-disable-next-line
-  }, [filters, isHome, sort]);
+  }, [filters, isHome, loadProducts]);
 
-  // --- Скролл для подгрузки
   useEffect(() => {
-    if (isHome) return;
+    if (isHome) {
+      console.log("[useEffect] isHome=true, skipping scroll attachment");
+      return;
+    }
+
+    console.log("[useEffect] attaching scroll listener");
     const onScroll = () => {
       if (isLoading || !hasMore) return;
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
@@ -170,7 +218,9 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  const handleCategoryFilterChange = (newCategory) => setCategoryFilter(newCategory);
+  const handleCategoryFilterChange = (newCategory) => {
+    setCategoryFilter(newCategory);
+  };
 
   const handleSearch = (
     query,
