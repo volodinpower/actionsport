@@ -35,11 +35,7 @@ export default function Header({
   ) => {
     if (onSearch)
       onSearch(query, crumbs, exclude, brand, category, subcategory, gender, size);
-    setActiveMenu(null);
-    setMobileMenuOpen(false);
-    if (query && query.trim().length > 0) setShowSearch(false);
-
-    // Меняем URL, чтобы Home увидел изменение
+    // ...
     if (navigate) {
       if (query) {
         navigate(`/?search=${encodeURIComponent(query)}`);
