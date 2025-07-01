@@ -31,7 +31,12 @@ export default function ProductCard({ product, onClick }) {
     ? Math.ceil((price * (1 - discount / 100)) / 100) * 100
     : null;
 
-  // Больше не нужны sizes для главной
+  let sizes = [];
+  if (Array.isArray(product.sizes)) {
+    sizes = product.sizes;
+  } else if (typeof product.sizes === "string" && product.sizes.trim()) {
+    sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
+  }
 
   return (
     <div
@@ -56,11 +61,7 @@ export default function ProductCard({ product, onClick }) {
         <h2 className="product-title">{product.sitename}</h2>
         <div className="desc-group">
           <div className="desc-row">
-            {product.subcategory_key && (
-              <span className="subcategory-gray">
-                {product.subcategory_key}
-              </span>
-            )}
+            {product.color ? `color: ${product.color}` : ""}
           </div>
         </div>
         <div className="price-block">
