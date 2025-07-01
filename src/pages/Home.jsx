@@ -16,7 +16,21 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-const LIMIT = 30;
+const HOME_LIMIT = 20;
+const OTHER_LIMIT = 30;
+
+function getCategoryLabel(cat) {
+  if (!cat) return "";
+  return (
+    cat.label ||
+    cat.name ||
+    cat.title ||
+    cat.category_title ||
+    cat.category_name ||
+    cat.category_key ||
+    "Category"
+  );
+}
 
 export default function Home() {
   const location = useLocation();
@@ -39,7 +53,6 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // Подкатегория (если categoryFilter — подкатегория)
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
     for (const c of categories) {
@@ -52,7 +65,6 @@ export default function Home() {
     return "";
   }, [categoryFilter, categories]);
 
-  // Стабильный объект фильтров
   const filters = useMemo(() => ({
     query: urlSearch,
     categoryKey: subcategoryKey ? "" : categoryFilter,
@@ -62,14 +74,31 @@ export default function Home() {
     size: sizeFilter,
   }), [urlSearch, categoryFilter, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  // Загрузка категорий
+  const submenuList = useMemo(() => {
+    let cat = categories.find(c => c.category_key === categoryFilter);
+    if (cat) {
+      return cat.subcategories.map(sub =>
+        typeof sub === "string" ? sub : sub.subcategory_key || sub.label
+      );
+    }
+    for (let c of categories) {
+      if ((c.subcategories || []).some(sub =>
+        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
+      )) {
+        return c.subcategories.map(sub =>
+          typeof sub === "string" ? sub : sub.subcategory_key || sub.label
+        );
+      }
+    }
+    return [];
+  }, [categories, categoryFilter]);
+
   useEffect(() => {
     fetchCategories()
       .then(data => setCategories(data || []))
       .catch(() => setCategories([]));
   }, []);
 
-  // Опции фильтров с сервера
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
@@ -78,7 +107,10 @@ export default function Home() {
     async function updateOptions() {
       let realCategoryKey = filters.categoryKey;
       let realSubcategoryKey = filters.subcategoryKey;
-      if (realSubcategoryKey) realCategoryKey = "";
+
+      if (realSubcategoryKey) {
+        realCategoryKey = "";
+      }
 
       try {
         const brands = await fetchFilteredBrands({
@@ -114,26 +146,20 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // Загрузка товаров с пагинацией
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
-    if (isLoading) return; // блокируем повторный вызов, пока идет загрузка
+    if (isLoading) return;
     setIsLoading(true);
 
+    const isMainPage = !filters.query && !filters.categoryKey && !filters.subcategoryKey && !filters.brand && !filters.gender && !filters.size;
+    const limit = isMainPage ? HOME_LIMIT : OTHER_LIMIT;
     const offset = reset ? 0 : products.length;
 
     try {
       let fetched;
-      if (
-        filters.categoryKey ||
-        filters.subcategoryKey ||
-        filters.brand ||
-        filters.gender ||
-        filters.size ||
-        filters.query
-      ) {
+      if (!isMainPage) {
         fetched = await fetchProducts(
           filters.query,
-          LIMIT,
+          limit,
           offset,
           "",
           filters.brand,
@@ -145,33 +171,31 @@ export default function Home() {
         );
         setIsHome(false);
       } else {
-        fetched = await fetchPopularProducts(LIMIT);
+        fetched = await fetchPopularProducts(limit);
         setIsHome(true);
       }
 
       if (reset) {
         setProducts(fetched);
-        setHasMore(fetched.length === LIMIT);
+        setHasMore(fetched.length === limit && !isMainPage);
       } else {
         setProducts(prev => [...prev, ...fetched]);
-        setHasMore(fetched.length === LIMIT);
+        setHasMore(fetched.length === limit);
       }
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, products.length]); // убрал isLoading из зависимостей
+  }, [filters, isLoading, products.length]);
 
-  // При изменении фильтров сбрасываем и загружаем заново
   useEffect(() => {
     loadProducts({ reset: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, loadProducts]);
 
-  // Обработчик бесконечной прокрутки
   useEffect(() => {
+    if (isHome) return;
+
     const onScroll = () => {
       if (isLoading || !hasMore) return;
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
@@ -180,14 +204,12 @@ export default function Home() {
     };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [loadProducts, isLoading, hasMore]);
+  }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // Фильтр категории
   const handleCategoryFilterChange = (newCategory) => {
     setCategoryFilter(newCategory);
   };
 
-  // Главный обработчик поиска и кликов
   const handleSearch = (
     query,
     breadcrumbTrail,
@@ -222,7 +244,6 @@ export default function Home() {
     setForceOpenCategory(!!subcategory);
   };
 
-  // Клик по хлебным крошкам
   const handleBreadcrumbClick = async (idx) => {
     const newTrail = breadcrumbs.slice(0, idx + 1);
     const lastCrumb = newTrail[newTrail.length - 1];
@@ -241,7 +262,6 @@ export default function Home() {
     }
   };
 
-  // Опции для пола
   const genderOptions = useMemo(() =>
     gendersInFilter.map(g => ({
       value: g,
@@ -251,7 +271,6 @@ export default function Home() {
   );
   const showGenderOption = gendersInFilter.length > 1 || !!genderFilter;
 
-  // Сортировка по цене, просмотрам, скидкам
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -304,26 +323,6 @@ export default function Home() {
       }
     });
   };
-
-  // Список подкатегорий для фильтра
-  const submenuList = useMemo(() => {
-    let cat = categories.find(c => c.category_key === categoryFilter);
-    if (cat) {
-      return cat.subcategories.map(sub =>
-        typeof sub === "string" ? sub : sub.subcategory_key || sub.label
-      );
-    }
-    for (let c of categories) {
-      if ((c.subcategories || []).some(sub =>
-        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
-      )) {
-        return c.subcategories.map(sub =>
-          typeof sub === "string" ? sub : sub.subcategory_key || sub.label
-        );
-      }
-    }
-    return [];
-  }, [categories, categoryFilter]);
 
   return (
     <>
@@ -389,7 +388,7 @@ export default function Home() {
           <div className="text-center text-gray-600 py-4">Loading more products...</div>
         )}
 
-        {!hasMore && !isLoading && (
+        {!hasMore && !isLoading && !isHome && (
           <div className="text-center text-gray-600 py-4">No more products</div>
         )}
       </div>
