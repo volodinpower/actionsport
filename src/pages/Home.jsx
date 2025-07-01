@@ -269,7 +269,20 @@ export default function Home() {
       }
     });
   };
-
+  const handleMenuCategoryClick = (categoryKey, categoryLabel, subcategoryKey = "") => {
+    // breadcrumbs будут: Main > Категория
+    setBreadcrumbs([
+      { label: "Main", query: "", exclude: "" },
+      { label: categoryLabel, query: categoryKey }
+    ]);
+    setCategoryFilter(subcategoryKey || categoryKey);
+    setBrandFilter("");
+    setGenderFilter("");
+    setSizeFilter("");
+    setForceOpenCategory(!!subcategoryKey);
+    // Сброс поисковой строки!
+    navigate(`/`);
+  };
   // Список подкатегорий для селекта
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
@@ -328,6 +341,7 @@ export default function Home() {
         setCategoryFilter={setCategoryFilter}
         setForceOpenCategory={setForceOpenCategory}
         navigate={navigate}
+        onMenuCategoryClick={handleMenuCategoryClick}
       />
 
       {!isHome && (

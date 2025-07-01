@@ -82,6 +82,7 @@ export default function Header({
         </div>
         {mobileMenuOpen && (
           <NavMenu
+            onMenuCategoryClick={onMenuCategoryClick}
             onMenuSearch={runSearch}
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
@@ -121,6 +122,7 @@ export default function Header({
       <div className="nav-bar">
         <div className="nav-menu-wrap">
           <NavMenu
+            onMenuCategoryClick={onMenuCategoryClick}
             onMenuSearch={runSearch}
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}

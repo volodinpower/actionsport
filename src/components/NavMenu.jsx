@@ -19,12 +19,9 @@ const SALE_CATEGORY = {
 };
 
 export default function NavMenu({
-  onMenuSearch,
-  onMainCategorySelect, // <---- обязательно прокидывай!
+  onMainCategorySelect,    // <= обязательно передать из Header!
   activeMenu, setActiveMenu,
   mobileMenuOpen, setMobileMenuOpen,
-  setCategoryFilter,
-  setForceOpenCategory,
 }) {
   const [categories, setCategories] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
@@ -52,8 +49,8 @@ export default function NavMenu({
               label: cat.label || cat.name || cat.title || cat.category_title || cat.category_key,
               subcategories: (cat.subcategories || []).map(sub =>
                 typeof sub === "string"
-                  ? { label: sub, query: sub, subcategory_key: sub }
-                  : { ...sub, query: sub.subcategory_key || sub.query, subcategory_key: sub.subcategory_key || sub.query }
+                  ? { label: sub, subcategory_key: sub }
+                  : { ...sub, subcategory_key: sub.subcategory_key || sub.query }
               ),
             }
           ])
@@ -94,22 +91,9 @@ export default function NavMenu({
                 <button
                   className={`mobile-menu-item ${cat.category_key === "sale" ? "nav-menu-sale" : ""}`}
                   onClick={() => {
-                    onMainCategorySelect?.(cat.category_key, cat.label);
-                    onMenuSearch(
-                      "",
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: cat.label, query: cat.category_key }
-                      ],
-                      "",
-                      "",
-                      cat.category_key,
-                      ""
-                    );
-                    setCategoryFilter?.("");
+                    onMainCategorySelect?.(cat.category_key, cat.label, "");
                     setMobileMenuOpen(false);
                     setOpenSubmenus([]);
-                    setForceOpenCategory?.(false);
                   }}
                 >
                   {cat.label}
@@ -135,21 +119,8 @@ export default function NavMenu({
                         className="mobile-menu-item"
                         style={{ fontSize: "1.05em" }}
                         onClick={() => {
-                          onMainCategorySelect?.(cat.category_key, cat.label);
-                          onMenuSearch(
-                            "",
-                            [
-                              { label: cat.label, query: cat.category_key },
-                              { label: sub.label, query: sub.subcategory_key }
-                            ],
-                            "",
-                            "",
-                            cat.category_key,
-                            sub.subcategory_key
-                          );
-                          setCategoryFilter?.(sub.subcategory_key);
-                          setForceOpenCategory?.(true);
-                          setMobileMenuOpen?.(false);
+                          onMainCategorySelect?.(cat.category_key, cat.label, sub.subcategory_key);
+                          setMobileMenuOpen(false);
                           setOpenSubmenus([]);
                         }}
                       >
@@ -195,20 +166,7 @@ export default function NavMenu({
                 <span
                   className={cat.category_key === "sale" ? "nav-menu-sale" : ""}
                   onClick={() => {
-                    onMainCategorySelect?.(cat.category_key, cat.label);
-                    onMenuSearch(
-                      "",
-                      [
-                        { label: "Main", query: "", exclude: "" },
-                        { label: cat.label, query: cat.category_key }
-                      ],
-                      "",
-                      "",
-                      cat.category_key,
-                      ""
-                    );
-                    setCategoryFilter?.("");
-                    setForceOpenCategory?.(false);
+                    onMainCategorySelect?.(cat.category_key, cat.label, "");
                   }}
                   style={{ display: "inline-block", width: "100%" }}
                 >
@@ -240,20 +198,8 @@ export default function NavMenu({
                         key={sub.subcategory_key}
                         className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                         onClick={() => {
-                          onMainCategorySelect?.(categories.find(c => c.category_key === activeMenu)?.category_key, categories.find(c => c.category_key === activeMenu)?.label);
-                          onMenuSearch(
-                            "",
-                            [
-                              { label: categories.find(c => c.category_key === activeMenu)?.label, query: activeMenu },
-                              { label: sub.label, query: sub.subcategory_key }
-                            ],
-                            "",
-                            "",
-                            activeMenu,
-                            sub.subcategory_key
-                          );
-                          setCategoryFilter?.(sub.subcategory_key);
-                          setForceOpenCategory?.(true);
+                          const parent = categories.find(c => c.category_key === activeMenu);
+                          onMainCategorySelect?.(parent?.category_key, parent?.label, sub.subcategory_key);
                         }}
                       >
                         {sub.label}
