@@ -30,71 +30,63 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // URL params
-  const urlSearchParams = new URLSearchParams(location.search);
-  const urlSearch = urlSearchParams.get("search") || "";
+  // --- Новый локальный state для поиска ---
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Категории (из API)
   const [categories, setCategories] = useState([]);
-
-  // Фильтры и состояние
   const [categoryKey, setCategoryKey] = useState("");      // выбранная категория (главное меню)
-  const [categoryLabel, setCategoryLabel] = useState("");  // подпись
+  const [categoryLabel, setCategoryLabel] = useState("");  // её подпись
   const [subcategoryKey, setSubcategoryKey] = useState(""); // подкатегория (если выбрана)
-
-  // Селекторные фильтры
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // Для товаров
   const [rawProducts, setRawProducts] = useState([]);
   const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-
   const [sort, setSort] = useState("");
 
-  // HOME-проверка
+  // --- Новый: следим за изменением URL для поиска ---
+  useEffect(() => {
+    const urlSearchParams = new URLSearchParams(location.search);
+    const urlSearch = urlSearchParams.get("search") || "";
+    setSearchQuery(urlSearch);
+  }, [location.search]);
+
   const isHome = useMemo(
-    () => !urlSearch && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
-    [urlSearch, categoryKey, brandFilter, genderFilter, sizeFilter]
+    () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
+    [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
 
-  // breadcrumbs: [{label, query}]
+  // --- Формируем breadcrumbs ---
   const breadcrumbs = useMemo(() => {
-    if (urlSearch) {
+    if (searchQuery) {
       return [
         { label: "Main", query: "" },
-        { label: `Search: ${urlSearch}`, query: urlSearch }
+        { label: `Search: ${searchQuery}`, query: searchQuery }
       ];
     }
     if (categoryKey) {
-      if (subcategoryKey) {
-        return [
-          { label: "Main", query: "" },
-          { label: categoryLabel || categoryKey, query: categoryKey },
-          { label: subcategoryKey, query: subcategoryKey }
-        ];
-      }
       return [
         { label: "Main", query: "" },
         { label: categoryLabel || categoryKey, query: categoryKey }
       ];
     }
     return [{ label: "Main", query: "" }];
-  }, [urlSearch, categoryKey, subcategoryKey, categoryLabel]);
+  }, [searchQuery, categoryKey, categoryLabel]);
 
-  // Filters для API
+  // --- filters для API ---
   const filters = useMemo(() => ({
-    query: urlSearch,
+    query: searchQuery,
     categoryKey,
     subcategoryKey,
     brand: brandFilter,
     gender: genderFilter,
     size: sizeFilter,
-  }), [urlSearch, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
+  }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
   // --- Категории ---
   useEffect(() => {
@@ -146,6 +138,7 @@ export default function Home() {
       let offset = reset ? 0 : rawProducts.length;
       let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
       let fetchedRaw = [];
+
       if (isHome) {
         fetchedRaw = await fetchPopularProducts(rawLimit);
         offset = 0;
@@ -179,7 +172,7 @@ export default function Home() {
     }
   }, [filters, isLoading, rawProducts, isHome, products.length]);
 
-  // Сброс данных при смене фильтра/поиска/категории
+  // --- Сброс данных при смене фильтра/поиска/категории
   useEffect(() => {
     setRawProducts([]);
     setProducts([]);
@@ -201,7 +194,7 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // --- Обработка клика по меню/категории/подкатегории ---
+  // --- Основной поиск и обработка кликов меню/поиска ---
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     setCategoryKey(catKey);
     setCategoryLabel(catLabel);
@@ -210,18 +203,20 @@ export default function Home() {
     setBrandFilter("");
     setGenderFilter("");
     setForceOpenCategory(!!subKey);
-    // При клике по меню - сбрасываем поиск
-    if (urlSearch) {
-      navigate("/");
-    }
+    setSearchQuery(""); // <<-- вот это сбрасывает текущий поисковый запрос!
+    navigate("/");
   };
 
-  // --- Поиск по Enter ---
   const handleSearch = (
     query = "",
-    crumbs = [{ label: "Main", query: "", exclude: "" }]
+    crumbs = [{ label: "Main", query: "", exclude: "" }],
+    _exclude = "",
+    _brand = "",
+    _category = "",
+    _subcategory = "",
+    _gender = "",
+    _size = ""
   ) => {
-    // Поиск сбрасывает все фильтры
     setCategoryKey("");
     setCategoryLabel("");
     setSubcategoryKey("");
@@ -229,15 +224,18 @@ export default function Home() {
     setGenderFilter("");
     setSizeFilter("");
     setForceOpenCategory(false);
+    setSearchQuery(query); // <<-- вот это и выставляет актуальный поисковый запрос!
     navigate(query ? `/?search=${encodeURIComponent(query)}` : "/");
   };
 
-  // --- Фильтры ---
-  const onCategoryChange = (newSubKey) => setSubcategoryKey(newSubKey);
+  // --- FilterBar ---
+  const onCategoryChange = (newSubKey) => {
+    setSubcategoryKey(newSubKey);
+    setForceOpenCategory(false);
+  };
   const onBrandChange = setBrandFilter;
   const onSizeChange = setSizeFilter;
   const onGenderChange = setGenderFilter;
-
   const clearFilters = () => {
     setSizeFilter("");
     setBrandFilter("");
@@ -246,7 +244,6 @@ export default function Home() {
     setForceOpenCategory(false);
   };
 
-  // --- Список подкатегорий ---
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
@@ -255,7 +252,6 @@ export default function Home() {
     );
   }, [categories, categoryKey]);
 
-  // --- Для сортировки ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -278,14 +274,11 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
-  // --- Переход в карточку товара ---
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`);
   };
 
-  // --- Клик по хлебным крошкам ---
   const handleBreadcrumbClick = idx => {
-    // Main всегда первый
     if (idx === 0) {
       setCategoryKey("");
       setCategoryLabel("");
@@ -294,31 +287,12 @@ export default function Home() {
       setGenderFilter("");
       setSizeFilter("");
       setForceOpenCategory(false);
+      setSearchQuery("");
       navigate("/");
-    }
-    // Если по поиску (вторая крошка)
-    else if (idx === 1 && urlSearch) {
-      setCategoryKey("");
-      setCategoryLabel("");
-      setSubcategoryKey("");
-      setBrandFilter("");
-      setGenderFilter("");
-      setSizeFilter("");
-      setForceOpenCategory(false);
-      navigate(`/?search=${encodeURIComponent(urlSearch)}`);
-    }
-    // Если по категории
-    else if (idx === 1 && categoryKey) {
-      setSubcategoryKey("");
-      setForceOpenCategory(false);
-    }
-    // Если по подкатегории
-    else if (idx === 2 && subcategoryKey) {
-      setForceOpenCategory(false);
     }
   };
 
-  // Рендер
+  // --- render ---
   return (
     <>
       <Header
