@@ -16,8 +16,8 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-const LIMIT = 20;                 // Кол-во карточек на главной и остальных страницах
-const RAW_FETCH_MULTIPLIER = 3;  // Множитель загрузки сырых товаров (для группировки)
+const LIMIT = 20;
+const RAW_FETCH_MULTIPLIER = 3;
 
 function groupProducts(rawProducts) {
   const grouped = {};
@@ -43,13 +43,7 @@ export default function Home() {
   const urlSearchParams = new URLSearchParams(location.search);
   const urlSearch = urlSearchParams.get("search") || "";
 
-  const [categories, setCategories] = useState([]);
-  const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
-  const [products, setProducts] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Фильтры и сортировка (объявляем ДО isHome)
+  // Сначала состояния фильтров
   const [sort, setSort] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
@@ -57,12 +51,18 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // isHome — если нет фильтров и нет поиска
+  // Теперь вычисляем isHome корректно
   const isHome = useMemo(() => {
-    return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
+    const val = !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
+    console.log("[isHome]", val);
+    return val;
   }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
 
-  // Отдельный offset только для НЕ главной страницы (для пагинации)
+  const [categories, setCategories] = useState([]);
+  const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
+  const [products, setProducts] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [rawCount, setRawCount] = useState(0);
 
   const subcategoryKey = useMemo(() => {
@@ -129,24 +129,33 @@ export default function Home() {
           search: filters.query,
         });
         setGendersInFilter(genders);
-      } catch {
-        // Игнорируем ошибки
+      } catch (e) {
+        console.error("[Filter options error]", e);
       }
     }
     updateOptions();
   }, [filters, categories]);
 
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("[loadProducts] Ignored because loading in progress");
+      return;
+    }
     setIsLoading(true);
 
     try {
       let fetchedRaw = [];
 
-      if (!isHome) {
-        // НЕ главная страница — пагинация с offset и лимитом
+      if (isHome) {
+        console.log("[loadProducts] Home page load, reset:", reset);
+        fetchedRaw = await fetchPopularProducts(LIMIT * RAW_FETCH_MULTIPLIER);
+        setRawCount(0);
+        setHasMore(false);
+      } else {
         const offset = reset ? 0 : rawCount;
         const rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
+        console.log("[loadProducts] Non-home load, reset:", reset, "offset:", offset);
+
         fetchedRaw = await fetchProducts(
           filters.query,
           rawLimit,
@@ -160,61 +169,70 @@ export default function Home() {
           filters.size
         );
 
-        // Обновляем offset ТОЛЬКО для НЕ главной страницы
         setRawCount(offset + fetchedRaw.length);
-
-        // Проверяем, есть ли еще данные для подгрузки
         setHasMore(fetchedRaw.length === rawLimit);
-
-      } else {
-        // Главная страница — берем популярные, без offset и пагинации
-        fetchedRaw = await fetchPopularProducts(LIMIT * RAW_FETCH_MULTIPLIER);
-
-        // На главной offset и пагинация не меняются
-        setRawCount(0);
-
-        setHasMore(false);
       }
 
+      console.log("[loadProducts] Fetched raw items count:", fetchedRaw.length);
+
       const grouped = groupProducts(fetchedRaw);
+      console.log("[loadProducts] Grouped items count:", grouped.length);
+
       const startIdx = reset ? 0 : products.length;
       const paged = grouped.slice(startIdx, startIdx + LIMIT);
 
       if (reset) {
+        console.log("[loadProducts] Reset products, count:", paged.length);
         setProducts(paged);
       } else {
+        console.log("[loadProducts] Append products, count:", paged.length);
         setProducts(prev => [...prev, ...paged]);
       }
-
     } catch (err) {
-      console.error(err);
+      console.error("[loadProducts] Error:", err);
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
   }, [filters, isLoading, products.length, rawCount, isHome]);
 
-  // При смене фильтров или смене isHome сбрасываем offset и загружаем заново
+  // При смене фильтров или isHome сбросить offset и загрузить заново
   useEffect(() => {
-    setRawCount(0); // Обнуляем offset при фильтрах/смене главной страницы
+    console.log("[useEffect] filters or isHome changed, resetting rawCount and loading products");
+    setRawCount(0);
     loadProducts({ reset: true });
   }, [filters, isHome, loadProducts]);
 
-  // Скролл-подгрузка ТОЛЬКО если не главная страница
+  // Скролл подгрузка ТОЛЬКО если НЕ главная страница
   useEffect(() => {
-    if (isHome) return; // Выход — нет скролл-подгрузки на главной
+    if (isHome) {
+      console.log("[useEffect] isHome = true, skipping scroll event attachment");
+      return;
+    }
 
     const onScroll = () => {
-      if (isLoading || !hasMore) return;
+      if (isLoading) {
+        console.log("[onScroll] Ignored because loading in progress");
+        return;
+      }
+      if (!hasMore) {
+        console.log("[onScroll] Ignored because no more products");
+        return;
+      }
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+        console.log("[onScroll] Near bottom, loading more products");
         loadProducts({ reset: false });
       }
     };
+
     window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      console.log("[useEffect] Scroll event listener removed");
+    };
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // Остальные обработчики (поиск, фильтры, хлебные крошки)...
+  // Остальные обработчики — без изменений
 
   const handleCategoryFilterChange = (newCategory) => {
     setCategoryFilter(newCategory);
@@ -334,7 +352,7 @@ export default function Home() {
     });
   };
 
-  // Подменю для фильтра категории
+  // Подменю подкатегорий
   const submenuList = useMemo(() => {
     let cat = categories.find(c => c.category_key === categoryFilter);
     if (cat) {
