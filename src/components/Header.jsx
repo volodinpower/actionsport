@@ -30,7 +30,14 @@ export default function Header({
     subcategory = ""
   ) => {
     if (onSearch)
-      onSearch(query, crumbs, exclude, brand, category, subcategory);
+      onSearch(
+        query,
+        crumbs,
+        exclude || "",
+        brand || "",
+        category || "",
+        subcategory || ""
+      );
     setActiveMenu(null);
     setMobileMenuOpen(false);
     if (query && query.trim().length > 0) setShowSearch(false);
