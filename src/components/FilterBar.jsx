@@ -52,6 +52,7 @@ export default function FilterBar({
           classNamePrefix="react-select"
           placeholder="Category"
           isClearable={false}
+          isSearchable={false}          {/* запретить ручной ввод */}
           value={selectedCategory}
           onChange={opt => setCategoryFilter(opt ? opt.value : "")}
           options={categoryOptions}
@@ -64,6 +65,7 @@ export default function FilterBar({
         classNamePrefix="react-select"
         placeholder="Brand"
         isClearable
+        isSearchable={false}          {/* запретить ручной ввод */}
         value={brandFilter ? { value: brandFilter, label: brandFilter } : null}
         onChange={handleBrandChange}
         options={allBrands.map(brand => ({ value: brand, label: brand }))}
@@ -74,6 +76,7 @@ export default function FilterBar({
         classNamePrefix="react-select"
         placeholder="Size"
         isClearable
+        isSearchable={false}          {/* запретить ручной ввод */}
         value={sizeFilter ? { value: sizeFilter, label: sizeFilter } : null}
         onChange={handleSizeChange}
         options={allSizes.map(size => ({ value: size, label: size }))}
@@ -85,6 +88,7 @@ export default function FilterBar({
           classNamePrefix="react-select"
           placeholder="Gender"
           isClearable
+          isSearchable={false}          {/* запретить ручной ввод */}
           value={genderOptions.find(opt => opt.value === genderFilter) || null}
           onChange={handleGenderChange}
           options={genderOptions}
