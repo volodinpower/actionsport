@@ -23,7 +23,8 @@ function normalize(val) {
 
 function extractSizes(product) {
   if (!product) return [];
-  if (Array.isArray(product.sizes)) return product.sizes.filter(Boolean).filter(s => s && s.toLowerCase() !== "нет");
+  if (Array.isArray(product.sizes))
+    return product.sizes.filter(Boolean).filter(s => s && s.toLowerCase() !== "нет");
   if (typeof product.sizes === "string")
     return product.sizes
       .split(",")
@@ -56,7 +57,7 @@ export default function ProductDetails() {
   const [availableSizes, setAvailableSizes] = useState([]);
   const [colorVariants, setColorVariants] = useState([]);
 
-  // Получаем продукт по id
+  // Загрузка продукта по id
   useEffect(() => {
     fetchProductById(id)
       .then((data) => {
@@ -69,12 +70,13 @@ export default function ProductDetails() {
       });
   }, [id]);
 
+  // Увеличение счётчика просмотров
   useEffect(() => {
     if (id) incrementProductView(id);
   }, [id]);
 
-  // --- Главное отличие: размеры только по name+color ---
-    useEffect(() => {
+  // Размеры (только по name + color)
+  useEffect(() => {
     if (!product || !product.name || !product.color) {
       setAvailableSizes([]);
       return;
@@ -91,12 +93,11 @@ export default function ProductDetails() {
       filtered.forEach((item) => {
         sizes.push(...extractSizes(item));
       });
-      const filteredSizes = Array.from(new Set(sizes));
-      setAvailableSizes(filteredSizes);
+      setAvailableSizes(Array.from(new Set(sizes)));
     });
   }, [product]);
 
-  // Цветовые варианты — только по name (цвета уникальны)
+  // Цветовые варианты по name
   useEffect(() => {
     if (!product || !product.name) {
       setColorVariants([]);
@@ -104,7 +105,6 @@ export default function ProductDetails() {
     }
     fetchProducts("", 1000).then((data) => {
       const nameNorm = normalize(product.name);
-      // Фильтруем только по name, и для уникальных цветов
       const seen = new Set();
       const variants = [];
       for (const item of data) {
@@ -137,6 +137,7 @@ export default function ProductDetails() {
 
   const displayName = product?.sitename || product?.name || "";
 
+  // Формируем хлебные крошки с сохранением из state, если есть
   const breadcrumbs =
     (location.state && location.state.breadcrumbs?.length > 1)
       ? [...location.state.breadcrumbs, { label: displayName, query: "" }]
@@ -146,15 +147,19 @@ export default function ProductDetails() {
     navigate(query ? "/?search=" + encodeURIComponent(query) : "/");
   };
 
+  // Функция возврата назад с передачей состояния для восстановления
   const handleGoBack = () => {
     if (location.state?.from) {
-      // Вернуться туда, откуда пришли
       navigate(location.state.from, {
         state: {
           categoryKey: location.state.categoryKey || "",
           categoryLabel: location.state.categoryLabel || "",
           subcategoryKey: location.state.subcategoryKey || "",
           searchQuery: location.state.searchQuery || "",
+          brandFilter: location.state.brandFilter || "",
+          sizeFilter: location.state.sizeFilter || "",
+          genderFilter: location.state.genderFilter || "",
+          forceOpenCategory: location.state.forceOpenCategory || false,
           breadcrumbs: location.state.breadcrumbs || [],
         }
       });
@@ -165,6 +170,7 @@ export default function ProductDetails() {
     }
   };
 
+  // Рендер цены с учётом скидки
   function renderPrice() {
     const price = Number(product.price);
     const discount = Number(product.discount);

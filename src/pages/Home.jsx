@@ -79,6 +79,21 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateLimit);
   }, []);
 
+  // --- Восстановление состояния из location.state при монтировании ---
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
+      if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
+      if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
+      if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
+
+      if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
+      if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
+      if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
+      if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
+    }
+  }, [location.state]);
+
   // --- Новый: следим за изменением URL для поиска ---
   useEffect(() => {
     const urlSearchParams = new URLSearchParams(location.search);
@@ -260,12 +275,18 @@ export default function Home() {
     navigate(`/product/${productId}`, {
       state: {
         from: location.pathname + location.search,
+        categoryKey,
+        categoryLabel,
+        subcategoryKey,
+        searchQuery,
+        brandFilter,
+        sizeFilter,
+        genderFilter,
+        forceOpenCategory,
         breadcrumbs,
-        query: searchQuery,
       }
     });
   };
-
 
   const handleBreadcrumbClick = idx => {
     if (idx === 0) {
