@@ -40,12 +40,10 @@ export default function NavMenu({
     fetch(import.meta.env.VITE_API_URL + "/categories")
       .then(res => res.json())
       .then(data => {
-        console.log("Категории с бэка:", data); // Посмотри в консоль!
         if (!Array.isArray(data) || data.length === 0) {
           setCategories([SALE_CATEGORY]);
           return;
         }
-        // Собери мапу по ключам
         const dict = Object.fromEntries(
           data.map(cat => [
             (cat.category_key || cat.key || cat.name).toLowerCase(),
@@ -60,8 +58,7 @@ export default function NavMenu({
             }
           ])
         );
-        dict["sale"] = SALE_CATEGORY; // Добавь Sale
-        // Фильтруй только те, что реально есть
+        dict["sale"] = SALE_CATEGORY;
         const ordered = MENU_ORDER.map(key => dict[key]).filter(Boolean);
         setCategories(ordered.length ? ordered : [SALE_CATEGORY]);
       })
@@ -95,7 +92,7 @@ export default function NavMenu({
             <li key={cat.category_key} className="mobile-menu-li" style={{ padding: 0 }}>
               <div className="mobile-menu-row">
                 <button
-                  className="mobile-menu-item"
+                  className={`mobile-menu-item ${cat.category_key === "sale" ? "nav-menu-sale" : ""}`}
                   onClick={() => {
                     if (cat.category_key === "sale") {
                       onMenuSearch(
@@ -212,6 +209,7 @@ export default function NavMenu({
                 }
               >
                 <span
+                  className={cat.category_key === "sale" ? "nav-menu-sale" : ""}
                   onClick={() => {
                     if (cat.category_key === "sale") {
                       onMenuSearch(
