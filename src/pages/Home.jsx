@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -41,6 +41,9 @@ export default function Home() {
   const [categoryKey, setCategoryKey] = useState("");
   const [categoryLabel, setCategoryLabel] = useState("");
   const [subcategoryKey, setSubcategoryKey] = useState("");
+
+  // Для контроля предыдущих фильтров (чтобы не вызывать loadProducts без смысла)
+  const prevFiltersRef = useRef({});
 
   // breadcrumbs: [{label, query}], всегда Main / Категория
   const breadcrumbs = useMemo(() => {
@@ -174,12 +177,27 @@ export default function Home() {
     }
   }, [filters, isLoading, rawProducts, isHome, products.length]);
 
-  // Сброс данных при смене фильтра/поиска/категории
+  // Сброс данных при смене фильтра/поиска/категории (только если фильтры реально изменились)
   useEffect(() => {
-    setRawProducts([]);
-    setProducts([]);
-    setHasMore(true);
-    loadProducts({ reset: true });
+    const prev = prevFiltersRef.current;
+    const curr = {
+      query: filters.query,
+      categoryKey: filters.categoryKey,
+      subcategoryKey: filters.subcategoryKey,
+      brand: filters.brand,
+      gender: filters.gender,
+      size: filters.size,
+    };
+
+    const isEqual = JSON.stringify(prev) === JSON.stringify(curr);
+
+    if (!isEqual) {
+      prevFiltersRef.current = curr;
+      setRawProducts([]);
+      setProducts([]);
+      setHasMore(true);
+      loadProducts({ reset: true });
+    }
   }, [filters, isHome, loadProducts]);
 
   // --- Пагинация при скролле ---
@@ -198,11 +216,11 @@ export default function Home() {
   // --- Определяем количество колонок в сетке по ширине экрана ---
   const columnsCount = useMemo(() => {
     const width = window.innerWidth;
-    if (width >= 1280) return 5;   // xl:grid-cols-5
-    if (width >= 1024) return 4;   // lg:grid-cols-4
-    if (width >= 768) return 3;    // md:grid-cols-3
-    if (width >= 640) return 2;    // sm:grid-cols-2
-    return 2;                     // default grid-cols-2
+    if (width >= 1280) return 5;
+    if (width >= 1024) return 4;
+    if (width >= 768) return 3;
+    if (width >= 640) return 2;
+    return 2;
   }, []);
 
   // --- Добавляем пустые карточки для ровного последнего ряда ---
@@ -232,7 +250,7 @@ export default function Home() {
   const displayedSortedProducts = useMemo(() => {
     let arr = [...displayedProductsWithFiller];
     if (sort === "asc") arr.sort((a, b) => {
-      if (!a) return 1; 
+      if (!a) return 1;
       if (!b) return -1;
       return getEffectivePrice(a) - getEffectivePrice(b);
     });
@@ -270,13 +288,15 @@ export default function Home() {
       setGenderFilter("");
       setSizeFilter("");
       setForceOpenCategory(false);
-      navigate("/");
+      // Только навигация если не на главной
+      if (location.pathname !== "/" || location.search !== "") {
+        navigate("/");
+      }
     }
   };
 
   // Основной поиск и меню
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
-    // При клике по категории сбрасываем поиск
     setCategoryKey(catKey);
     setCategoryLabel(catLabel);
     setSubcategoryKey(subKey);
@@ -284,10 +304,10 @@ export default function Home() {
     setBrandFilter("");
     setGenderFilter("");
     setForceOpenCategory(!!subKey);
+
+    // Переход только если URL с поиском
     if (urlSearch) {
-      navigate(`/`);
-    } else {
-      navigate(`/`);
+      navigate("/");
     }
   };
 
@@ -301,7 +321,6 @@ export default function Home() {
     _gender = "",
     _size = ""
   ) => {
-    // При поиске сбрасываем категорию
     setCategoryKey("");
     setCategoryLabel("");
     setSubcategoryKey("");
@@ -309,6 +328,7 @@ export default function Home() {
     setGenderFilter("");
     setSizeFilter("");
     setForceOpenCategory(false);
+
     navigate(query ? `/?search=${encodeURIComponent(query)}` : "/");
   };
 
