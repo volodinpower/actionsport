@@ -23,22 +23,17 @@ export default function Header({
 
   const runSearch = (
     query,
-    crumbs,
+    crumbs = [{ label: "Main", query: query, exclude: "" }],
     exclude = "",
-    brand,
-    category,
-    subcategory
+    brand = "",
+    category = "",
+    subcategory = ""
   ) => {
     if (onSearch)
       onSearch(query, crumbs, exclude, brand, category, subcategory);
-
     setActiveMenu(null);
     setMobileMenuOpen(false);
-
-    // Закрываем поиск только если реально был поиск/выбор (а не очистка)
-    if (query && query.trim().length > 0) {
-      setShowSearch(false);
-    }
+    if (query && query.trim().length > 0) setShowSearch(false);
   };
 
   if (isMobile) {

@@ -46,10 +46,14 @@ export default function SearchBar({
   const handleSearch = () => {
     const trimmed = searchText.trim();
     if (trimmed) {
-      onSearch(trimmed);
+      // передай второй аргумент как crumbs:
+      onSearch(trimmed, [{ label: "Main", query: trimmed, exclude: "" }]);
+      setSearchResults([]);
+      if (onClose) onClose();
       if (searchInputRef.current) searchInputRef.current.blur();
     }
   };
+
 
   return (
     <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
