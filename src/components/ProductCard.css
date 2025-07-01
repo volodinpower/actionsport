@@ -108,7 +108,7 @@
     padding: 2px 2px 4px 2px;
   }
   .product-image, .no-image {
-    height: 70%;
+    height: 60%;
     padding: 6px 1px 3px 1px;
     font-size: 11px;
     border-radius: 0 !important;
@@ -131,8 +131,4 @@
   .old-price, .new-price, .cur-price {
     font-size: 11px;
   }
-}
-.subcategory-gray {
-  color: #888;
-  font-size: 14px;
 }
