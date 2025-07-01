@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -41,6 +41,11 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
   const [products, setProducts] = useState([]);
+  const productsRef = useRef(products); // реф для актуальной длины
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isHome, setIsHome] = useState(true);
@@ -113,7 +118,6 @@ export default function Home() {
       let realSubcategoryKey = filters.subcategoryKey;
 
       if (realSubcategoryKey) {
-        // Если подкатегория указана, то сбрасываем основную категорию
         realCategoryKey = "";
       }
 
@@ -151,12 +155,13 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // Загрузка товаров с пагинацией, offset считаем по длине products
+  // Загрузка товаров с пагинацией
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
     setIsLoading(true);
 
-    const offset = reset ? 0 : products.length;
+    const offset = reset ? 0 : productsRef.current.length;
+    console.log("Loading products, offset =", offset, "reset =", reset);
 
     try {
       let fetched;
@@ -186,6 +191,8 @@ export default function Home() {
         setIsHome(true);
       }
 
+      console.log("Fetched products count:", fetched.length);
+
       if (reset) {
         setProducts(fetched);
         setHasMore(fetched.length === LIMIT);
@@ -198,7 +205,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, products.length]);
+  }, [filters, isLoading]);
 
   // Сброс товаров и загрузка первой страницы при смене фильтров
   useEffect(() => {
