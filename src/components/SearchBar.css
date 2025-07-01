@@ -48,7 +48,7 @@
   transition: border 0.2s;
 }
 .search-input:focus, .search-input-full:focus {
-  border: 1.5px solid #2b6cb0;
+  border: 1.5px solid #000000;
   background: #fff;
 }
 .search-clear-btn {
