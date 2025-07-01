@@ -339,7 +339,7 @@ export default function Home() {
             clearFilters={clearFilters}
             showGender={showGenderOption}
             showCategory={!!mainCategoryKey}
-            onCategoryChange={setCategoryFilter}   
+            onCategoryChange={setCategoryFilter}   // подкатегория!
             onBrandChange={setBrandFilter}
             onSizeChange={setSizeFilter}
             onGenderChange={setGenderFilter}
