@@ -15,12 +15,14 @@ export default function SearchBar({
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "";
 
+  // Автофокус при открытии поиска
   useEffect(() => {
     if (autoFocus && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [autoFocus]);
 
+  // Поиск подсказок при наборе текста
   useEffect(() => {
     const delay = setTimeout(async () => {
       const query = searchText.trim();
@@ -43,10 +45,11 @@ export default function SearchBar({
     return () => clearTimeout(delay);
   }, [searchText, API_URL]);
 
+  // Обработка поиска по Enter или по кнопке
   const handleSearch = () => {
     const trimmed = searchText.trim();
     if (trimmed) {
-      // передай второй аргумент как crumbs:
+      // Передаем второй аргумент — crumbs для правильной фильтрации
       onSearch(trimmed, [{ label: "Main", query: trimmed, exclude: "" }]);
       setSearchResults([]);
       if (onClose) onClose();
@@ -54,6 +57,31 @@ export default function SearchBar({
     }
   };
 
+  // Очистить поиск
+  const handleClear = () => {
+    setSearchText("");
+    setSearchResults([]);
+    onSearch(""); // Сброс поиска (отображать все)
+    if (searchInputRef.current) searchInputRef.current.focus();
+  };
+
+  // Выбор бренда из подсказок
+  const handleBrandSelect = (sitename) => {
+    setSearchText(sitename);
+    setSearchResults([]);
+    onSearch(sitename, [{ label: "Main", query: sitename, exclude: "" }]);
+    if (onClose) onClose();
+    if (searchInputRef.current) searchInputRef.current.blur();
+  };
+
+  // Переход к товару из подсказок
+  const handleProductSelect = (item) => {
+    setSearchText(item.sitename);
+    setSearchResults([]);
+    if (searchInputRef.current) searchInputRef.current.blur();
+    if (onClose) onClose();
+    navigate(`/product/${item.id}`);
+  };
 
   return (
     <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
@@ -87,12 +115,7 @@ export default function SearchBar({
                 type="button"
                 aria-label="Clear search"
                 className="search-clear-btn"
-                onClick={() => {
-                  setSearchText("");
-                  setSearchResults([]);
-                  onSearch(""); // только очистить, не закрывать!
-                  if (searchInputRef.current) searchInputRef.current.focus();
-                }}
+                onClick={handleClear}
               >
                 Clear
               </button>
@@ -120,12 +143,7 @@ export default function SearchBar({
                   <div
                     key={"brand-" + item.sitename}
                     className="search-result-item brand"
-                    onClick={() => {
-                      setSearchText(item.sitename);
-                      setSearchResults([]);
-                      onSearch(item.sitename);
-                      if (onClose) onClose();
-                    }}
+                    onClick={() => handleBrandSelect(item.sitename)}
                   >
                     <span>{item.sitename} - brand</span>
                   </div>
@@ -133,13 +151,7 @@ export default function SearchBar({
                   <div
                     key={item.id}
                     className="search-result-item"
-                    onClick={() => {
-                      setSearchText(item.sitename);
-                      setSearchResults([]);
-                      if (searchInputRef.current) searchInputRef.current.blur();
-                      if (onClose) onClose();
-                      navigate(`/product/${item.id}`);
-                    }}
+                    onClick={() => handleProductSelect(item)}
                   >
                     <img
                       src={
