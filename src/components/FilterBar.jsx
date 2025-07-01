@@ -4,21 +4,21 @@ import Select from "react-select";
 export default function FilterBar({
   submenuList = [],
   sizeFilter,
-  setSizeFilter,
   brandFilter,
-  setBrandFilter,
   genderFilter,
-  setGenderFilter,
-  genderOptions = [],
   categoryFilter,
-  setCategoryFilter,
-  clearFilters,
-  showGender = true,
-  showCategory = true,
+  genderOptions = [],
   allSizes = [],
   allBrands = [],
   forceOpenCategory = false,
   setForceOpenCategory = () => {},
+  clearFilters,
+  showGender = true,
+  showCategory = true,
+  onCategoryChange,
+  onBrandChange,
+  onSizeChange,
+  onGenderChange,
 }) {
   const categorySelectRef = useRef();
 
@@ -35,10 +35,6 @@ export default function FilterBar({
 
   const selectedCategory = categoryOptions.find(opt => opt.value === categoryFilter) || null;
 
-  const handleBrandChange = (opt) => setBrandFilter(opt ? opt.value : "");
-  const handleSizeChange = (opt) => setSizeFilter(opt ? opt.value : "");
-  const handleGenderChange = (opt) => setGenderFilter(opt ? opt.value : "");
-
   const shouldShowGender =
     showGender &&
     ((genderOptions && genderOptions.length > 1) ||
@@ -52,9 +48,9 @@ export default function FilterBar({
           classNamePrefix="react-select"
           placeholder="Category"
           isClearable={false}
-          isSearchable={false} // Отключаем ручной ввод
+          isSearchable={false}
           value={selectedCategory}
-          onChange={opt => setCategoryFilter(opt ? opt.value : "")}
+          onChange={opt => onCategoryChange(opt ? opt.value : "")}
           options={categoryOptions}
           menuPlacement="auto"
           ref={categorySelectRef}
@@ -65,9 +61,9 @@ export default function FilterBar({
         classNamePrefix="react-select"
         placeholder="Brand"
         isClearable
-        isSearchable={false} // Отключаем ручной ввод
+        isSearchable={false}
         value={brandFilter ? { value: brandFilter, label: brandFilter } : null}
-        onChange={handleBrandChange}
+        onChange={opt => onBrandChange(opt ? opt.value : "")}
         options={allBrands.map(brand => ({ value: brand, label: brand }))}
         menuPlacement="auto"
       />
@@ -76,9 +72,9 @@ export default function FilterBar({
         classNamePrefix="react-select"
         placeholder="Size"
         isClearable
-        isSearchable={false} // Отключаем ручной ввод
+        isSearchable={false}
         value={sizeFilter ? { value: sizeFilter, label: sizeFilter } : null}
-        onChange={handleSizeChange}
+        onChange={opt => onSizeChange(opt ? opt.value : "")}
         options={allSizes.map(size => ({ value: size, label: size }))}
         menuPlacement="auto"
       />
@@ -88,9 +84,9 @@ export default function FilterBar({
           classNamePrefix="react-select"
           placeholder="Gender"
           isClearable
-          isSearchable={false} // Отключаем ручной ввод
+          isSearchable={false}
           value={genderOptions.find(opt => opt.value === genderFilter) || null}
-          onChange={handleGenderChange}
+          onChange={opt => onGenderChange(opt ? opt.value : "")}
           options={genderOptions}
           menuPlacement="auto"
         />
