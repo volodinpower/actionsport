@@ -49,17 +49,18 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Важно: вычисляем isHome динамически — если нет фильтров и поиска
-  const isHome = useMemo(() => {
-    return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
-  }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
-
+  // Объявляем фильтры ДО isHome
   const [sort, setSort] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
+
+  // isHome зависит от фильтров и urlSearch
+  const isHome = useMemo(() => {
+    return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
+  }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
 
   const [rawCount, setRawCount] = useState(0); // Для offset при пагинации
 
@@ -204,7 +205,7 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // Остальные обработчики (поиск, фильтры, хлебные крошки) — без изменений...
+  // Остальные обработчики (поиск, фильтры, хлебные крошки)...
 
   const handleCategoryFilterChange = (newCategory) => {
     setCategoryFilter(newCategory);
@@ -323,6 +324,26 @@ export default function Home() {
       }
     });
   };
+
+  // Подменю для фильтра категории
+  const submenuList = useMemo(() => {
+    let cat = categories.find(c => c.category_key === categoryFilter);
+    if (cat) {
+      return cat.subcategories.map(sub =>
+        typeof sub === "string" ? sub : sub.subcategory_key || sub.label
+      );
+    }
+    for (let c of categories) {
+      if ((c.subcategories || []).some(sub =>
+        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
+      )) {
+        return c.subcategories.map(sub =>
+          typeof sub === "string" ? sub : sub.subcategory_key || sub.label
+        );
+      }
+    }
+    return [];
+  }, [categories, categoryFilter]);
 
   return (
     <>
