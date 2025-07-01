@@ -60,9 +60,18 @@ export default function ProductCard({ product, onClick }) {
       <div className="product-content">
         <h2 className="product-title">{product.sitename}</h2>
         <div className="desc-group">
-          <div className="desc-row">
-            {product.color ? `color: ${product.color}` : ""}
-          </div>
+          {/* color */}
+          {product.color && (
+            <div className="desc-row" style={{ color: "#888", fontSize: "0.98em" }}>
+              color: {product.color}
+            </div>
+          )}
+          {/* sizes */}
+          {sizes.length > 0 && (
+            <div className="desc-row" style={{ color: "#555", fontSize: "0.97em" }}>
+              size: {sizes.join(", ")}
+            </div>
+          )}
         </div>
         <div className="price-block">
           {showDiscount ? (
