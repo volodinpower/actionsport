@@ -46,16 +46,18 @@ export default function SearchBar({
   }, [searchText, API_URL]);
 
   // Обработка поиска по Enter или по кнопке
-  const handleSearch = () => {
-    const trimmed = searchText.trim();
-    if (trimmed) {
-      // Передаем второй аргумент — crumbs для правильной фильтрации
-      onSearch(trimmed, [{ label: "Main", query: trimmed, exclude: "" }]);
-      setSearchResults([]);
-      if (onClose) onClose();
-      if (searchInputRef.current) searchInputRef.current.blur();
-    }
-  };
+const handleSearch = () => {
+  const trimmed = searchText.trim();
+  if (trimmed) {
+    onSearch(trimmed, [
+      { label: "Main", query: "", exclude: "" },
+      { label: `Search: ${trimmed}`, query: trimmed, exclude: "" }
+    ]);
+    setSearchResults([]);
+    if (onClose) onClose();
+    if (searchInputRef.current) searchInputRef.current.blur();
+  }
+};
 
   // Очистить поиск
   const handleClear = () => {
