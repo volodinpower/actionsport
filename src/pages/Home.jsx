@@ -139,58 +139,55 @@ export default function Home() {
           search: filters.query,
         });
         setGendersInFilter(genders);
-      } catch {
-        // Ошибки молча игнорируем или можно добавить UI-оповещение
+      } catch (e) {
+        console.error(e);
       }
     }
     updateOptions();
   }, [filters, categories]);
 
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
-  if (isLoading) return;
-  setIsLoading(true);
+    if (isLoading) return;
+    setIsLoading(true);
 
-  const isMainPage = !filters.query && !filters.categoryKey && !filters.subcategoryKey && !filters.brand && !filters.gender && !filters.size;
-  const fetchLimit = isMainPage ? HOME_LIMIT * 2 : OTHER_LIMIT;  // Загружаем в 2 раза больше для главной страницы
-  const offset = reset ? 0 : products.length;
+    const isMainPage = !filters.query && !filters.categoryKey && !filters.subcategoryKey && !filters.brand && !filters.gender && !filters.size;
+    const limit = isMainPage ? HOME_LIMIT : OTHER_LIMIT;
+    const offset = reset ? 0 : products.length;
 
-  try {
-    let fetched;
-    if (!isMainPage) {
-      fetched = await fetchProducts(
-        filters.query,
-        fetchLimit,
-        offset,
-        "",
-        filters.brand,
-        "asc",
-        filters.categoryKey,
-        filters.subcategoryKey,
-        filters.gender,
-        filters.size
-      );
-      setIsHome(false);
-    } else {
-      fetched = await fetchPopularProducts(fetchLimit);
-      setIsHome(true);
+    try {
+      let fetched;
+      if (!isMainPage) {
+        fetched = await fetchProducts(
+          filters.query,
+          limit,
+          offset,
+          "",
+          filters.brand,
+          "asc",
+          filters.categoryKey,
+          filters.subcategoryKey,
+          filters.gender,
+          filters.size
+        );
+        setIsHome(false);
+      } else {
+        fetched = await fetchPopularProducts(limit);
+        setIsHome(true);
+      }
+
+      if (reset) {
+        setProducts(fetched);
+        setHasMore(fetched.length === limit && !isMainPage);
+      } else {
+        setProducts(prev => [...prev, ...fetched]);
+        setHasMore(fetched.length === limit);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
-
-    // Для главной страницы срезаем массив до HOME_LIMIT (20 карточек)
-    const finalFetched = isMainPage ? fetched.slice(0, HOME_LIMIT) : fetched;
-
-    if (reset) {
-      setProducts(finalFetched);
-      setHasMore(finalFetched.length === HOME_LIMIT && !isMainPage);
-    } else {
-      setProducts(prev => [...prev, ...finalFetched]);
-      setHasMore(finalFetched.length === (isMainPage ? HOME_LIMIT : OTHER_LIMIT));
-    }
-  } catch (err) {
-    // Можно добавить обработку ошибок, например setHasMore(false)
-  } finally {
-    setIsLoading(false);
-  }
-}, [filters, isLoading, products.length]);
+  }, [filters, isLoading, products.length]);
 
   useEffect(() => {
     loadProducts({ reset: true });
