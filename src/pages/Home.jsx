@@ -18,9 +18,9 @@ import SortControl from "../components/SortControl";
 
 const HOME_LIMIT = 20;  // Кол-во карточек на главной
 const OTHER_LIMIT = 30; // Кол-во карточек на остальных страницах
-const RAW_FETCH_MULTIPLIER = 3; // Множитель загрузки сырых товаров
+const RAW_FETCH_MULTIPLIER = 3; // Множитель для загрузки сырых товаров
 
-// Группируем сырые товары по name+color, объединяем размеры, чтобы получить карточки
+// Группируем сырые товары по name+color, объединяем размеры в массив sizes
 function groupProducts(rawProducts) {
   const grouped = {};
   for (const p of rawProducts) {
@@ -168,11 +168,10 @@ export default function Home() {
     try {
       let fetchedRaw = [];
       if (isMainPage) {
-        // Главная — берем популярные без пагинации, подрезаем до limit карточек
         fetchedRaw = await fetchPopularProducts(rawLimit);
         setIsHome(true);
         setRawCount(fetchedRaw.length);
-
+        setHasMore(false);  // пагинация на главной отключена
       } else {
         fetchedRaw = await fetchProducts(
           filters.query,
@@ -188,6 +187,7 @@ export default function Home() {
         );
         setIsHome(false);
         setRawCount(offset + fetchedRaw.length);
+        setHasMore(fetchedRaw.length === rawLimit);
       }
 
       const grouped = groupProducts(fetchedRaw);
@@ -200,8 +200,6 @@ export default function Home() {
       } else {
         setProducts(prev => [...prev, ...paged]);
       }
-
-      setHasMore(!isMainPage && fetchedRaw.length === rawLimit);
     } catch {
       setHasMore(false);
     } finally {
@@ -214,7 +212,7 @@ export default function Home() {
   }, [filters, loadProducts]);
 
   useEffect(() => {
-    if (isHome) return;
+    if (isHome) return; // пагинация и скролл не работают на главной
 
     const onScroll = () => {
       if (isLoading || !hasMore) return;
@@ -222,6 +220,7 @@ export default function Home() {
         loadProducts({ reset: false });
       }
     };
+
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
