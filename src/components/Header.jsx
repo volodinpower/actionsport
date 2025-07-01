@@ -5,11 +5,12 @@ import "./Header.css";
 
 export default function Header({
   onSearch,
+  onMenuCategoryClick,
   breadcrumbs,
   isHome,
   setCategoryFilter,
   setForceOpenCategory,
-  navigate, // обязательно передавать!
+  navigate,
 }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,7 +23,6 @@ export default function Header({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Ключевая функция: теперь меняет URL
   const runSearch = (
     query = "",
     crumbs = [{ label: "Main", query: query, exclude: "" }],
@@ -35,7 +35,6 @@ export default function Header({
   ) => {
     if (onSearch)
       onSearch(query, crumbs, exclude, brand, category, subcategory, gender, size);
-    // ...
     if (navigate) {
       if (query) {
         navigate(`/?search=${encodeURIComponent(query)}`);
@@ -82,17 +81,11 @@ export default function Header({
         </div>
         {mobileMenuOpen && (
           <NavMenu
-            onMenuCategoryClick={onMenuCategoryClick}
-            onMenuSearch={runSearch}
+            onMainCategorySelect={onMenuCategoryClick}
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
             mobileMenuOpen={mobileMenuOpen}
             setMobileMenuOpen={setMobileMenuOpen}
-            breadcrumbs={breadcrumbs}
-            isHome={isHome}
-            mobileView={true}
-            setCategoryFilter={setCategoryFilter}
-            setForceOpenCategory={setForceOpenCategory}
           />
         )}
         {showSearch && (
@@ -122,14 +115,9 @@ export default function Header({
       <div className="nav-bar">
         <div className="nav-menu-wrap">
           <NavMenu
-            onMenuCategoryClick={onMenuCategoryClick}
-            onMenuSearch={runSearch}
+            onMainCategorySelect={onMenuCategoryClick}
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
-            breadcrumbs={breadcrumbs}
-            isHome={isHome}
-            setCategoryFilter={setCategoryFilter}
-            setForceOpenCategory={setForceOpenCategory}
           />
         </div>
         <div className="search-desktop-spacer"></div>

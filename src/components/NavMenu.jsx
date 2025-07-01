@@ -19,7 +19,7 @@ const SALE_CATEGORY = {
 };
 
 export default function NavMenu({
-  onMainCategorySelect,    // <= обязательно передать из Header!
+  onMainCategorySelect,
   activeMenu, setActiveMenu,
   mobileMenuOpen, setMobileMenuOpen,
 }) {
