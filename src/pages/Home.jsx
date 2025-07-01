@@ -16,7 +16,7 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-const LIMIT = 20;                 // Кол-во карточек на странице
+const LIMIT = 20;                 // Кол-во карточек на главной и остальных страницах
 const RAW_FETCH_MULTIPLIER = 3;  // Множитель загрузки сырых товаров (для группировки)
 
 function groupProducts(rawProducts) {
@@ -48,7 +48,11 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [isHome, setIsHome] = useState(true);
+
+  // Важно: вычисляем isHome динамически — если нет фильтров и поиска
+  const isHome = useMemo(() => {
+    return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
+  }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
 
   const [sort, setSort] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
@@ -57,7 +61,7 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  const [rawCount, setRawCount] = useState(0); // Для смещения при загрузке сырых товаров
+  const [rawCount, setRawCount] = useState(0); // Для offset при пагинации
 
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
@@ -80,31 +84,14 @@ export default function Home() {
     size: sizeFilter,
   }), [urlSearch, categoryFilter, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  const submenuList = useMemo(() => {
-    let cat = categories.find(c => c.category_key === categoryFilter);
-    if (cat) {
-      return cat.subcategories.map(sub =>
-        typeof sub === "string" ? sub : sub.subcategory_key || sub.label
-      );
-    }
-    for (let c of categories) {
-      if ((c.subcategories || []).some(sub =>
-        (typeof sub === "string" ? sub : sub.subcategory_key || sub.label) === categoryFilter
-      )) {
-        return c.subcategories.map(sub =>
-          typeof sub === "string" ? sub : sub.subcategory_key || sub.label
-        );
-      }
-    }
-    return [];
-  }, [categories, categoryFilter]);
-
+  // Загрузка категорий
   useEffect(() => {
     fetchCategories()
       .then(data => setCategories(data || []))
       .catch(() => setCategories([]));
   }, []);
 
+  // Опции фильтров
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
@@ -143,27 +130,21 @@ export default function Home() {
         });
         setGendersInFilter(genders);
       } catch {
-        // Ошибки игнорируем
+        // Игнорируем ошибки
       }
     }
     updateOptions();
   }, [filters, categories]);
 
+  // Загрузка товаров с пагинацией
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
       let fetchedRaw = [];
-      if (
-        filters.categoryKey ||
-        filters.subcategoryKey ||
-        filters.brand ||
-        filters.gender ||
-        filters.size ||
-        filters.query
-      ) {
-        // Не главная страница — пагинация с запасом
+      if (!isHome) {
+        // НЕ главная страница — пагинация работает, offset и лимит
         const offset = reset ? 0 : rawCount;
         const rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
         fetchedRaw = await fetchProducts(
@@ -178,16 +159,13 @@ export default function Home() {
           filters.gender,
           filters.size
         );
-        setIsHome(false);
         setRawCount(offset + fetchedRaw.length);
         setHasMore(fetchedRaw.length === rawLimit);
       } else {
-        // Главная — подгружаем популярные товары с запасом
-        const rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
-        fetchedRaw = await fetchPopularProducts(rawLimit);
-        setIsHome(true);
+        // Главная страница — только 20 популярных, пагинация и скролл отключены
+        fetchedRaw = await fetchPopularProducts(LIMIT * RAW_FETCH_MULTIPLIER);
         setRawCount(fetchedRaw.length);
-        setHasMore(false); // пагинация отключена
+        setHasMore(false);
       }
 
       const grouped = groupProducts(fetchedRaw);
@@ -205,14 +183,16 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, products.length, rawCount]);
+  }, [filters, isLoading, products.length, rawCount, isHome]);
 
+  // При смене фильтров или isHome загружаем заново (сброс)
   useEffect(() => {
     loadProducts({ reset: true });
-  }, [filters, loadProducts]);
+  }, [filters, isHome, loadProducts]);
 
+  // Скролл подгрузка — только если НЕ главная страница
   useEffect(() => {
-    if (isHome) return;
+    if (isHome) return; // Пагинация и скролл отключены на главной
 
     const onScroll = () => {
       if (isLoading || !hasMore) return;
@@ -223,6 +203,8 @@ export default function Home() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
+
+  // Остальные обработчики (поиск, фильтры, хлебные крошки) — без изменений...
 
   const handleCategoryFilterChange = (newCategory) => {
     setCategoryFilter(newCategory);
@@ -406,7 +388,7 @@ export default function Home() {
           <div className="text-center text-gray-600 py-4">Loading more products...</div>
         )}
 
-        {!hasMore && !isLoading && (
+        {!hasMore && !isLoading && !isHome && (
           <div className="text-center text-gray-600 py-4">No more products</div>
         )}
       </div>
