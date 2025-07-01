@@ -99,16 +99,37 @@ export default function Home() {
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
-  useEffect(() => {
-    async function updateOptions() {
-      try {
-        setBrandsInFilter(await fetchFilteredBrands(filters));
-        setSizesInFilter(await fetchFilteredSizes(filters));
-        setGendersInFilter(await fetchFilteredGenders(filters));
-      } catch {}
-    }
-    updateOptions();
-  }, [filters]);
+useEffect(() => {
+  async function updateOptions() {
+    let realCategoryKey = filters.categoryKey;
+    let realSubcategoryKey = filters.subcategoryKey;
+    if (realSubcategoryKey) realCategoryKey = "";
+    try {
+      setBrandsInFilter(await fetchFilteredBrands({
+        categoryKey: realCategoryKey,
+        subcategoryKey: realSubcategoryKey,
+        gender: filters.gender,
+        size: filters.size,
+        search: filters.query, // <-- ДОЛЖЕН БЫТЬ АКТУАЛЬНЫЙ ПОИСК!
+      }));
+      setSizesInFilter(await fetchFilteredSizes({
+        categoryKey: realCategoryKey,
+        subcategoryKey: realSubcategoryKey,
+        brand: filters.brand,
+        gender: filters.gender,
+        search: filters.query, // <-- ДОЛЖЕН БЫТЬ АКТУАЛЬНЫЙ ПОИСК!
+      }));
+      setGendersInFilter(await fetchFilteredGenders({
+        categoryKey: realCategoryKey,
+        subcategoryKey: realSubcategoryKey,
+        brand: filters.brand,
+        size: filters.size,
+        search: filters.query, // <-- ДОЛЖЕН БЫТЬ АКТУАЛЬНЫЙ ПОИСК!
+      }));
+    } catch { /* no-op */ }
+  }
+  updateOptions();
+}, [filters, categories]);
 
   // --- Загрузка товаров ---
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
