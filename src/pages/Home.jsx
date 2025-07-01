@@ -42,8 +42,7 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Восстанавливаем фильтры и поиск из location.state (если есть)
-  // При первом монтировании (не обновляем при смене location.state, только один раз)
+  // Флаг, что мы уже восстановили фильтры из location.state
   const [initialized, setInitialized] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,7 +77,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateLimit);
   }, []);
 
-  // Восстановление фильтров из location.state (только 1 раз при загрузке)
+  // Восстановление фильтров из location.state (только 1 раз)
   useEffect(() => {
     if (!initialized && location.state) {
       if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
@@ -95,12 +94,14 @@ export default function Home() {
     }
   }, [initialized, location.state]);
 
-  // Следим за параметром search в URL (чтобы можно было искать напрямую по URL)
+  // Следим за изменением URL параметра search — только если еще не инициализировались
   useEffect(() => {
-    const urlSearchParams = new URLSearchParams(location.search);
-    const urlSearch = urlSearchParams.get("search") || "";
-    setSearchQuery(urlSearch);
-  }, [location.search]);
+    if (!initialized) {
+      const urlSearchParams = new URLSearchParams(location.search);
+      const urlSearch = urlSearchParams.get("search") || "";
+      setSearchQuery(urlSearch);
+    }
+  }, [location.search, initialized]);
 
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,

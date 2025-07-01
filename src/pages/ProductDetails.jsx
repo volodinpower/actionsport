@@ -137,7 +137,7 @@ export default function ProductDetails() {
 
   const displayName = product?.sitename || product?.name || "";
 
-  // Формируем хлебные крошки с сохранением из state, если есть
+  // Хлебные крошки с сохранением из state, если есть
   const breadcrumbs =
     (location.state && location.state.breadcrumbs?.length > 1)
       ? [...location.state.breadcrumbs, { label: displayName, query: "" }]
@@ -147,7 +147,7 @@ export default function ProductDetails() {
     navigate(query ? "/?search=" + encodeURIComponent(query) : "/");
   };
 
-  // Функция возврата назад с передачей состояния для восстановления
+  // Возврат назад с восстановлением состояния фильтров
   const handleGoBack = () => {
     if (location.state?.from) {
       navigate(location.state.from, {
@@ -170,7 +170,7 @@ export default function ProductDetails() {
     }
   };
 
-  // Рендер цены с учётом скидки
+  // Рендер цены с учетом скидки
   function renderPrice() {
     const price = Number(product.price);
     const discount = Number(product.discount);
