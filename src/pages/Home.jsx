@@ -49,7 +49,7 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Объявляем фильтры ДО isHome
+  // Фильтры и сортировка (объявляем ДО isHome)
   const [sort, setSort] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
@@ -57,12 +57,13 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
-  // isHome зависит от фильтров и urlSearch
+  // isHome — если нет фильтров и нет поиска
   const isHome = useMemo(() => {
     return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
   }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
 
-  const [rawCount, setRawCount] = useState(0); // Для offset при пагинации
+  // Отдельный offset только для НЕ главной страницы (для пагинации)
+  const [rawCount, setRawCount] = useState(0);
 
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
@@ -85,14 +86,12 @@ export default function Home() {
     size: sizeFilter,
   }), [urlSearch, categoryFilter, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  // Загрузка категорий
   useEffect(() => {
     fetchCategories()
       .then(data => setCategories(data || []))
       .catch(() => setCategories([]));
   }, []);
 
-  // Опции фильтров
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
@@ -137,15 +136,15 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // Загрузка товаров с пагинацией
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
       let fetchedRaw = [];
+
       if (!isHome) {
-        // НЕ главная страница — пагинация работает, offset и лимит
+        // НЕ главная страница — пагинация с offset и лимитом
         const offset = reset ? 0 : rawCount;
         const rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
         fetchedRaw = await fetchProducts(
@@ -160,12 +159,20 @@ export default function Home() {
           filters.gender,
           filters.size
         );
+
+        // Обновляем offset ТОЛЬКО для НЕ главной страницы
         setRawCount(offset + fetchedRaw.length);
+
+        // Проверяем, есть ли еще данные для подгрузки
         setHasMore(fetchedRaw.length === rawLimit);
+
       } else {
-        // Главная страница — только 20 популярных, пагинация и скролл отключены
+        // Главная страница — берем популярные, без offset и пагинации
         fetchedRaw = await fetchPopularProducts(LIMIT * RAW_FETCH_MULTIPLIER);
-        setRawCount(fetchedRaw.length);
+
+        // На главной offset и пагинация не меняются
+        setRawCount(0);
+
         setHasMore(false);
       }
 
@@ -178,6 +185,7 @@ export default function Home() {
       } else {
         setProducts(prev => [...prev, ...paged]);
       }
+
     } catch (err) {
       console.error(err);
       setHasMore(false);
@@ -186,14 +194,15 @@ export default function Home() {
     }
   }, [filters, isLoading, products.length, rawCount, isHome]);
 
-  // При смене фильтров или isHome загружаем заново (сброс)
+  // При смене фильтров или смене isHome сбрасываем offset и загружаем заново
   useEffect(() => {
+    setRawCount(0); // Обнуляем offset при фильтрах/смене главной страницы
     loadProducts({ reset: true });
   }, [filters, isHome, loadProducts]);
 
-  // Скролл подгрузка — только если НЕ главная страница
+  // Скролл-подгрузка ТОЛЬКО если не главная страница
   useEffect(() => {
-    if (isHome) return; // Пагинация и скролл отключены на главной
+    if (isHome) return; // Выход — нет скролл-подгрузки на главной
 
     const onScroll = () => {
       if (isLoading || !hasMore) return;
