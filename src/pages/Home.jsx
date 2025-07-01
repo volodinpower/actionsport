@@ -139,8 +139,8 @@ export default function Home() {
           search: filters.query,
         });
         setGendersInFilter(genders);
-      } catch (e) {
-        console.error(e);
+      } catch {
+        // Ошибки игнорируем
       }
     }
     updateOptions();
@@ -156,7 +156,38 @@ export default function Home() {
 
     try {
       let fetched;
-      if (!isMainPage) {
+      if (isMainPage) {
+        // Для главной: запрашиваем в 3 раза больше и группируем
+        const rawLimit = limit * 3;
+        fetched = await fetchPopularProducts(rawLimit);
+        setIsHome(true);
+
+        // Группируем по name+color
+        const groupedMap = new Map();
+        fetched.forEach(p => {
+          const key = p.name + "||" + p.color;
+          if (!groupedMap.has(key)) {
+            groupedMap.set(key, { ...p, sizes: [p.size || ""] });
+          } else {
+            const existing = groupedMap.get(key);
+            if (p.size && !existing.sizes.includes(p.size)) {
+              existing.sizes.push(p.size);
+            }
+          }
+        });
+        const grouped = Array.from(groupedMap.values());
+
+        const result = grouped.slice(0, limit);
+
+        if (reset) {
+          setProducts(result);
+        } else {
+          setProducts(prev => [...prev, ...result]);
+        }
+
+        setHasMore(fetched.length === rawLimit);
+      } else {
+        // Для остальных страниц — пагинация по offset и limit
         fetched = await fetchProducts(
           filters.query,
           limit,
@@ -170,20 +201,16 @@ export default function Home() {
           filters.size
         );
         setIsHome(false);
-      } else {
-        fetched = await fetchPopularProducts(limit);
-        setIsHome(true);
-      }
 
-      if (reset) {
-        setProducts(fetched);
-        setHasMore(fetched.length === limit && !isMainPage);
-      } else {
-        setProducts(prev => [...prev, ...fetched]);
+        if (reset) {
+          setProducts(fetched);
+        } else {
+          setProducts(prev => [...prev, ...fetched]);
+        }
         setHasMore(fetched.length === limit);
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      setHasMore(false);
     } finally {
       setIsLoading(false);
     }
@@ -383,10 +410,9 @@ export default function Home() {
             </div>
           )}
         </div>
-
       </div>
 
       <Footer />
-    </> 
+    </>
   );
 }
