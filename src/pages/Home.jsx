@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -16,8 +16,8 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-const LIMIT = 20;                 // Кол-во карточек на главной и остальных страницах
-const RAW_FETCH_MULTIPLIER = 3;  // Множитель загрузки сырых товаров (для группировки)
+const LIMIT = 20;
+const RAW_FETCH_MULTIPLIER = 3;
 
 function groupProducts(rawProducts) {
   const grouped = {};
@@ -45,11 +45,11 @@ export default function Home() {
 
   const [categories, setCategories] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
-  const [products, setProducts] = useState([]);
+  const [rawProducts, setRawProducts] = useState([]);   // Накапливаем ВСЕ сырые товары
+  const [products, setProducts] = useState([]);         // Сгруппированные товары для отображения
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Важно: вычисляем isHome динамически — если нет фильтров и поиска
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
@@ -61,7 +61,6 @@ export default function Home() {
   }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
 
   const [sort, setSort] = useState("");
-  const [rawCount, setRawCount] = useState(0); // Для offset при пагинации
 
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
@@ -128,32 +127,27 @@ export default function Home() {
         });
         setGendersInFilter(genders);
       } catch {
-        // Игнорируем ошибки
+        // ignore
       }
     }
     updateOptions();
   }, [filters, categories]);
 
+  // ------- ГЛАВНАЯ ФУНКЦИЯ ПАГИНАЦИИ -------
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
-    if (isLoading) {
-      console.log("[loadProducts] Ignored because loading in progress");
-      return;
-    }
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
+      let offset = reset ? 0 : rawProducts.length;
+      let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
+
       let fetchedRaw = [];
 
       if (isHome) {
-        console.log("[loadProducts] Home page load, reset:", reset);
-        fetchedRaw = await fetchPopularProducts(LIMIT * RAW_FETCH_MULTIPLIER);
-        if (reset) setRawCount(0);
-        setHasMore(false);
+        fetchedRaw = await fetchPopularProducts(rawLimit);
+        offset = 0;
       } else {
-        const offset = reset ? 0 : rawCount;
-        const rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
-        console.log("[loadProducts] Non-home load, reset:", reset, "offset:", offset);
-
         fetchedRaw = await fetchProducts(
           filters.query,
           rawLimit,
@@ -166,48 +160,40 @@ export default function Home() {
           filters.gender,
           filters.size
         );
-
-        if (reset) setRawCount(fetchedRaw.length);
-        else setRawCount(offset + fetchedRaw.length);
-
-        setHasMore(fetchedRaw.length === rawLimit);
       }
 
-      console.log("[loadProducts] Fetched raw items count:", fetchedRaw.length);
+      // Накапливаем все сырые товары
+      let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
+      setRawProducts(updatedRaw);
 
-      const grouped = groupProducts(fetchedRaw);
-      console.log("[loadProducts] Grouped items count:", grouped.length);
+      // Группируем все сырые товары для отображения
+      const grouped = groupProducts(updatedRaw);
 
-      const startIdx = reset ? 0 : products.length;
-      const paged = grouped.slice(startIdx, startIdx + LIMIT);
+      // slice — только сколько нужно от начала!
+      const showCount = reset ? LIMIT : products.length + LIMIT;
+      const paged = grouped.slice(0, showCount);
 
-      if (reset) {
-        console.log("[loadProducts] Reset products, count:", paged.length);
-        setProducts(paged);
-      } else {
-        console.log("[loadProducts] Append products, count:", paged.length);
-        setProducts(prev => [...prev, ...paged]);
-      }
+      setProducts(paged);
+      setHasMore(fetchedRaw.length === rawLimit); // есть ли еще в базе
     } catch (err) {
-      console.error("[loadProducts] Error:", err);
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, products.length, rawCount, isHome]);
+  }, [filters, isLoading, rawProducts, isHome, products.length]);
 
+  // --- Сброс при смене фильтров или isHome
   useEffect(() => {
-    console.log("[useEffect] filters or isHome changed, loading products");
+    setRawProducts([]);
+    setProducts([]);
+    setHasMore(true);
     loadProducts({ reset: true });
-  }, [filters, isHome, loadProducts]);
+    // eslint-disable-next-line
+  }, [filters, isHome]);
 
+  // --- Скролл для подгрузки
   useEffect(() => {
-    if (isHome) {
-      console.log("[useEffect] isHome = true, skipping scroll event attachment");
-      return; // Пагинация и скролл отключены на главной
-    }
-
-    console.log("[useEffect] Attaching scroll event for pagination");
+    if (isHome) return;
     const onScroll = () => {
       if (isLoading || !hasMore) return;
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
@@ -218,9 +204,8 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  const handleCategoryFilterChange = (newCategory) => {
-    setCategoryFilter(newCategory);
-  };
+  // Остальное без изменений:
+  const handleCategoryFilterChange = (newCategory) => setCategoryFilter(newCategory);
 
   const handleSearch = (
     query,
