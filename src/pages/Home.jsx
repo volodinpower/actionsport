@@ -45,8 +45,7 @@ export default function Home() {
 
   const [categories, setCategories] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
-  const [rawProducts, setRawProducts] = useState([]);   // Накапливаем ВСЕ сырые товары
-  const [products, setProducts] = useState([]);         // Сгруппированные товары для отображения
+  const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,11 +55,13 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
 
+  // isHome рассчитываем по зависимостям фильтров
   const isHome = useMemo(() => {
     return !urlSearch && !categoryFilter && !brandFilter && !genderFilter && !sizeFilter;
   }, [urlSearch, categoryFilter, brandFilter, genderFilter, sizeFilter]);
 
   const [sort, setSort] = useState("");
+  const rawCountRef = useRef(0); // храним rawCount в useRef, чтобы не вызывать ререндер
 
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
@@ -133,21 +134,26 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // ------- ГЛАВНАЯ ФУНКЦИЯ ПАГИНАЦИИ -------
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("[loadProducts] Ignored, loading in progress");
+      return;
+    }
     setIsLoading(true);
 
     try {
-      let offset = reset ? 0 : rawProducts.length;
-      let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
-
       let fetchedRaw = [];
 
       if (isHome) {
-        fetchedRaw = await fetchPopularProducts(rawLimit);
-        offset = 0;
+        console.log("[loadProducts] Home load, reset:", reset);
+        fetchedRaw = await fetchPopularProducts(LIMIT * RAW_FETCH_MULTIPLIER);
+        rawCountRef.current = 0;
+        setHasMore(false);
       } else {
+        const offset = reset ? 0 : rawCountRef.current;
+        const rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
+        console.log("[loadProducts] Non-home load, reset:", reset, "offset:", offset);
+
         fetchedRaw = await fetchProducts(
           filters.query,
           rawLimit,
@@ -160,40 +166,48 @@ export default function Home() {
           filters.gender,
           filters.size
         );
+
+        if (reset) rawCountRef.current = fetchedRaw.length;
+        else rawCountRef.current += fetchedRaw.length;
+
+        setHasMore(fetchedRaw.length === rawLimit);
       }
 
-      // Накапливаем все сырые товары
-      let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
-      setRawProducts(updatedRaw);
+      console.log("[loadProducts] Fetched raw count:", fetchedRaw.length);
 
-      // Группируем все сырые товары для отображения
-      const grouped = groupProducts(updatedRaw);
+      const grouped = groupProducts(fetchedRaw);
+      console.log("[loadProducts] Grouped count:", grouped.length);
 
-      // slice — только сколько нужно от начала!
-      const showCount = reset ? LIMIT : products.length + LIMIT;
-      const paged = grouped.slice(0, showCount);
+      const startIdx = reset ? 0 : products.length;
+      const paged = grouped.slice(startIdx, startIdx + LIMIT);
 
-      setProducts(paged);
-      setHasMore(fetchedRaw.length === rawLimit); // есть ли еще в базе
+      if (reset) {
+        console.log("[loadProducts] Reset products count:", paged.length);
+        setProducts(paged);
+      } else {
+        console.log("[loadProducts] Append products count:", paged.length);
+        setProducts(prev => [...prev, ...paged]);
+      }
     } catch (err) {
+      console.error("[loadProducts] Error:", err);
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, rawProducts, isHome, products.length]);
+  }, [filters, isLoading, products.length, isHome]);
 
-  // --- Сброс при смене фильтров или isHome
   useEffect(() => {
-    setRawProducts([]);
-    setProducts([]);
-    setHasMore(true);
+    console.log("[useEffect] filters or isHome changed, loading products");
     loadProducts({ reset: true });
-    // eslint-disable-next-line
-  }, [filters, isHome]);
+  }, [filters, isHome, loadProducts]);
 
-  // --- Скролл для подгрузки
   useEffect(() => {
-    if (isHome) return;
+    if (isHome) {
+      console.log("[useEffect] isHome=true, skipping scroll attachment");
+      return;
+    }
+
+    console.log("[useEffect] attaching scroll listener");
     const onScroll = () => {
       if (isLoading || !hasMore) return;
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
@@ -204,18 +218,19 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // Остальное без изменений:
-  const handleCategoryFilterChange = (newCategory) => setCategoryFilter(newCategory);
+  const handleCategoryFilterChange = (newCategory) => {
+    setCategoryFilter(newCategory);
+  };
 
   const handleSearch = (
-      query = "",
-      breadcrumbTrail = [{ label: "Main", query: query, exclude: "" }],
-      excludeArg = "",
-      filterBrand = "",
-      category = "",
-      subcategory = "",
-      genderArg = "",
-      sizeArg = ""
+    query,
+    breadcrumbTrail,
+    excludeArg = "",
+    filterBrand = "",
+    category = "",
+    subcategory = "",
+    genderArg = "",
+    sizeArg = ""
   ) => {
     let newBreadcrumbs = breadcrumbTrail;
     let categoryKey = "";
@@ -348,7 +363,6 @@ export default function Home() {
         isHome={isHome}
         setCategoryFilter={setCategoryFilter}
         setForceOpenCategory={setForceOpenCategory}
-        navigate={navigate}  
       />
 
       {!isHome && (
