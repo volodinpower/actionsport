@@ -61,9 +61,6 @@ export default function ProductCard({ product, onClick }) {
         <h2 className="product-title">{product.sitename}</h2>
         <div className="desc-group">
           <div className="desc-row">
-            {product.color ? `color: ${product.color}` : ""}
-          </div>
-          <div className="desc-row">
             {sizes.length > 0 ? `size: ${sizes.join(", ")}` : ""}
           </div>
         </div>
