@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Header.css";
 
+// Вынеси этот порядок в верх, можешь переименовать под твои реальные key
 const MENU_ORDER = [
   "snowboard",
   "skateboard",
@@ -20,9 +21,10 @@ const SALE_CATEGORY = {
 
 export default function NavMenu({
   onMenuSearch,
-  onMainCategorySelect,
   activeMenu, setActiveMenu,
   mobileMenuOpen, setMobileMenuOpen,
+  setCategoryFilter,
+  setForceOpenCategory,
 }) {
   const [categories, setCategories] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
@@ -38,10 +40,12 @@ export default function NavMenu({
     fetch(import.meta.env.VITE_API_URL + "/categories")
       .then(res => res.json())
       .then(data => {
+        console.log("Категории с бэка:", data); // Посмотри в консоль!
         if (!Array.isArray(data) || data.length === 0) {
           setCategories([SALE_CATEGORY]);
           return;
         }
+        // Собери мапу по ключам
         const dict = Object.fromEntries(
           data.map(cat => [
             (cat.category_key || cat.key || cat.name).toLowerCase(),
@@ -56,7 +60,8 @@ export default function NavMenu({
             }
           ])
         );
-        dict["sale"] = SALE_CATEGORY;
+        dict["sale"] = SALE_CATEGORY; // Добавь Sale
+        // Фильтруй только те, что реально есть
         const ordered = MENU_ORDER.map(key => dict[key]).filter(Boolean);
         setCategories(ordered.length ? ordered : [SALE_CATEGORY]);
       })
@@ -71,7 +76,7 @@ export default function NavMenu({
     );
   };
 
-  // --------- MOBILE MENU ---------
+  // --- Мобильное меню ---
   if (isMobile && mobileMenuOpen) {
     return (
       <div className="mobile-menu-modal">
@@ -90,11 +95,41 @@ export default function NavMenu({
             <li key={cat.category_key} className="mobile-menu-li" style={{ padding: 0 }}>
               <div className="mobile-menu-row">
                 <button
-                  className={`mobile-menu-item ${cat.category_key === "sale" ? "nav-menu-sale" : ""}`}
+                  className="mobile-menu-item"
                   onClick={() => {
-                    onMainCategorySelect?.(cat.category_key, cat.label, "");
-                    setMobileMenuOpen(false);
-                    setOpenSubmenus([]);
+                    if (cat.category_key === "sale") {
+                      onMenuSearch(
+                        "",
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: "Sale", query: "sale" }
+                        ],
+                        "",
+                        "",
+                        "sale",
+                        ""
+                      );
+                      setCategoryFilter?.("sale");
+                      setMobileMenuOpen(false);
+                      setOpenSubmenus([]);
+                      setForceOpenCategory?.(false);
+                    } else {
+                      onMenuSearch(
+                        cat.category_key,
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: cat.label, query: cat.category_key }
+                        ],
+                        "",
+                        "",
+                        cat.category_key,
+                        null
+                      );
+                      setCategoryFilter?.(cat.category_key);
+                      setMobileMenuOpen(false);
+                      setOpenSubmenus([]);
+                      setForceOpenCategory?.(false);
+                    }
                   }}
                 >
                   {cat.label}
@@ -120,8 +155,20 @@ export default function NavMenu({
                         className="mobile-menu-item"
                         style={{ fontSize: "1.05em" }}
                         onClick={() => {
-                          onMainCategorySelect?.(cat.category_key, cat.label, sub.subcategory_key);
-                          setMobileMenuOpen(false);
+                          onMenuSearch(
+                            sub.subcategory_key,
+                            [
+                              { label: cat.label, query: cat.category_key },
+                              { label: sub.label, query: sub.subcategory_key }
+                            ],
+                            "",
+                            "",
+                            cat.category_key,
+                            sub.subcategory_key
+                          );
+                          setCategoryFilter?.(sub.subcategory_key);
+                          setForceOpenCategory?.(true);
+                          setMobileMenuOpen?.(false);
                           setOpenSubmenus([]);
                         }}
                       >
@@ -138,7 +185,7 @@ export default function NavMenu({
     );
   }
 
-  // --------- DESKTOP MENU ---------
+  // --- Десктопное меню ---
   if (!isMobile) {
     const submenuItems = activeMenu
       ? (categories.find(cat => cat.category_key === activeMenu)?.subcategories || [])
@@ -165,9 +212,36 @@ export default function NavMenu({
                 }
               >
                 <span
-                  className={cat.category_key === "sale" ? "nav-menu-sale" : ""}
                   onClick={() => {
-                    onMainCategorySelect?.(cat.category_key, cat.label, "");
+                    if (cat.category_key === "sale") {
+                      onMenuSearch(
+                        "",
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: "Sale", query: "sale" }
+                        ],
+                        "",
+                        "",
+                        "sale",
+                        ""
+                      );
+                      setCategoryFilter?.("sale");
+                      setForceOpenCategory?.(false);
+                    } else {
+                      onMenuSearch(
+                        cat.category_key,
+                        [
+                          { label: "Main", query: "", exclude: "" },
+                          { label: cat.label, query: cat.category_key }
+                        ],
+                        "",
+                        "",
+                        cat.category_key,
+                        null
+                      );
+                      setCategoryFilter?.(cat.category_key);
+                      setForceOpenCategory?.(false);
+                    }
                   }}
                   style={{ display: "inline-block", width: "100%" }}
                 >
@@ -199,12 +273,19 @@ export default function NavMenu({
                         key={sub.subcategory_key}
                         className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                         onClick={() => {
-                          const parent = categories.find(c => c.category_key === activeMenu);
-                          onMainCategorySelect?.(
-                            parent?.category_key,
-                            parent?.label,
+                          onMenuSearch(
+                            sub.subcategory_key,
+                            [
+                              { label: categories.find(c => c.category_key === activeMenu)?.label, query: activeMenu },
+                              { label: sub.label, query: sub.subcategory_key }
+                            ],
+                            "",
+                            "",
+                            activeMenu,
                             sub.subcategory_key
                           );
+                          setCategoryFilter?.(sub.subcategory_key);
+                          setForceOpenCategory?.(true);
                         }}
                       >
                         {sub.label}
