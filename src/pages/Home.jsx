@@ -20,12 +20,21 @@ const LIMIT = 20;
 const RAW_FETCH_MULTIPLIER = 3;
 
 function groupProducts(rawProducts) {
-  return rawProducts.map(p => ({
-    ...p,
-    sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
-  }));
+  const grouped = {};
+  for (const p of rawProducts) {
+    const key = (p.name || "") + "|" + (p.color || "");
+    if (!grouped[key]) {
+      grouped[key] = { ...p, sizes: [] };
+    }
+    if (p.size && p.size.toLowerCase() !== "нет" && !grouped[key].sizes.includes(p.size)) {
+      grouped[key].sizes.push(p.size);
+    }
+  }
+  for (const key in grouped) {
+    grouped[key].sizes.sort((a, b) => a.localeCompare(b));
+  }
+  return Object.values(grouped);
 }
-
 
 export default function Home() {
   const location = useLocation();
@@ -339,7 +348,6 @@ export default function Home() {
         isHome={isHome}
         setCategoryFilter={setCategoryFilter}
         setForceOpenCategory={setForceOpenCategory}
-        navigate={navigate}
       />
 
       {!isHome && (
