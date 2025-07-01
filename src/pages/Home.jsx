@@ -41,7 +41,6 @@ export default function Home() {
   const [categories, setCategories] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
   const [products, setProducts] = useState([]);
-  const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isHome, setIsHome] = useState(true);
@@ -104,6 +103,10 @@ export default function Home() {
   }, []);
 
   // Серверные опции фильтров — обновляем при изменении фильтров
+  const [brandsInFilter, setBrandsInFilter] = useState([]);
+  const [sizesInFilter, setSizesInFilter] = useState([]);
+  const [gendersInFilter, setGendersInFilter] = useState([]);
+
   useEffect(() => {
     async function updateOptions() {
       let realCategoryKey = filters.categoryKey;
@@ -114,66 +117,68 @@ export default function Home() {
         realCategoryKey = "";
       }
 
-      const brands = await fetchFilteredBrands({
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        gender: filters.gender,
-        size: filters.size,
-        search: filters.query,
-      });
-      setBrandsInFilter(brands);
+      try {
+        const brands = await fetchFilteredBrands({
+          categoryKey: realCategoryKey,
+          subcategoryKey: realSubcategoryKey,
+          gender: filters.gender,
+          size: filters.size,
+          search: filters.query,
+        });
+        setBrandsInFilter(brands);
 
-      const sizes = await fetchFilteredSizes({
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        brand: filters.brand,
-        gender: filters.gender,
-        search: filters.query,
-      });
-      setSizesInFilter(sizes);
+        const sizes = await fetchFilteredSizes({
+          categoryKey: realCategoryKey,
+          subcategoryKey: realSubcategoryKey,
+          brand: filters.brand,
+          gender: filters.gender,
+          search: filters.query,
+        });
+        setSizesInFilter(sizes);
 
-      const genders = await fetchFilteredGenders({
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        brand: filters.brand,
-        size: filters.size,
-        search: filters.query,
-      });
-      setGendersInFilter(genders);
+        const genders = await fetchFilteredGenders({
+          categoryKey: realCategoryKey,
+          subcategoryKey: realSubcategoryKey,
+          brand: filters.brand,
+          size: filters.size,
+          search: filters.query,
+        });
+        setGendersInFilter(genders);
+      } catch (e) {
+        console.error(e);
+      }
     }
     updateOptions();
   }, [filters, categories]);
 
-  // Загрузка товаров с пагинацией
-  const loadProducts = useCallback(async ({ reset = false, pageParam = 0, ...opts } = {}) => {
-    if (isLoading) return; // Предотвращаем параллельные запросы
+  // Загрузка товаров с пагинацией, offset считаем по длине products
+  const loadProducts = useCallback(async ({ reset = false } = {}) => {
+    if (isLoading) return;
     setIsLoading(true);
 
-    const {
-      query = filters.query,
-      categoryKey = filters.categoryKey,
-      subcategoryKey = filters.subcategoryKey,
-      brand = filters.brand,
-      gender = filters.gender,
-      size = filters.size,
-    } = opts;
-
-    const offset = pageParam * LIMIT;
+    const offset = reset ? 0 : products.length;
 
     try {
       let fetched;
-      if (categoryKey || subcategoryKey || brand || gender || size || query) {
+      if (
+        filters.categoryKey ||
+        filters.subcategoryKey ||
+        filters.brand ||
+        filters.gender ||
+        filters.size ||
+        filters.query
+      ) {
         fetched = await fetchProducts(
-          query,
+          filters.query,
           LIMIT,
           offset,
           "",
-          brand,
+          filters.brand,
           "asc",
-          categoryKey,
-          subcategoryKey,
-          gender,
-          size
+          filters.categoryKey,
+          filters.subcategoryKey,
+          filters.gender,
+          filters.size
         );
         setIsHome(false);
       } else {
@@ -188,18 +193,16 @@ export default function Home() {
         setProducts(prev => [...prev, ...fetched]);
         setHasMore(fetched.length === LIMIT);
       }
-
-      setPage(pageParam);
     } catch (err) {
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading]);
+  }, [filters, isLoading, products.length]);
 
   // Сброс товаров и загрузка первой страницы при смене фильтров
   useEffect(() => {
-    loadProducts({ reset: true, pageParam: 0 });
+    loadProducts({ reset: true });
   }, [filters, loadProducts]);
 
   // Обработчик скролла — бесконечная прокрутка
@@ -207,12 +210,12 @@ export default function Home() {
     const onScroll = () => {
       if (isLoading || !hasMore) return;
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-        loadProducts({ pageParam: page + 1 });
+        loadProducts({ reset: false });
       }
     };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [page, hasMore, isLoading, loadProducts]);
+  }, [loadProducts, isLoading, hasMore]);
 
   // Обработка смены фильтра категории
   const handleCategoryFilterChange = (newCategory) => {
@@ -266,17 +269,12 @@ export default function Home() {
 
     if (lastCrumb.query === "") {
       setBreadcrumbs([{ label: "Main", query: "", exclude: "" }]);
-      await loadProducts({ reset: true, pageParam: 0 });
+      await loadProducts({ reset: true });
     } else {
       setBreadcrumbs(newTrail);
-      await loadProducts({ reset: true, pageParam: 0, query: lastCrumb.query });
+      await loadProducts({ reset: true, query: lastCrumb.query });
     }
   };
-
-  // Серверные опции для фильтров
-  const [brandsInFilter, setBrandsInFilter] = useState([]);
-  const [sizesInFilter, setSizesInFilter] = useState([]);
-  const [gendersInFilter, setGendersInFilter] = useState([]);
 
   // Опции для фильтра по полу
   const genderOptions = useMemo(() =>
