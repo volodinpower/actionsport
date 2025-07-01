@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
 import {
-  fetchProducts,
+  fetchProductsGrouped,
   fetchPopularProducts,
   fetchCategories,
   fetchFilteredBrands,
@@ -19,23 +19,6 @@ import SortControl from "../components/SortControl";
 const LIMIT = 20;
 const RAW_FETCH_MULTIPLIER = 3;
 
-function groupProducts(rawProducts) {
-  const grouped = {};
-  for (const p of rawProducts) {
-    const key = (p.name || "") + "|" + (p.color || "");
-    if (!grouped[key]) {
-      grouped[key] = { ...p, sizes: [] };
-    }
-    if (p.size && p.size.toLowerCase() !== "нет" && !grouped[key].sizes.includes(p.size)) {
-      grouped[key].sizes.push(p.size);
-    }
-  }
-  for (const key in grouped) {
-    grouped[key].sizes.sort((a, b) => a.localeCompare(b));
-  }
-  return Object.values(grouped);
-}
-
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,8 +28,7 @@ export default function Home() {
 
   const [categories, setCategories] = useState([]);
   const [breadcrumbs, setBreadcrumbs] = useState([{ label: "Main", query: "", exclude: "" }]);
-  const [rawProducts, setRawProducts] = useState([]);   // Накапливаем ВСЕ сырые товары
-  const [products, setProducts] = useState([]);         // Сгруппированные товары для отображения
+  const [products, setProducts] = useState([]);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -133,28 +115,25 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // ------- ГЛАВНАЯ ФУНКЦИЯ ПАГИНАЦИИ -------
+  // --- Загрузка товаров (группированных)
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
-      let offset = reset ? 0 : rawProducts.length;
+      let offset = reset ? 0 : products.length;
       let rawLimit = LIMIT * RAW_FETCH_MULTIPLIER;
-
-      let fetchedRaw = [];
+      let fetched = [];
 
       if (isHome) {
-        fetchedRaw = await fetchPopularProducts(rawLimit);
+        fetched = await fetchPopularProducts(rawLimit); // popular-products возвращает массив с sizes
         offset = 0;
       } else {
-        fetchedRaw = await fetchProducts(
+        fetched = await fetchProductsGrouped(
           filters.query,
           rawLimit,
           offset,
-          "",
           filters.brand,
-          "asc",
           filters.categoryKey,
           filters.subcategoryKey,
           filters.gender,
@@ -162,29 +141,19 @@ export default function Home() {
         );
       }
 
-      // Накапливаем все сырые товары
-      let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
-      setRawProducts(updatedRaw);
-
-      // Группируем все сырые товары для отображения
-      const grouped = groupProducts(updatedRaw);
-
-      // slice — только сколько нужно от начала!
+      const updated = reset ? fetched : [...products, ...fetched];
       const showCount = reset ? LIMIT : products.length + LIMIT;
-      const paged = grouped.slice(0, showCount);
-
-      setProducts(paged);
-      setHasMore(fetchedRaw.length === rawLimit); // есть ли еще в базе
+      setProducts(updated.slice(0, showCount));
+      setHasMore(fetched.length === rawLimit);
     } catch (err) {
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, rawProducts, isHome, products.length]);
+  }, [filters, isLoading, products.length, isHome]);
 
   // --- Сброс при смене фильтров или isHome
   useEffect(() => {
-    setRawProducts([]);
     setProducts([]);
     setHasMore(true);
     loadProducts({ reset: true });
@@ -204,7 +173,6 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // Остальное без изменений:
   const handleCategoryFilterChange = (newCategory) => setCategoryFilter(newCategory);
 
   const handleSearch = (

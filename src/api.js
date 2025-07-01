@@ -322,3 +322,27 @@ export async function fetchCategories() {
   const data = await res.json();
   return Array.isArray(data) ? data : [];
 }
+export async function fetchProductsGrouped(
+  search = "",
+  limit = 30,
+  offset = 0,
+  brand = "",
+  category_key = "",
+  subcategory_key = "",
+  gender = "",
+  size = ""
+) {
+  const params = new URLSearchParams();
+  if (search) params.append("search", search);
+  params.append("limit", limit);
+  params.append("offset", offset);
+  if (brand) params.append("brand", brand);
+  if (category_key) params.append("category_key", category_key);
+  if (subcategory_key) params.append("subcategory_key", subcategory_key);
+  if (gender) params.append("gender", gender);
+  if (size) params.append("size", size);
+
+  const res = await fetch(apiUrl(`/products/grouped?${params}`));
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json();
+}
