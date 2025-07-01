@@ -148,10 +148,14 @@ export default function ProductDetails() {
 
   const handleGoBack = () => {
     if (location.state?.from) {
+      // Вернуться туда, откуда пришли
       navigate(location.state.from, {
         state: {
-          breadcrumbs: location.state.breadcrumbs,
-          query: location.state.query
+          categoryKey: location.state.categoryKey || "",
+          categoryLabel: location.state.categoryLabel || "",
+          subcategoryKey: location.state.subcategoryKey || "",
+          searchQuery: location.state.searchQuery || "",
+          breadcrumbs: location.state.breadcrumbs || [],
         }
       });
     } else if (window.history.length > 2) {
