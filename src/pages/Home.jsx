@@ -16,27 +16,20 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-const HOME_LIMIT = 20;  // Кол-во карточек на главной
-const OTHER_LIMIT = 30; // Кол-во карточек на остальных страницах
-const RAW_FETCH_MULTIPLIER = 3; // Множитель для загрузки сырых товаров
+const HOME_LIMIT = 20;
+const OTHER_LIMIT = 30;
 
-// Группируем сырые товары по name+color, объединяем размеры в массив sizes
-function groupProducts(rawProducts) {
-  const grouped = {};
-  for (const p of rawProducts) {
-    const key = (p.name || "") + "|" + (p.color || "");
-    if (!grouped[key]) {
-      grouped[key] = { ...p, sizes: [] };
-    }
-    if (p.size && p.size.toLowerCase() !== "нет" && !grouped[key].sizes.includes(p.size)) {
-      grouped[key].sizes.push(p.size);
-    }
-  }
-  // Сортируем размеры внутри групп
-  for (const key in grouped) {
-    grouped[key].sizes.sort((a, b) => a.localeCompare(b));
-  }
-  return Object.values(grouped);
+function getCategoryLabel(cat) {
+  if (!cat) return "";
+  return (
+    cat.label ||
+    cat.name ||
+    cat.title ||
+    cat.category_title ||
+    cat.category_name ||
+    cat.category_key ||
+    "Category"
+  );
 }
 
 export default function Home() {
@@ -59,9 +52,6 @@ export default function Home() {
   const [genderFilter, setGenderFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [forceOpenCategory, setForceOpenCategory] = useState(false);
-
-  // Счётчик загруженных сырых товаров (для offset)
-  const [rawCount, setRawCount] = useState(0);
 
   const subcategoryKey = useMemo(() => {
     if (!categoryFilter) return "";
@@ -150,7 +140,7 @@ export default function Home() {
         });
         setGendersInFilter(genders);
       } catch {
-        // Ошибки игнорируем
+        // Ошибки молча игнорируем или можно добавить UI-оповещение
       }
     }
     updateOptions();
@@ -162,20 +152,14 @@ export default function Home() {
 
     const isMainPage = !filters.query && !filters.categoryKey && !filters.subcategoryKey && !filters.brand && !filters.gender && !filters.size;
     const limit = isMainPage ? HOME_LIMIT : OTHER_LIMIT;
-    const rawLimit = limit * RAW_FETCH_MULTIPLIER;
-    const offset = reset ? 0 : rawCount;
+    const offset = reset ? 0 : products.length;
 
     try {
-      let fetchedRaw = [];
-      if (isMainPage) {
-        fetchedRaw = await fetchPopularProducts(rawLimit);
-        setIsHome(true);
-        setRawCount(fetchedRaw.length);
-        setHasMore(false);  // пагинация на главной отключена
-      } else {
-        fetchedRaw = await fetchProducts(
+      let fetched;
+      if (!isMainPage) {
+        fetched = await fetchProducts(
           filters.query,
-          rawLimit,
+          limit,
           offset,
           "",
           filters.brand,
@@ -186,33 +170,31 @@ export default function Home() {
           filters.size
         );
         setIsHome(false);
-        setRawCount(offset + fetchedRaw.length);
-        setHasMore(fetchedRaw.length === rawLimit);
+      } else {
+        fetched = await fetchPopularProducts(limit);
+        setIsHome(true);
       }
-
-      const grouped = groupProducts(fetchedRaw);
-
-      const startIdx = reset ? 0 : products.length;
-      const paged = grouped.slice(startIdx, startIdx + limit);
 
       if (reset) {
-        setProducts(paged);
+        setProducts(fetched);
+        setHasMore(fetched.length === limit && !isMainPage);
       } else {
-        setProducts(prev => [...prev, ...paged]);
+        setProducts(prev => [...prev, ...fetched]);
+        setHasMore(fetched.length === limit);
       }
     } catch {
-      setHasMore(false);
+      // Ошибки молча игнорируем или можно добавить UI-оповещение
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isLoading, products.length, rawCount]);
+  }, [filters, isLoading, products.length]);
 
   useEffect(() => {
     loadProducts({ reset: true });
   }, [filters, loadProducts]);
 
   useEffect(() => {
-    if (isHome) return; // пагинация и скролл не работают на главной
+    if (isHome) return;
 
     const onScroll = () => {
       if (isLoading || !hasMore) return;
@@ -220,7 +202,6 @@ export default function Home() {
         loadProducts({ reset: false });
       }
     };
-
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [loadProducts, isLoading, hasMore, isHome]);
@@ -402,9 +383,10 @@ export default function Home() {
             </div>
           )}
         </div>
+
       </div>
 
       <Footer />
-    </>
+    </> 
   );
 }
