@@ -327,23 +327,22 @@ export default function Home() {
       {!isHome && (
         <div>
           <FilterBar
-            allSizes={sizesInFilter}
-            allBrands={brandsInFilter}
             submenuList={submenuList}
             sizeFilter={sizeFilter}
-            setSizeFilter={setSizeFilter}
             brandFilter={brandFilter}
-            setBrandFilter={setBrandFilter}
             genderFilter={genderFilter}
-            setGenderFilter={setGenderFilter}
             genderOptions={genderOptions}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={handleCategoryFilterChange}
+            allSizes={sizesInFilter}
+            allBrands={brandsInFilter}
+            forceOpenCategory={forceOpenCategory}
+            setForceOpenCategory={setForceOpenCategory}
             clearFilters={clearFilters}
             showGender={showGenderOption}
             showCategory={!!mainCategoryKey}
-            forceOpenCategory={forceOpenCategory}
-            setForceOpenCategory={setForceOpenCategory}
+            onCategoryChange={setCategoryFilter}   
+            onBrandChange={setBrandFilter}
+            onSizeChange={setSizeFilter}
+            onGenderChange={setGenderFilter}
           />
           <div>
             <SortControl sort={sort} setSort={setSort} />
