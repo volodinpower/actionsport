@@ -75,7 +75,7 @@ export default function ProductDetails() {
     if (id) incrementProductView(id);
   }, [id]);
 
-  // Размеры (только по name + color)
+  // Размеры (по name + color)
   useEffect(() => {
     if (!product || !product.name || !product.color) {
       setAvailableSizes([]);
@@ -137,37 +137,49 @@ export default function ProductDetails() {
 
   const displayName = product?.sitename || product?.name || "";
 
-  // Хлебные крошки с сохранением из state, если есть
-  const breadcrumbs =
-    (location.state && location.state.breadcrumbs?.length > 1)
-      ? [...location.state.breadcrumbs, { label: displayName, query: "" }]
-      : [{ label: "Main", query: "" }, { label: displayName, query: "" }];
+  // Хлебные крошки
+  const breadcrumbs = [
+    { label: "Main", query: "" },
+    { label: displayName, query: "" }
+  ];
 
   const handleHeaderSearch = (query) => {
     navigate(query ? "/?search=" + encodeURIComponent(query) : "/");
   };
 
-  // Кнопка "назад" с восстановлением состояния фильтров
+  // Возврат назад: только navigate(location.state?.from), всё остальное подтянется из URL
   const handleGoBack = () => {
     if (location.state?.from && location.state.from !== "/") {
-      navigate(location.state.from, {
-        state: {
-          categoryKey: location.state.categoryKey || "",
-          categoryLabel: location.state.categoryLabel || "",
-          subcategoryKey: location.state.subcategoryKey || "",
-          searchQuery: location.state.searchQuery || "",
-          brandFilter: location.state.brandFilter || "",
-          sizeFilter: location.state.sizeFilter || "",
-          genderFilter: location.state.genderFilter || "",
-          forceOpenCategory: location.state.forceOpenCategory || false,
-          breadcrumbs: location.state.breadcrumbs || [],
-        },
-        replace: true,
-      });
+      navigate(location.state.from);
+    } else if (window.history.length > 1) {
+      navigate(-1);
     } else {
       navigate("/", { replace: true });
     }
   };
+
+  // Рендер цены с учетом скидки
+  function renderPrice() {
+    const price = Number(product.price);
+    const discount = Number(product.discount);
+    let discountPrice = Number(product.discount_price);
+    if (discount > 0 && (!discountPrice || discountPrice === 0)) {
+      discountPrice = Math.round(price * (1 - discount / 100));
+    }
+    return discount > 0 && discountPrice > 0 ? (
+      <div>
+        <div>
+          <span className="line-through text-gray-400 text-xl mr-2">{price.toLocaleString()} AMD</span>
+          <span className="text-red-500 text-xl font-semibold mr-2">-{discount}%</span>
+        </div>
+        <div>
+          <span className="text-green-700 text-2xl font-bold">{discountPrice.toLocaleString()} AMD</span>
+        </div>
+      </div>
+    ) : (
+      <span className="text-2xl font-bold">{price.toLocaleString()} AMD</span>
+    );
+  }
 
   if (error) return <div className="p-8 text-center text-red-600">Ошибка: {error}</div>;
   if (!product) return <div className="p-8 text-center">Loading...</div>;
@@ -208,7 +220,7 @@ export default function ProductDetails() {
                 title={item.color || ""}
                 onClick={e => {
                   e.preventDefault();
-                  if (!isCurrent) navigate(`/product/${item.id}`, { state: location.state });
+                  if (!isCurrent) navigate(`/product/${item.id}`);
                 }}
               >
                 <img
@@ -230,24 +242,92 @@ export default function ProductDetails() {
       <Header onSearch={handleHeaderSearch} breadcrumbs={breadcrumbs} isHome={false} />
       <div className="w-full mx-auto pt-1">
         <Breadcrumbs items={breadcrumbs} onBreadcrumbClick={idx => {
-          if (idx === 0) {
-            handleGoBack();
-          } else if (location.state?.breadcrumbs) {
-            const crumb = location.state.breadcrumbs[idx];
-            if (crumb?.query) {
-              navigate(`/?search=${encodeURIComponent(crumb.query)}`, {
-                state: {
-                  breadcrumbs: location.state.breadcrumbs.slice(0, idx + 1),
-                  query: crumb.query
-                }
-              });
-            }
-          }
+          if (idx === 0) handleGoBack();
         }} />
-        {/* ... остальной JSX с отображением товара, изображений и кнопкой назад */}
-        {/* ... */}
-        <Footer />
+        <div className="bg-white shadow-md p-6 flex flex-col md:flex-row gap-8 mt-2 w-full">
+          <div className="flex-shrink-0 flex-1 min-w-[300px] flex flex-col items-center justify-center">
+            {isMobile ? (
+              <div className="relative w-full flex items-center justify-center" style={{ minHeight: 280 }}>
+                {rawImages.length > 1 && (
+                  <button className="absolute left-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-20 text-white px-2 py-1"
+                    onClick={() => setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)}>‹</button>
+                )}
+                <img
+                  src={rawImages[mainIndex]}
+                  alt={displayName}
+                  className="w-full object-contain shadow mb-3 select-none"
+                  style={{ maxHeight: 340, cursor: "pointer" }}
+                  onClick={() => { setShowModal(true); setModalIndex(mainIndex); }}
+                  draggable={false}
+                />
+                {rawImages.length > 1 && (
+                  <button className="absolute right-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-20 text-white px-2 py-1"
+                    onClick={() => setMainIndex((mainIndex + 1) % rawImages.length)}>›</button>
+                )}
+              </div>
+            ) : (
+              <>
+                <img
+                  src={rawImages[mainIndex]}
+                  alt={displayName}
+                  className="w-3/4 object-contain shadow mb-3 cursor-pointer"
+                  onClick={() => { setShowModal(true); setModalIndex(mainIndex); }}
+                />
+                <div className="flex gap-3 mt-2 flex-wrap justify-center">
+                  {rawImages.map((imgUrl, idx) => (
+                    <img
+                      key={idx}
+                      src={imgUrl}
+                      alt={`Фото ${idx + 1}`}
+                      className={`w-20 h-20 object-cover rounded-lg border-2 shadow-sm cursor-pointer ${
+                        idx === mainIndex ? "border-black" : "border-gray-200"
+                      }`}
+                      onClick={() => setMainIndex(idx)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex-1 flex flex-col justify-start mt-2">
+            <h2 className="text-2xl font-bold mb-8">{displayName}</h2>
+            {colorBlock}
+            <div className="mb-1 text-gray-600 text-sm">
+              <b>size:</b> {availableSizes.length > 0 ? availableSizes.join(", ") : "—"}
+            </div>
+            <div className="mt-8 mb-2">{renderPrice()}</div>
+            <button className="mt-8 px-6 py-2 bg-black text-white w-max" onClick={handleGoBack}>Back</button>
+          </div>
+        </div>
       </div>
+
+      {showModal && rawImages.length > 0 && (
+        <div className="fixed z-50 inset-0 bg-black bg-opacity-80 flex items-center justify-center">
+          <button className="absolute top-4 right-6 text-white text-4xl font-bold" onClick={() => setShowModal(false)}>×</button>
+          {rawImages.length > 1 && (
+            <button className="absolute left-6 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
+              onClick={() => setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length)}>‹</button>
+          )}
+          <img src={rawImages[modalIndex]} alt={`${displayName} фото ${modalIndex + 1}`}
+            className="max-h-[80vh] max-w-[80vw] rounded-xl shadow-lg" />
+          {rawImages.length > 1 && (
+            <button className="absolute right-6 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
+              onClick={() => setModalIndex((modalIndex + 1) % rawImages.length)}>›</button>
+          )}
+          {!isMobile && rawImages.length > 1 && (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+              {rawImages.map((imgUrl, idx) => (
+                <img key={idx} src={imgUrl} alt={`миниатюра ${idx + 1}`}
+                  className={`w-12 h-12 rounded border-2 ${idx === modalIndex ? "border-white" : "border-transparent"} cursor-pointer`}
+                  onClick={() => setModalIndex(idx)} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <Footer />
     </div>
   );
 }
