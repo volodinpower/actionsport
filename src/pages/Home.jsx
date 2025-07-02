@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -27,11 +27,11 @@ function groupProducts(rawProducts) {
 
 function getColumnsCount() {
   const width = window.innerWidth;
-  if (width >= 1280) return 5;
-  if (width >= 1024) return 4;
-  if (width >= 768) return 3;
-  if (width >= 640) return 2;
-  return 2;
+  if (width >= 1280) return 5;   // xl:grid-cols-5
+  if (width >= 1024) return 4;   // lg:grid-cols-4
+  if (width >= 768) return 3;    // md:grid-cols-3
+  if (width >= 640) return 2;    // sm:grid-cols-2
+  return 2;                     // default grid-cols-2
 }
 
 function getLimitByColumns(columns) {
@@ -42,14 +42,14 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Состояния
-  const [initialized, setInitialized] = useState(false);
-
+  // --- Новый локальный state для поиска ---
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Категории (из API)
   const [categories, setCategories] = useState([]);
-  const [categoryKey, setCategoryKey] = useState("");
-  const [categoryLabel, setCategoryLabel] = useState("");
-  const [subcategoryKey, setSubcategoryKey] = useState("");
+  const [categoryKey, setCategoryKey] = useState("");      // выбранная категория (главное меню)
+  const [categoryLabel, setCategoryLabel] = useState("");  // её подпись
+  const [subcategoryKey, setSubcategoryKey] = useState(""); // подкатегория (если выбрана)
   const [sizeFilter, setSizeFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
@@ -61,21 +61,69 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [sort, setSort] = useState("");
 
+  // --- Считаем изначально число колонок и лимит ---
   const [limit, setLimit] = useState(() => {
     const initialColumns = getColumnsCount();
     return getLimitByColumns(initialColumns);
   });
 
-  // Рефы для актуальных значений
-  const rawProductsRef = useRef(rawProducts);
-  const productsRef = useRef(products);
-  const isLoadingRef = useRef(isLoading);
-  const limitRef = useRef(limit);
-  const filtersRef = useRef({});
-  const isHomeRef = useRef(false);
-  const initializedRef = useRef(initialized);
+  // --- Следим за изменение размера окна для лимита ---
+  useEffect(() => {
+    function updateLimit() {
+      const columns = getColumnsCount();
+      const newLimit = getLimitByColumns(columns);
+      setLimit(newLimit);
+    }
+    updateLimit();
+    window.addEventListener("resize", updateLimit);
+    return () => window.removeEventListener("resize", updateLimit);
+  }, []);
 
-  // Мемоирация filters
+  // --- Восстановление состояния из location.state при монтировании ---
+  useEffect(() => {
+    if (location.state) {
+      if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
+      if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
+      if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
+      if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
+
+      if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
+      if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
+      if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
+      if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
+    }
+  }, [location.state]);
+
+  // --- Новый: следим за изменением URL для поиска ---
+  useEffect(() => {
+    const urlSearchParams = new URLSearchParams(location.search);
+    const urlSearch = urlSearchParams.get("search") || "";
+    setSearchQuery(urlSearch);
+  }, [location.search]);
+
+  const isHome = useMemo(
+    () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
+    [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
+  );
+
+  // --- Формируем breadcrumbs ---
+  const breadcrumbs = useMemo(() => {
+    if (searchQuery) {
+      return [
+        { label: "Main", query: "" },
+        { label: `Search: ${searchQuery}`, query: searchQuery }
+      ];
+    }
+    if (categoryKey) {
+      return [
+        { label: "Main", query: "" },
+        { label: categoryLabel || categoryKey, query: categoryKey }
+      ];
+    }
+    return [{ label: "Main", query: "" }];
+  }, [searchQuery, categoryKey, categoryLabel]);
+
+  // --- filters для API ---
   const filters = useMemo(() => ({
     query: searchQuery,
     categoryKey,
@@ -85,132 +133,81 @@ export default function Home() {
     size: sizeFilter,
   }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  const isHome = useMemo(
-    () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
-    [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
-  );
-
-  // Обновляем рефы при изменении стейтов
-  useEffect(() => { rawProductsRef.current = rawProducts; }, [rawProducts]);
-  useEffect(() => { productsRef.current = products; }, [products]);
-  useEffect(() => { isLoadingRef.current = isLoading; }, [isLoading]);
-  useEffect(() => { limitRef.current = limit; }, [limit]);
-  useEffect(() => { filtersRef.current = filters; }, [filters]);
-  useEffect(() => { isHomeRef.current = isHome; }, [isHome]);
-  useEffect(() => { initializedRef.current = initialized; }, [initialized]);
-
-  // Следим за размером окна для лимита
-  useEffect(() => {
-    function updateLimit() {
-      const columns = getColumnsCount();
-      setLimit(getLimitByColumns(columns));
-    }
-    updateLimit();
-    window.addEventListener("resize", updateLimit);
-    return () => window.removeEventListener("resize", updateLimit);
-  }, []);
-
-  // Восстановление состояния из location.state (один раз)
-  useEffect(() => {
-    if (!initializedRef.current && location.state) {
-      if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
-      if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
-      if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
-      if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
-      if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
-      if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
-      if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
-      if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
-      setInitialized(true);
-    }
-  }, [location.state]);
-
-  // Следим за параметром search в URL (если ещё не инициализировались)
-  useEffect(() => {
-    if (!initializedRef.current) {
-      const urlSearchParams = new URLSearchParams(location.search);
-      const urlSearch = urlSearchParams.get("search") || "";
-      setSearchQuery(urlSearch);
-    }
-  }, [location.search]);
-
-  // Загрузка категорий
+  // --- Категории ---
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
-  // Фильтры для селекторов
+  // --- Фильтры для селекторов ---
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
   useEffect(() => {
     async function updateOptions() {
-      let realCategoryKey = filtersRef.current.categoryKey;
-      let realSubcategoryKey = filtersRef.current.subcategoryKey;
+      let realCategoryKey = filters.categoryKey;
+      let realSubcategoryKey = filters.subcategoryKey;
       if (realSubcategoryKey) realCategoryKey = "";
       try {
         setBrandsInFilter(await fetchFilteredBrands({
           categoryKey: realCategoryKey,
           subcategoryKey: realSubcategoryKey,
-          gender: filtersRef.current.gender,
-          size: filtersRef.current.size,
-          search: filtersRef.current.query,
+          gender: filters.gender,
+          size: filters.size,
+          search: filters.query,
         }));
         setSizesInFilter(await fetchFilteredSizes({
           categoryKey: realCategoryKey,
           subcategoryKey: realSubcategoryKey,
-          brand: filtersRef.current.brand,
-          gender: filtersRef.current.gender,
-          search: filtersRef.current.query,
+          brand: filters.brand,
+          gender: filters.gender,
+          search: filters.query,
         }));
         setGendersInFilter(await fetchFilteredGenders({
           categoryKey: realCategoryKey,
           subcategoryKey: realSubcategoryKey,
-          brand: filtersRef.current.brand,
-          size: filtersRef.current.size,
-          search: filtersRef.current.query,
+          brand: filters.brand,
+          size: filters.size,
+          search: filters.query,
         }));
-      } catch {}
+      } catch { /* no-op */ }
     }
     updateOptions();
   }, [filters, categories]);
 
-  // Загрузка продуктов
+  // --- Загрузка товаров ---
   const loadProducts = useCallback(async ({ reset = false } = {}) => {
-    if (isLoadingRef.current) return;
+    if (isLoading) return;
     setIsLoading(true);
     try {
-      const offset = reset ? 0 : rawProductsRef.current.length;
-      const rawLimit = limitRef.current * RAW_FETCH_MULTIPLIER;
+      let offset = reset ? 0 : rawProducts.length;
+      let rawLimit = limit * RAW_FETCH_MULTIPLIER;
       let fetchedRaw = [];
 
-      if (isHomeRef.current) {
+      if (isHome) {
         fetchedRaw = await fetchPopularProducts(rawLimit);
+        offset = 0;
       } else {
         fetchedRaw = await fetchProducts(
-          filtersRef.current.query,
+          filters.query,
           rawLimit,
           offset,
           "",
-          filtersRef.current.brand,
+          filters.brand,
           "asc",
-          filtersRef.current.categoryKey,
-          filtersRef.current.subcategoryKey,
-          filtersRef.current.gender,
-          filtersRef.current.size
+          filters.categoryKey,
+          filters.subcategoryKey,
+          filters.gender,
+          filters.size
         );
       }
-
-      const updatedRaw = reset ? fetchedRaw : [...rawProductsRef.current, ...fetchedRaw];
-      rawProductsRef.current = updatedRaw;
+      let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
+      setRawProducts(updatedRaw);
 
       const grouped = groupProducts(updatedRaw);
-      const showCount = reset ? limitRef.current : productsRef.current.length + limitRef.current;
+      const showCount = reset ? limit : products.length + limit;
       const paged = grouped.slice(0, showCount);
-      productsRef.current = paged;
 
-      setRawProducts(updatedRaw);
       setProducts(paged);
       setHasMore(fetchedRaw.length === rawLimit);
     } catch {
@@ -218,40 +215,40 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [filters, isLoading, rawProducts, isHome, products.length, limit]);
 
-  // Запускаем загрузку товаров при инициализации и изменениях
+  // --- Сброс данных при смене фильтра/поиска/категории
   useEffect(() => {
-    if (!initializedRef.current) return; // ждём восстановления из location.state
     setRawProducts([]);
     setProducts([]);
     setHasMore(true);
     loadProducts({ reset: true });
-  }, [filters, isHome, limit, initialized, loadProducts]);
+    // eslint-disable-next-line
+  }, [filters, isHome, limit]);
 
-  // Пагинация при скролле
+  // --- Пагинация при скролле ---
   useEffect(() => {
     if (isHome) return;
     const onScroll = () => {
-      if (isLoadingRef.current || !hasMore) return;
+      if (isLoading || !hasMore) return;
       if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
         loadProducts({ reset: false });
       }
     };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [loadProducts, hasMore, isHome]);
+  }, [loadProducts, isLoading, hasMore, isHome]);
 
-  // Подменю для FilterBar
+  // --- Список подкатегорий для FilterBar ---
   const submenuList = useMemo(() => {
-    const cat = categories.find(c => c.category_key === categoryKey);
+    let cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
     return (cat.subcategories || []).map(sub =>
       typeof sub === "string" ? sub : sub.subcategory_key || sub.label
     );
   }, [categories, categoryKey]);
 
-  // Сортировка по цене, популярности и скидке
+  // --- Для сортировки ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -274,7 +271,6 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
-  // Обработчики кликов
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`, {
       state: {
@@ -306,6 +302,7 @@ export default function Home() {
     }
   };
 
+  // --- Основной поиск и обработка кликов меню/поиска ---
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     setCategoryKey(catKey);
     setCategoryLabel(catLabel);
@@ -339,6 +336,7 @@ export default function Home() {
     navigate(query ? `/?search=${encodeURIComponent(query)}` : "/");
   };
 
+  // --- FilterBar handlers ---
   const onCategoryChange = (newSubKey) => {
     setSubcategoryKey(newSubKey);
     setForceOpenCategory(false);
@@ -354,6 +352,7 @@ export default function Home() {
     setForceOpenCategory(false);
   };
 
+  // --- render ---
   return (
     <>
       <Header
