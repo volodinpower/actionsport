@@ -42,7 +42,8 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Флаг, что мы уже восстановили фильтры из location.state
+  // Восстанавливаем фильтры и поиск из location.state (если есть)
+  // При первом монтировании (не обновляем при смене location.state, только один раз)
   const [initialized, setInitialized] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,7 +78,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateLimit);
   }, []);
 
-  // Восстановление фильтров из location.state (только 1 раз)
+  // Восстановление фильтров из location.state (только 1 раз при загрузке)
   useEffect(() => {
     if (!initialized && location.state) {
       if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
@@ -94,14 +95,12 @@ export default function Home() {
     }
   }, [initialized, location.state]);
 
-  // Следим за изменением URL параметра search — только если еще не инициализировались
+  // Следим за параметром search в URL (чтобы можно было искать напрямую по URL)
   useEffect(() => {
-    if (!initialized) {
-      const urlSearchParams = new URLSearchParams(location.search);
-      const urlSearch = urlSearchParams.get("search") || "";
-      setSearchQuery(urlSearch);
-    }
-  }, [location.search, initialized]);
+    const urlSearchParams = new URLSearchParams(location.search);
+    const urlSearch = urlSearchParams.get("search") || "";
+    setSearchQuery(urlSearch);
+  }, [location.search]);
 
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
@@ -263,22 +262,22 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
-const handleCardClick = (productId) => {
-  navigate(`/product/${productId}`, {
-    state: {
-      from: location.pathname + location.search,  // текущий адрес с фильтрами
-      categoryKey,
-      categoryLabel,
-      subcategoryKey,
-      searchQuery,
-      brandFilter,
-      sizeFilter,
-      genderFilter,
-      forceOpenCategory,
-      breadcrumbs,
-    }
-  });
-};
+  const handleCardClick = (productId) => {
+    navigate(`/product/${productId}`, {
+      state: {
+        from: location.pathname + location.search,
+        categoryKey,
+        categoryLabel,
+        subcategoryKey,
+        searchQuery,
+        brandFilter,
+        sizeFilter,
+        genderFilter,
+        forceOpenCategory,
+        breadcrumbs,
+      }
+    });
+  };
 
   const handleBreadcrumbClick = idx => {
     if (idx === 0) {
