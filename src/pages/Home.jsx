@@ -16,24 +16,14 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
+// Используем большой лимит для получения всех товаров категории
+const CATEGORY_LIMIT = 2000;
+
 function groupProducts(rawProducts) {
   return rawProducts.map(p => ({
     ...p,
     sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
   }));
-}
-
-function getColumnsCount() {
-  const width = window.innerWidth;
-  if (width >= 1280) return 5;
-  if (width >= 1024) return 4;
-  if (width >= 768) return 3;
-  if (width >= 640) return 2;
-  return 2;
-}
-
-function getLimitByColumns(columns) {
-  return columns === 3 ? 21 : 20;
 }
 
 export default function Home() {
@@ -146,45 +136,29 @@ export default function Home() {
     size: sizeFilter,
   }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
- useEffect(() => {
-  async function updateOptions() {
-    let realCategoryKey = filters.categoryKey;
-    let realSubcategoryKey = filters.subcategoryKey;
-    if (realSubcategoryKey) realCategoryKey = "";
-
-    // Бренды (исключаем выбранный бренд)
-    const brandsFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
-    delete brandsFilters.brand;
-    setBrandsInFilter(await fetchFilteredBrands(brandsFilters));
-
-    // Размеры (исключаем выбранный размер)
-    const sizesFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
-    delete sizesFilters.size;
-    setSizesInFilter(await fetchFilteredSizes(sizesFilters));
-
-    // Пол (исключаем выбранный пол)
-    const gendersFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
-    delete gendersFilters.gender;
-    setGendersInFilter(await fetchFilteredGenders(gendersFilters));
-  }
-  updateOptions();
-}, [filters, categories]);
-
-
-  // --- Число колонок и лимит ---
-  const [limit, setLimit] = useState(() => {
-    const initialColumns = getColumnsCount();
-    return getLimitByColumns(initialColumns);
-  });
   useEffect(() => {
-    function updateLimit() {
-      const columns = getColumnsCount();
-      setLimit(getLimitByColumns(columns));
+    async function updateOptions() {
+      let realCategoryKey = filters.categoryKey;
+      let realSubcategoryKey = filters.subcategoryKey;
+      if (realSubcategoryKey) realCategoryKey = "";
+
+      // Бренды (без текущего бренда)
+      const brandsFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
+      delete brandsFilters.brand;
+      setBrandsInFilter(await fetchFilteredBrands(brandsFilters));
+
+      // Размеры (без текущего размера)
+      const sizesFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
+      delete sizesFilters.size;
+      setSizesInFilter(await fetchFilteredSizes(sizesFilters));
+
+      // Пол (без текущего пола)
+      const gendersFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
+      delete gendersFilters.gender;
+      setGendersInFilter(await fetchFilteredGenders(gendersFilters));
     }
-    updateLimit();
-    window.addEventListener("resize", updateLimit);
-    return () => window.removeEventListener("resize", updateLimit);
-  }, []);
+    updateOptions();
+  }, [filters, categories]);
 
   // --- isHome ---
   const isHome = useMemo(
@@ -194,64 +168,44 @@ export default function Home() {
 
   // --- Пагинация и сброс данных при фильтрации ---
   const [products, setProducts] = useState([]);
-  const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-
-  // Сброс при смене фильтров
-  useEffect(() => {
-    setProducts([]);
-    setPage(1);
-    setHasMore(true);
-  }, [searchQuery, categoryKey, subcategoryKey, sizeFilter, brandFilter, genderFilter, limit, isHome]);
 
   // --- Загрузка товаров (fetchProducts/fetchPopularProducts) ---
   const loadProducts = useCallback(async () => {
-    if (isLoading) return;
     setIsLoading(true);
     try {
-      let offset = (page - 1) * limit;
-      let fetched = [];
       if (isHome) {
-        const raw = await fetchPopularProducts(limit * page);
-        fetched = groupProducts(raw);
-        setHasMore(raw.length >= limit * page);
-        setProducts(fetched);
+        // Популярные товары для главной
+        const raw = await fetchPopularProducts(20);
+        setProducts(groupProducts(raw));
       } else {
+        // Все товары категории или по фильтру
         const raw = await fetchProducts(
-          filters.query, limit, offset, "", filters.brand, "asc",
-          filters.categoryKey, filters.subcategoryKey, filters.gender, filters.size
+          filters.query,
+          CATEGORY_LIMIT,
+          0,
+          "",
+          filters.brand,
+          sort || "asc",
+          filters.categoryKey,
+          filters.subcategoryKey,
+          filters.gender,
+          filters.size
         );
-        setProducts(prev =>
-          page === 1 ? groupProducts(raw) : [...prev, ...groupProducts(raw)]
-        );
-        setHasMore(raw.length === limit);
+        setProducts(groupProducts(raw));
       }
-    } catch {
-      setHasMore(false);
+    } catch (e) {
+      setProducts([]);
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isHome, page, limit, isLoading]);
+  }, [filters, isHome, sort]);
 
-  // Загрузка товаров при любом изменении page/фильтра
+  // Загрузка товаров при любом изменении фильтра/категории/поиска
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line
-  }, [filters, isHome, limit, page]);
-
-  // --- Пагинация при скролле ---
-  useEffect(() => {
-    if (isHome) return;
-    const onScroll = () => {
-      if (isLoading || !hasMore) return;
-      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
-        setPage(p => p + 1);
-      }
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [isLoading, hasMore, isHome]);
+  }, [filters, isHome, sort]);
 
   // --- Подкатегории ---
   const submenuList = useMemo(() => {
@@ -373,7 +327,7 @@ export default function Home() {
             ))
           ) : (
             <div className="col-span-5 text-center text-gray-500 py-12">
-              No products to display
+              {isLoading ? "Loading..." : "No products to display"}
             </div>
           )}
         </div>
