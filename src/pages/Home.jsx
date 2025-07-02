@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -19,7 +19,7 @@ import SortControl from "../components/SortControl";
 const RAW_FETCH_MULTIPLIER = 3;
 
 function groupProducts(rawProducts) {
-  return rawProducts.map(p => ({
+  return rawProducts.map((p) => ({
     ...p,
     sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
   }));
@@ -42,8 +42,8 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Флаг, что мы уже восстановили фильтры из location.state
   const [initialized, setInitialized] = useState(false);
-  const isSyncingUrl = useRef(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState([]);
@@ -77,64 +77,29 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateLimit);
   }, []);
 
-  // 1. Восстановление фильтров из location.state или URL при монтировании (один раз)
+  // Восстановление фильтров из location.state (только 1 раз)
+  useEffect(() => {
+    if (!initialized && location.state) {
+      if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
+      if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
+      if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
+      if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
+      if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
+      if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
+      if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
+      if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
+      setInitialized(true);
+    }
+  }, [initialized, location.state]);
+
+  // Следим за изменением URL параметра search — только если еще не инициализировались
   useEffect(() => {
     if (!initialized) {
-      if (location.state) {
-        setCategoryKey(location.state.categoryKey || "");
-        setCategoryLabel(location.state.categoryLabel || "");
-        setSubcategoryKey(location.state.subcategoryKey || "");
-        setSearchQuery(location.state.searchQuery || "");
-        setBrandFilter(location.state.brandFilter || "");
-        setSizeFilter(location.state.sizeFilter || "");
-        setGenderFilter(location.state.genderFilter || "");
-        setForceOpenCategory(location.state.forceOpenCategory || false);
-        setInitialized(true);
-      } else {
-        const params = new URLSearchParams(location.search);
-        setCategoryKey(params.get("category") || "");
-        setCategoryLabel("");
-        setSubcategoryKey(params.get("subcategory") || "");
-        setSearchQuery(params.get("search") || "");
-        setBrandFilter(params.get("brand") || "");
-        setSizeFilter(params.get("size") || "");
-        setGenderFilter(params.get("gender") || "");
-        setForceOpenCategory(false);
-        setInitialized(true);
-      }
+      const urlSearchParams = new URLSearchParams(location.search);
+      const urlSearch = urlSearchParams.get("search") || "";
+      setSearchQuery(urlSearch);
     }
-  }, [initialized, location.state, location.search]);
-
-  // 2. Синхронизация фильтров с URL
-  useEffect(() => {
-    if (!initialized) return;
-
-    const params = new URLSearchParams();
-
-    if (searchQuery) params.set("search", searchQuery);
-    if (categoryKey) params.set("category", categoryKey);
-    if (subcategoryKey) params.set("subcategory", subcategoryKey);
-    if (brandFilter) params.set("brand", brandFilter);
-    if (sizeFilter) params.set("size", sizeFilter);
-    if (genderFilter) params.set("gender", genderFilter);
-
-    const newSearch = params.toString();
-    const currentSearch = location.search.startsWith("?") ? location.search.substring(1) : location.search;
-
-    if (newSearch !== currentSearch && !isSyncingUrl.current) {
-      isSyncingUrl.current = true;
-      navigate({
-        pathname: location.pathname,
-        search: newSearch ? `?${newSearch}` : "",
-      }, { replace: true });
-    }
-  }, [searchQuery, categoryKey, subcategoryKey, brandFilter, sizeFilter, genderFilter, initialized, location.pathname, location.search, navigate]);
-
-  useEffect(() => {
-    if (isSyncingUrl.current) {
-      isSyncingUrl.current = false;
-    }
-  }, [location.search]);
+  }, [location.search, initialized]);
 
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
@@ -145,18 +110,19 @@ export default function Home() {
     if (searchQuery) {
       return [
         { label: "Main", query: "" },
-        { label: `Search: ${searchQuery}`, query: searchQuery }
+        { label: `Search: ${searchQuery}`, query: searchQuery },
       ];
     }
     if (categoryKey) {
       return [
         { label: "Main", query: "" },
-        { label: categoryLabel || categoryKey, query: categoryKey }
+        { label: categoryLabel || categoryKey, query: categoryKey },
       ];
     }
     return [{ label: "Main", query: "" }];
   }, [searchQuery, categoryKey, categoryLabel]);
 
+  // Мемоизируем фильтры по полям (чтобы не было лишних пересозданий объекта)
   const filters = useMemo(() => ({
     query: searchQuery,
     categoryKey,
@@ -201,58 +167,74 @@ export default function Home() {
           size: filters.size,
           search: filters.query,
         }));
-      } catch { }
+      } catch {}
     }
     updateOptions();
   }, [filters, categories]);
 
-  const loadProducts = useCallback(async ({ reset = false } = {}) => {
-    if (isLoading) return;
-    setIsLoading(true);
-    try {
-      let offset = reset ? 0 : rawProducts.length;
-      let rawLimit = limit * RAW_FETCH_MULTIPLIER;
-      let fetchedRaw = [];
+  const loadProducts = useCallback(
+    async ({ reset = false } = {}) => {
+      if (isLoading) return;
+      setIsLoading(true);
+      try {
+        let offset = reset ? 0 : rawProducts.length;
+        let rawLimit = limit * RAW_FETCH_MULTIPLIER;
+        let fetchedRaw = [];
 
-      if (isHome) {
-        fetchedRaw = await fetchPopularProducts(rawLimit);
-        offset = 0;
-      } else {
-        fetchedRaw = await fetchProducts(
-          filters.query,
-          rawLimit,
-          offset,
-          "",
-          filters.brand,
-          "asc",
-          filters.categoryKey,
-          filters.subcategoryKey,
-          filters.gender,
-          filters.size
-        );
+        if (isHome) {
+          fetchedRaw = await fetchPopularProducts(rawLimit);
+          offset = 0;
+        } else {
+          fetchedRaw = await fetchProducts(
+            filters.query,
+            rawLimit,
+            offset,
+            "",
+            filters.brand,
+            "asc",
+            filters.categoryKey,
+            filters.subcategoryKey,
+            filters.gender,
+            filters.size
+          );
+        }
+        let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
+        setRawProducts(updatedRaw);
+
+        const grouped = groupProducts(updatedRaw);
+        const showCount = reset ? limit : products.length + limit;
+        const paged = grouped.slice(0, showCount);
+
+        setProducts(paged);
+        setHasMore(fetchedRaw.length === rawLimit);
+      } catch {
+        setHasMore(false);
+      } finally {
+        setIsLoading(false);
       }
-      let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
-      setRawProducts(updatedRaw);
-
-      const grouped = groupProducts(updatedRaw);
-      const showCount = reset ? limit : products.length + limit;
-      const paged = grouped.slice(0, showCount);
-
-      setProducts(paged);
-      setHasMore(fetchedRaw.length === rawLimit);
-    } catch {
-      setHasMore(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filters, isLoading, rawProducts, isHome, products.length, limit]);
+    },
+    // Важно: зависимостей только нужных — не весь filters целиком!
+    [isLoading, limit, isHome, rawProducts.length, products.length,
+      filters.query, filters.categoryKey, filters.subcategoryKey,
+      filters.brand, filters.gender, filters.size]
+  );
 
   useEffect(() => {
     setRawProducts([]);
     setProducts([]);
     setHasMore(true);
     loadProducts({ reset: true });
-  }, [filters, isHome, limit, loadProducts]);
+  }, [
+    loadProducts,
+    filters.query,
+    filters.categoryKey,
+    filters.subcategoryKey,
+    filters.brand,
+    filters.gender,
+    filters.size,
+    limit,
+    isHome
+  ]);
 
   useEffect(() => {
     if (isHome) return;
@@ -267,15 +249,15 @@ export default function Home() {
   }, [loadProducts, isLoading, hasMore, isHome]);
 
   const submenuList = useMemo(() => {
-    let cat = categories.find(c => c.category_key === categoryKey);
+    let cat = categories.find((c) => c.category_key === categoryKey);
     if (!cat) return [];
-    return (cat.subcategories || []).map(sub =>
+    return (cat.subcategories || []).map((sub) =>
       typeof sub === "string" ? sub : sub.subcategory_key || sub.label
     );
   }, [categories, categoryKey]);
 
   const getEffectivePrice = (item) => {
-    const fix = val => {
+    const fix = (val) => {
       if (val == null) return Infinity;
       if (typeof val === "number") return val;
       const str = String(val).replace(/\s| /g, "").replace(",", ".").replace(/[^0-9.]/g, "");
@@ -309,11 +291,11 @@ export default function Home() {
         genderFilter,
         forceOpenCategory,
         breadcrumbs,
-      }
+      },
     });
   };
 
-  const handleBreadcrumbClick = idx => {
+  const handleBreadcrumbClick = (idx) => {
     if (idx === 0) {
       setCategoryKey("");
       setCategoryLabel("");
@@ -403,9 +385,9 @@ export default function Home() {
             brandFilter={brandFilter}
             genderFilter={genderFilter}
             categoryFilter={subcategoryKey}
-            genderOptions={gendersInFilter.map(g => ({
+            genderOptions={gendersInFilter.map((g) => ({
               value: g,
-              label: g === "m" ? "Men" : g === "w" ? "Women" : g === "k" ? "Kids" : g
+              label: g === "m" ? "Men" : g === "w" ? "Women" : g === "k" ? "Kids" : g,
             }))}
             forceOpenCategory={forceOpenCategory}
             setForceOpenCategory={setForceOpenCategory}
@@ -426,7 +408,7 @@ export default function Home() {
       <div className="mx-auto px-2 pb-12">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
           {displayedProducts.length > 0 ? (
-            displayedProducts.map(product => (
+            displayedProducts.map((product) => (
               <ProductCard
                 key={product.id || product.name + product.color}
                 product={product}
