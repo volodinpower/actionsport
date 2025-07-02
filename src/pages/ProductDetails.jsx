@@ -248,7 +248,9 @@ export default function ProductDetails() {
       </div>
     </div>
   );
-
+  useEffect(() => {
+    console.log("ProductDetails location.state:", location.state);
+  }, [location.state]);
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header onSearch={handleHeaderSearch} breadcrumbs={breadcrumbs} isHome={false} />
