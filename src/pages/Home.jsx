@@ -80,29 +80,32 @@ export default function Home() {
   // Восстановление фильтров из location.state (только 1 раз)
   useEffect(() => {
   if (!initialized && location.state) {
-      if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
-      if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
-      if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
-      if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
-      if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
-      if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
-      if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
-      if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
+    if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
+    if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
+    if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
+    if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
+    if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
+    if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
+    if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
+    if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
 
-      // Обновляем URL с параметрами фильтров (replace: true — чтобы не добавлять в историю новую запись)
-      const params = new URLSearchParams();
-      if (location.state.searchQuery) params.set("search", location.state.searchQuery);
-      if (location.state.categoryKey) params.set("category", location.state.categoryKey);
-      if (location.state.subcategoryKey) params.set("subcategory", location.state.subcategoryKey);
-      if (location.state.brandFilter) params.set("brand", location.state.brandFilter);
-      if (location.state.sizeFilter) params.set("size", location.state.sizeFilter);
-      if (location.state.genderFilter) params.set("gender", location.state.genderFilter);
+    // Формируем параметры для URL
+    const params = new URLSearchParams();
+    if (location.state.searchQuery) params.set("search", location.state.searchQuery);
+    if (location.state.categoryKey) params.set("category", location.state.categoryKey);
+    if (location.state.subcategoryKey) params.set("subcategory", location.state.subcategoryKey);
+    if (location.state.brandFilter) params.set("brand", location.state.brandFilter);
+    if (location.state.sizeFilter) params.set("size", location.state.sizeFilter);
+    if (location.state.genderFilter) params.set("gender", location.state.genderFilter);
 
+    // Проверяем, отличается ли текущий search от нужного
+    if (location.search !== `?${params.toString()}`) {
       navigate({ pathname: "/", search: params.toString() }, { replace: true });
-
-      setInitialized(true);
     }
-  }, [initialized, location.state, navigate]);
+
+    setInitialized(true);
+  }
+}, [initialized, location.state, location.search, navigate]);
 
   // Следим за изменением URL параметра search — только если еще не инициализировались
   useEffect(() => {
