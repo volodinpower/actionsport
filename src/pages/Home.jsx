@@ -19,7 +19,7 @@ import SortControl from "../components/SortControl";
 const RAW_FETCH_MULTIPLIER = 3;
 
 function groupProducts(rawProducts) {
-  return rawProducts.map((p) => ({
+  return rawProducts.map(p => ({
     ...p,
     sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
   }));
@@ -84,10 +84,12 @@ export default function Home() {
       if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
       if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
       if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
+
       if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
       if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
       if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
       if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
+
       setInitialized(true);
     }
   }, [initialized, location.state]);
@@ -110,19 +112,18 @@ export default function Home() {
     if (searchQuery) {
       return [
         { label: "Main", query: "" },
-        { label: `Search: ${searchQuery}`, query: searchQuery },
+        { label: `Search: ${searchQuery}`, query: searchQuery }
       ];
     }
     if (categoryKey) {
       return [
         { label: "Main", query: "" },
-        { label: categoryLabel || categoryKey, query: categoryKey },
+        { label: categoryLabel || categoryKey, query: categoryKey }
       ];
     }
     return [{ label: "Main", query: "" }];
   }, [searchQuery, categoryKey, categoryLabel]);
 
-  // Мемоизируем фильтры по полям (чтобы не было лишних пересозданий объекта)
   const filters = useMemo(() => ({
     query: searchQuery,
     categoryKey,
@@ -167,74 +168,58 @@ export default function Home() {
           size: filters.size,
           search: filters.query,
         }));
-      } catch {}
+      } catch { }
     }
     updateOptions();
   }, [filters, categories]);
 
-  const loadProducts = useCallback(
-    async ({ reset = false } = {}) => {
-      if (isLoading) return;
-      setIsLoading(true);
-      try {
-        let offset = reset ? 0 : rawProducts.length;
-        let rawLimit = limit * RAW_FETCH_MULTIPLIER;
-        let fetchedRaw = [];
+  const loadProducts = useCallback(async ({ reset = false } = {}) => {
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      let offset = reset ? 0 : rawProducts.length;
+      let rawLimit = limit * RAW_FETCH_MULTIPLIER;
+      let fetchedRaw = [];
 
-        if (isHome) {
-          fetchedRaw = await fetchPopularProducts(rawLimit);
-          offset = 0;
-        } else {
-          fetchedRaw = await fetchProducts(
-            filters.query,
-            rawLimit,
-            offset,
-            "",
-            filters.brand,
-            "asc",
-            filters.categoryKey,
-            filters.subcategoryKey,
-            filters.gender,
-            filters.size
-          );
-        }
-        let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
-        setRawProducts(updatedRaw);
-
-        const grouped = groupProducts(updatedRaw);
-        const showCount = reset ? limit : products.length + limit;
-        const paged = grouped.slice(0, showCount);
-
-        setProducts(paged);
-        setHasMore(fetchedRaw.length === rawLimit);
-      } catch {
-        setHasMore(false);
-      } finally {
-        setIsLoading(false);
+      if (isHome) {
+        fetchedRaw = await fetchPopularProducts(rawLimit);
+        offset = 0;
+      } else {
+        fetchedRaw = await fetchProducts(
+          filters.query,
+          rawLimit,
+          offset,
+          "",
+          filters.brand,
+          "asc",
+          filters.categoryKey,
+          filters.subcategoryKey,
+          filters.gender,
+          filters.size
+        );
       }
-    },
-    // Важно: зависимостей только нужных — не весь filters целиком!
-    [isLoading, limit, isHome, rawProducts.length, products.length,
-      filters.query, filters.categoryKey, filters.subcategoryKey,
-      filters.brand, filters.gender, filters.size]
-  );
+      let updatedRaw = reset ? fetchedRaw : [...rawProducts, ...fetchedRaw];
+      setRawProducts(updatedRaw);
+
+      const grouped = groupProducts(updatedRaw);
+      const showCount = reset ? limit : products.length + limit;
+      const paged = grouped.slice(0, showCount);
+
+      setProducts(paged);
+      setHasMore(fetchedRaw.length === rawLimit);
+    } catch {
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters, isLoading, rawProducts, isHome, products.length, limit]);
 
   useEffect(() => {
     setRawProducts([]);
     setProducts([]);
     setHasMore(true);
     loadProducts({ reset: true });
-  }, [
-    loadProducts,
-    filters.query,
-    filters.categoryKey,
-    filters.subcategoryKey,
-    filters.brand,
-    filters.gender,
-    filters.size,
-    limit,
-    isHome
-  ]);
+  }, [filters, isHome, limit, loadProducts]);
 
   useEffect(() => {
     if (isHome) return;
@@ -249,15 +234,15 @@ export default function Home() {
   }, [loadProducts, isLoading, hasMore, isHome]);
 
   const submenuList = useMemo(() => {
-    let cat = categories.find((c) => c.category_key === categoryKey);
+    let cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
-    return (cat.subcategories || []).map((sub) =>
+    return (cat.subcategories || []).map(sub =>
       typeof sub === "string" ? sub : sub.subcategory_key || sub.label
     );
   }, [categories, categoryKey]);
 
   const getEffectivePrice = (item) => {
-    const fix = (val) => {
+    const fix = val => {
       if (val == null) return Infinity;
       if (typeof val === "number") return val;
       const str = String(val).replace(/\s| /g, "").replace(",", ".").replace(/[^0-9.]/g, "");
@@ -281,7 +266,7 @@ export default function Home() {
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`, {
       state: {
-        from: location.pathname + location.search,
+        from: location.pathname + location.search,  // текущий адрес с фильтрами
         categoryKey,
         categoryLabel,
         subcategoryKey,
@@ -291,11 +276,11 @@ export default function Home() {
         genderFilter,
         forceOpenCategory,
         breadcrumbs,
-      },
+      }
     });
   };
 
-  const handleBreadcrumbClick = (idx) => {
+  const handleBreadcrumbClick = idx => {
     if (idx === 0) {
       setCategoryKey("");
       setCategoryLabel("");
@@ -385,9 +370,9 @@ export default function Home() {
             brandFilter={brandFilter}
             genderFilter={genderFilter}
             categoryFilter={subcategoryKey}
-            genderOptions={gendersInFilter.map((g) => ({
+            genderOptions={gendersInFilter.map(g => ({
               value: g,
-              label: g === "m" ? "Men" : g === "w" ? "Women" : g === "k" ? "Kids" : g,
+              label: g === "m" ? "Men" : g === "w" ? "Women" : g === "k" ? "Kids" : g
             }))}
             forceOpenCategory={forceOpenCategory}
             setForceOpenCategory={setForceOpenCategory}
@@ -408,7 +393,7 @@ export default function Home() {
       <div className="mx-auto px-2 pb-12">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
           {displayedProducts.length > 0 ? (
-            displayedProducts.map((product) => (
+            displayedProducts.map(product => (
               <ProductCard
                 key={product.id || product.name + product.color}
                 product={product}
