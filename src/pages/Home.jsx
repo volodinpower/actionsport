@@ -146,37 +146,30 @@ export default function Home() {
     size: sizeFilter,
   }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  useEffect(() => {
-    async function updateOptions() {
-      let realCategoryKey = filters.categoryKey;
-      let realSubcategoryKey = filters.subcategoryKey;
-      if (realSubcategoryKey) realCategoryKey = "";
-      try {
-        setBrandsInFilter(await fetchFilteredBrands({
-          categoryKey: realCategoryKey,
-          subcategoryKey: realSubcategoryKey,
-          gender: filters.gender,
-          size: filters.size,
-          search: filters.query,
-        }));
-        setSizesInFilter(await fetchFilteredSizes({
-          categoryKey: realCategoryKey,
-          subcategoryKey: realSubcategoryKey,
-          brand: filters.brand,
-          gender: filters.gender,
-          search: filters.query,
-        }));
-        setGendersInFilter(await fetchFilteredGenders({
-          categoryKey: realCategoryKey,
-          subcategoryKey: realSubcategoryKey,
-          brand: filters.brand,
-          size: filters.size,
-          search: filters.query,
-        }));
-      } catch { /* no-op */ }
-    }
-    updateOptions();
-  }, [filters, categories]);
+ useEffect(() => {
+  async function updateOptions() {
+    let realCategoryKey = filters.categoryKey;
+    let realSubcategoryKey = filters.subcategoryKey;
+    if (realSubcategoryKey) realCategoryKey = "";
+
+    // Бренды (исключаем выбранный бренд)
+    const brandsFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
+    delete brandsFilters.brand;
+    setBrandsInFilter(await fetchFilteredBrands(brandsFilters));
+
+    // Размеры (исключаем выбранный размер)
+    const sizesFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
+    delete sizesFilters.size;
+    setSizesInFilter(await fetchFilteredSizes(sizesFilters));
+
+    // Пол (исключаем выбранный пол)
+    const gendersFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
+    delete gendersFilters.gender;
+    setGendersInFilter(await fetchFilteredGenders(gendersFilters));
+  }
+  updateOptions();
+}, [filters, categories]);
+
 
   // --- Число колонок и лимит ---
   const [limit, setLimit] = useState(() => {
