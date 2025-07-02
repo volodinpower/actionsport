@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -42,8 +42,8 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Флаг, что мы уже восстановили фильтры из location.state
   const [initialized, setInitialized] = useState(false);
+  const isSyncingUrl = useRef(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState([]);
@@ -77,44 +77,64 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateLimit);
   }, []);
 
-  // Восстановление фильтров из location.state (только 1 раз)
-  useEffect(() => {
-  if (!initialized && location.state) {
-    if (location.state.categoryKey) setCategoryKey(location.state.categoryKey);
-    if (location.state.categoryLabel) setCategoryLabel(location.state.categoryLabel);
-    if (location.state.subcategoryKey) setSubcategoryKey(location.state.subcategoryKey);
-    if (location.state.searchQuery !== undefined) setSearchQuery(location.state.searchQuery);
-    if (location.state.brandFilter !== undefined) setBrandFilter(location.state.brandFilter);
-    if (location.state.sizeFilter !== undefined) setSizeFilter(location.state.sizeFilter);
-    if (location.state.genderFilter !== undefined) setGenderFilter(location.state.genderFilter);
-    if (location.state.forceOpenCategory !== undefined) setForceOpenCategory(location.state.forceOpenCategory);
-
-    // Формируем параметры для URL
-    const params = new URLSearchParams();
-    if (location.state.searchQuery) params.set("search", location.state.searchQuery);
-    if (location.state.categoryKey) params.set("category", location.state.categoryKey);
-    if (location.state.subcategoryKey) params.set("subcategory", location.state.subcategoryKey);
-    if (location.state.brandFilter) params.set("brand", location.state.brandFilter);
-    if (location.state.sizeFilter) params.set("size", location.state.sizeFilter);
-    if (location.state.genderFilter) params.set("gender", location.state.genderFilter);
-
-    // Проверяем, отличается ли текущий search от нужного
-    if (location.search !== `?${params.toString()}`) {
-      navigate({ pathname: "/", search: params.toString() }, { replace: true });
-    }
-
-    setInitialized(true);
-  }
-}, [initialized, location.state, location.search, navigate]);
-
-  // Следим за изменением URL параметра search — только если еще не инициализировались
+  // 1. Восстановление фильтров из location.state или URL при монтировании (один раз)
   useEffect(() => {
     if (!initialized) {
-      const urlSearchParams = new URLSearchParams(location.search);
-      const urlSearch = urlSearchParams.get("search") || "";
-      setSearchQuery(urlSearch);
+      if (location.state) {
+        setCategoryKey(location.state.categoryKey || "");
+        setCategoryLabel(location.state.categoryLabel || "");
+        setSubcategoryKey(location.state.subcategoryKey || "");
+        setSearchQuery(location.state.searchQuery || "");
+        setBrandFilter(location.state.brandFilter || "");
+        setSizeFilter(location.state.sizeFilter || "");
+        setGenderFilter(location.state.genderFilter || "");
+        setForceOpenCategory(location.state.forceOpenCategory || false);
+        setInitialized(true);
+      } else {
+        const params = new URLSearchParams(location.search);
+        setCategoryKey(params.get("category") || "");
+        setCategoryLabel("");
+        setSubcategoryKey(params.get("subcategory") || "");
+        setSearchQuery(params.get("search") || "");
+        setBrandFilter(params.get("brand") || "");
+        setSizeFilter(params.get("size") || "");
+        setGenderFilter(params.get("gender") || "");
+        setForceOpenCategory(false);
+        setInitialized(true);
+      }
     }
-  }, [location.search, initialized]);
+  }, [initialized, location.state, location.search]);
+
+  // 2. Синхронизация фильтров с URL
+  useEffect(() => {
+    if (!initialized) return;
+
+    const params = new URLSearchParams();
+
+    if (searchQuery) params.set("search", searchQuery);
+    if (categoryKey) params.set("category", categoryKey);
+    if (subcategoryKey) params.set("subcategory", subcategoryKey);
+    if (brandFilter) params.set("brand", brandFilter);
+    if (sizeFilter) params.set("size", sizeFilter);
+    if (genderFilter) params.set("gender", genderFilter);
+
+    const newSearch = params.toString();
+    const currentSearch = location.search.startsWith("?") ? location.search.substring(1) : location.search;
+
+    if (newSearch !== currentSearch && !isSyncingUrl.current) {
+      isSyncingUrl.current = true;
+      navigate({
+        pathname: location.pathname,
+        search: newSearch ? `?${newSearch}` : "",
+      }, { replace: true });
+    }
+  }, [searchQuery, categoryKey, subcategoryKey, brandFilter, sizeFilter, genderFilter, initialized, location.pathname, location.search, navigate]);
+
+  useEffect(() => {
+    if (isSyncingUrl.current) {
+      isSyncingUrl.current = false;
+    }
+  }, [location.search]);
 
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
@@ -279,7 +299,7 @@ export default function Home() {
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`, {
       state: {
-        from: location.pathname + location.search,  // текущий адрес с фильтрами
+        from: location.pathname + location.search,
         categoryKey,
         categoryLabel,
         subcategoryKey,
