@@ -115,10 +115,6 @@
   transition: border-color 0.2s ease;
 }
 
-/* --- Выделение выбранной миниатюры --- */
-.thumbnail-image.selected {
-  border-color: black;
-}
 
 /* --- Блок с информацией о товаре (справа) --- */
 .product-info {
