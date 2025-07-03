@@ -4,8 +4,13 @@ import { fetchProductById, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper";
 
-import "./ProductDetails.css"; // импортируем стили
+import "swiper/css";
+import "swiper/css/pagination";
+
+import "./ProductDetails.css";
 
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
@@ -154,15 +159,9 @@ export default function ProductDetails() {
         </div>
       </div>
     ) : (
-      <span className="price-current">{price.toLocaleString()} AMD</span>
+      <span className="price-current-no-discount">{price.toLocaleString()} AMD</span>
     );
   }
-
-  if (error)
-    return (
-      <div className="error-message">Ошибка: {error}</div>
-    );
-  if (!product) return <div className="loading-message">Loading...</div>;
 
   const colorBlock =
     colorVariants.length <= 1 ? (
@@ -242,38 +241,25 @@ export default function ProductDetails() {
         <div className="product-main">
           <div className="product-images">
             {isMobile ? (
-              <div className="mobile-image-wrapper">
-                {rawImages.length > 1 && (
-                  <button
-                    className="mobile-image-prev"
-                    onClick={() =>
-                      setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)
-                    }
-                  >
-                    ‹
-                  </button>
-                )}
-                <img
-                  src={rawImages[mainIndex]}
-                  alt={displayName}
-                  className="main-image"
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalIndex(mainIndex);
-                  }}
-                  draggable={false}
-                />
-                {rawImages.length > 1 && (
-                  <button
-                    className="mobile-image-next"
-                    onClick={() =>
-                      setMainIndex((mainIndex + 1) % rawImages.length)
-                    }
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
+              <Swiper
+                modules={[Pagination]}
+                pagination={{ clickable: true }}
+                spaceBetween={10}
+                slidesPerView={1}
+                onSlideChange={(swiper) => setMainIndex(swiper.activeIndex)}
+                onSwiper={(swiper) => setMainIndex(swiper.activeIndex)}
+              >
+                {rawImages.map((imgUrl, idx) => (
+                  <SwiperSlide key={idx}>
+                    <img
+                      src={imgUrl}
+                      alt={`Фото ${idx + 1}`}
+                      className="main-image"
+                      draggable={false}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             ) : (
               <>
                 <img
@@ -284,6 +270,7 @@ export default function ProductDetails() {
                     setShowModal(true);
                     setModalIndex(mainIndex);
                   }}
+                  draggable={false}
                 />
                 <div className="thumbnails-container">
                   {rawImages.map((imgUrl, idx) => (
@@ -312,7 +299,8 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {showModal && rawImages.length > 0 && (
+      {/* Модалка открывается только на десктопе */}
+      {!isMobile && showModal && rawImages.length > 0 && (
         <div className="modal-overlay">
           <button className="modal-close" onClick={() => setShowModal(false)}>
             ×
