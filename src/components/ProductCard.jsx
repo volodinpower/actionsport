@@ -14,7 +14,7 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Получаем массив изображений из product.image_url
+  // Составляем массив изображений
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url
@@ -25,7 +25,7 @@ export default function ProductCard({ product, onClick }) {
     urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
 
-  // Для мобильного свайпера берем только _main и _prev
+  // Для мобильного свайпера — показываем сначала _main, потом _prev
   const mobileSwipeUrls = [
     ...urls.filter((url) => url.toLowerCase().includes("_main")),
     ...urls.filter((url) => url.toLowerCase().includes("_prev")),
@@ -43,7 +43,6 @@ export default function ProductCard({ product, onClick }) {
     return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
   }
 
-  // Цена и скидка
   const price = parseFloat(String(product.price ?? "").replace(/\s/g, "").replace(",", "."));
   const discount = parseFloat(String(product.discount ?? "").replace(/\s/g, "").replace(",", "."));
   const showDiscount = !isNaN(discount) && discount > 0;
@@ -51,7 +50,6 @@ export default function ProductCard({ product, onClick }) {
     ? Math.ceil((price * (1 - discount / 100)) / 100) * 100
     : null;
 
-  // Размеры
   let sizes = [];
   if (Array.isArray(product.sizes)) {
     sizes = product.sizes;
@@ -59,7 +57,6 @@ export default function ProductCard({ product, onClick }) {
     sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
-  // Отсутствие изображений (нет в массиве mobileSwipeUrls)
   const noImages = mobileSwipeUrls.length === 0;
 
   return (
@@ -70,49 +67,25 @@ export default function ProductCard({ product, onClick }) {
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      {imgError || noImages ? (
-        // Блок no-image если ошибка или нет картинок
-        <div className="no-image">no image</div>
-      ) : isMobile ? (
-        // Мобильный свайпер с пагинацией (точками)
-        <div className="image-text-wrapper">
-          <div className="swiper-container">
-            <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
-              {mobileSwipeUrls.map((url, idx) => (
-                <SwiperSlide key={idx}>
-                  <img
-                    src={makeAbsUrl(url)}
-                    alt={product.sitename}
-                    className="product-image"
-                    onError={() => setImgError(true)}
-                    draggable={false}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-          <div className="product-content">
-            <h2 className="product-card-title">{product.sitename}</h2>
-            <div className="desc-group">
-              {product.color && <div className="desc-row">{`color: ${product.color}`}</div>}
-              <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
-            </div>
-            <div className="price-block">
-              {showDiscount ? (
-                <>
-                  <span className="sale-badge">{`sale: -${discount}%`}</span>
-                  <span className="old-price">{`${price} AMD`}</span>
-                  <span className="new-price">{`${discountedPrice} AMD`}</span>
-                </>
-              ) : (
-                <span className="cur-price">{`${price} AMD`}</span>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (
-        // Десктоп: основное/превью изображение и контент
-        <>
+      {/* Картинка или no-image */}
+      <div className={isMobile ? "swiper-container" : ""} style={{ height: "70%" }}>
+        {imgError || noImages ? (
+          <div className="no-image">no image</div>
+        ) : isMobile ? (
+          <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
+            {mobileSwipeUrls.map((url, idx) => (
+              <SwiperSlide key={idx}>
+                <img
+                  src={makeAbsUrl(url)}
+                  alt={product.sitename}
+                  className="product-image"
+                  onError={() => setImgError(true)}
+                  draggable={false}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
           <img
             src={makeAbsUrl(isHovered ? prevImg : mainImg)}
             alt={product.sitename}
@@ -120,26 +93,28 @@ export default function ProductCard({ product, onClick }) {
             onError={() => setImgError(true)}
             draggable={false}
           />
-          <div className="product-content">
-            <h2 className="product-card-title">{product.sitename}</h2>
-            <div className="desc-group">
-              {product.color && <div className="desc-row">{`color: ${product.color}`}</div>}
-              <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
-            </div>
-            <div className="price-block">
-              {showDiscount ? (
-                <>
-                  <span className="sale-badge">{`sale: -${discount}%`}</span>
-                  <span className="old-price">{`${price} AMD`}</span>
-                  <span className="new-price">{`${discountedPrice} AMD`}</span>
-                </>
-              ) : (
-                <span className="cur-price">{`${price} AMD`}</span>
-              )}
-            </div>
-          </div>
-        </>
-      )}
+        )}
+      </div>
+
+      {/* Контент с названием, цветом, размером, ценой — всегда показываем */}
+      <div className="product-content">
+        <h2 className="product-card-title">{product.sitename}</h2>
+        <div className="desc-group">
+          {product.color && <div className="desc-row">{`color: ${product.color}`}</div>}
+          <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
+        </div>
+        <div className="price-block">
+          {showDiscount ? (
+            <>
+              <span className="sale-badge">{`sale: -${discount}%`}</span>
+              <span className="old-price">{`${price} AMD`}</span>
+              <span className="new-price">{`${discountedPrice} AMD`}</span>
+            </>
+          ) : (
+            <span className="cur-price">{`${price} AMD`}</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
