@@ -1,12 +1,19 @@
-// ProductCard.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import "./ProductCard.css";
 
 export default function ProductCard({ product, onClick }) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
 
-  // Собираем массив картинок
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 900);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url.split(",").map(url => url && url.trim()).filter(Boolean);
@@ -24,8 +31,6 @@ export default function ProductCard({ product, onClick }) {
     return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
   }
 
-  const image = isHovered ? makeAbsUrl(prevImg) : makeAbsUrl(mainImg);
-
   const price = parseFloat(String(product.price ?? "").replace(/\s/g, "").replace(",", "."));
   const discount = parseFloat(String(product.discount ?? "").replace(/\s/g, "").replace(",", "."));
   const showDiscount = !isNaN(discount) && discount > 0;
@@ -33,7 +38,7 @@ export default function ProductCard({ product, onClick }) {
     ? Math.ceil((price * (1 - discount / 100)) / 100) * 100
     : null;
 
-  // Всегда массив sizes, даже если пустой
+  // sizes массив
   let sizes = [];
   if (Array.isArray(product.sizes)) {
     sizes = product.sizes;
@@ -46,14 +51,28 @@ export default function ProductCard({ product, onClick }) {
       className="product-card"
       onClick={onClick}
       title={product.sitename}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
       {imgError ? (
         <div className="no-image">no image</div>
+      ) : isMobile ? (
+        <Swiper spaceBetween={10} slidesPerView={1}>
+          {urls.map((url, idx) => (
+            <SwiperSlide key={idx}>
+              <img
+                src={makeAbsUrl(url)}
+                alt={product.sitename}
+                className="product-image"
+                onError={() => setImgError(true)}
+                draggable={false}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       ) : (
         <img
-          src={image}
+          src={makeAbsUrl(isHovered ? prevImg : mainImg)}
           alt={product.sitename}
           className="product-image"
           onError={() => setImgError(true)}
