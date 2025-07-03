@@ -27,7 +27,6 @@ function useIsMobile() {
   return isMobile;
 }
 
-// --- кастомная сортировка цветов (по алфавиту)
 function sortColorVariants(a, b) {
   return (a.color || "").localeCompare(b.color || "", undefined, { sensitivity: "base" });
 }
@@ -123,6 +122,14 @@ export default function ProductDetails() {
 
   const handleHeaderSearch = (query) => {
     navigate(query ? "/?search=" + encodeURIComponent(query) : "/");
+  };
+
+  // --- обработчик перехода по меню (главное!)
+  const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
+    const params = new URLSearchParams();
+    if (catKey) params.set("category", catKey);
+    if (subKey) params.set("subcategory", subKey);
+    navigate({ pathname: "/", search: params.toString() });
   };
 
   // Возврат назад в каталог с фильтрами, если есть в location.state.from
@@ -267,7 +274,12 @@ export default function ProductDetails() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      <Header onSearch={handleHeaderSearch} breadcrumbs={breadcrumbs} isHome={false} />
+      <Header
+        onSearch={handleHeaderSearch}
+        onMenuCategoryClick={handleMenuCategoryClick}
+        breadcrumbs={breadcrumbs}
+        isHome={false}
+      />
       <div className="w-full mx-auto pt-1">
         <Breadcrumbs
           items={breadcrumbs}
