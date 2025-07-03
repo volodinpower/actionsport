@@ -4,13 +4,6 @@ import { fetchProductById, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
-
-import "swiper/css";
-import "swiper/css/pagination";
-
-import "./ProductDetails.css";
 
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
@@ -73,7 +66,9 @@ export default function ProductDetails() {
       setColorVariants([]);
       return;
     }
-    const variants = [...product.all_colors].sort(sortColorVariants);
+    // Фильтрация null/undefined и сортировка
+    const filtered = product.all_colors.filter(c => c && typeof c === 'object');
+    const variants = [...filtered].sort(sortColorVariants);
     setColorVariants(variants);
   }, [product]);
 
@@ -81,7 +76,7 @@ export default function ProductDetails() {
     if (location.state && location.state.color) {
       const found = product?.all_colors?.find(
         (c) =>
-          c.color === location.state.color || String(c.id) === String(location.state.color)
+          c && (c.color === location.state.color || String(c.id) === String(location.state.color))
       );
       if (found) {
         setSelectedColorId(found.id);
@@ -173,6 +168,7 @@ export default function ProductDetails() {
         <b>color:</b> {product.color}
         <div className="color-variants-container">
           {colorVariants.map((item) => {
+            if (!item) return null; // защита от null
             const mainImg = item.image_url
               ?.split(",")
               .map((u) => u.trim())
@@ -241,26 +237,34 @@ export default function ProductDetails() {
         <div className="product-main">
           <div className="product-images">
             {isMobile ? (
-              <Swiper
-                modules={[Pagination]}
-                pagination={{ clickable: true }}
-                spaceBetween={10}
-                slidesPerView={1}
-                onSlideChange={(swiper) => setMainIndex(swiper.activeIndex)}
-                onSwiper={(swiper) => setMainIndex(swiper.activeIndex)}
-              >
-                {rawImages.map((imgUrl, idx) => (
-                  <SwiperSlide key={idx}>
-                    <img
-                      src={imgUrl}
-                      alt={`Фото ${idx + 1}`}
-                      className="main-image"
-                      draggable={false}
-                      style={{ cursor: "default" }}
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+              <div className="mobile-image-wrapper">
+                {rawImages.length > 1 && (
+                  <button
+                    className="mobile-image-prev"
+                    onClick={() =>
+                      setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)
+                    }
+                  >
+                    ‹
+                  </button>
+                )}
+                <img
+                  src={rawImages[mainIndex]}
+                  alt={displayName}
+                  className="main-image"
+                  draggable={false}
+                />
+                {rawImages.length > 1 && (
+                  <button
+                    className="mobile-image-next"
+                    onClick={() =>
+                      setMainIndex((mainIndex + 1) % rawImages.length)
+                    }
+                  >
+                    ›
+                  </button>
+                )}
+              </div>
             ) : (
               <>
                 <img
@@ -300,8 +304,7 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* Модалка открывается только на десктопе */}
-      {!isMobile && showModal && rawImages.length > 0 && (
+      {showModal && rawImages.length > 0 && (
         <div className="modal-overlay">
           <button className="modal-close" onClick={() => setShowModal(false)}>
             ×
