@@ -1,5 +1,3 @@
-/* ProductCard.css */
-
 .product-card {
   display: flex;
   border-radius: 0 !important;
@@ -19,7 +17,7 @@
   box-shadow: 0 6px 24px rgba(0,0,0,0.15);
 }
 
-/* Новая обёртка для слайдера и текста, чтобы не накладывались */
+/* Обертка для мобильного свайпера + текста, чтобы они были друг под другом */
 .image-text-wrapper {
   display: flex;
   flex-direction: column;
@@ -28,6 +26,7 @@
   box-sizing: border-box;
 }
 
+/* Картинка и блок no-image занимают одинаковое место */
 .product-image, .no-image {
   width: 100%;
   border-radius: 0 !important;
@@ -35,12 +34,21 @@
   object-fit: contain;
   background: #fff;
   padding: 8px 2px 4px 2px;
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 12px;
   color: #aaa;
   text-align: center;
+  user-select: none;
 }
 
+/* Для десктопа отдельно */
+.product-image {
+  display: block;
+}
+
+/* Контент под картинкой */
 .product-content {
   display: flex;
   flex-direction: column;
@@ -134,23 +142,6 @@
   border-radius: 0 !important;
 }
 
-/* Стили пагинации Swiper (точки) */
-.swiper-pagination {
-  bottom: 6px !important;
-}
-
-.swiper-pagination-bullet {
-  width: 8px !important;
-  height: 8px !important;
-  background: #d32d2f !important; /* красный цвет */
-  opacity: 1 !important;
-  margin: 0 3px !important;
-}
-
-.swiper-pagination-bullet-active {
-  background: #9b1b1f !important; /* темнее красный для активной точки */
-}
-
 /* Мобильная адаптация */
 @media (max-width: 640px) {
   .product-card {
@@ -163,7 +154,6 @@
     max-height: 180px;
   }
   .product-image, .no-image {
-    /* убираем фиксированную высоту чтобы не перекрывал заголовок */
     height: auto !important;
     max-height: 180px;
     padding: 0;
@@ -187,5 +177,15 @@
   }
   .old-price, .new-price, .cur-price {
     font-size: 11px;
+  }
+  /* Пагинация swiper (точки) */
+  .swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    background: red !important;
+    opacity: 0.8;
+  }
+  .swiper-pagination-bullet-active {
+    opacity: 1;
   }
 }
