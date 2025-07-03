@@ -416,12 +416,6 @@ export default function Home() {
             </div>
           )}
         </div>
-        {!isHome && isLoading && (
-          <div className="text-center text-gray-400 py-4">Loading more...</div>
-        )}
-        {!isHome && !hasMore && (
-          <div className="text-center text-gray-400 py-4">End of list</div>
-        )}
       </div>
       <Footer />
     </>
