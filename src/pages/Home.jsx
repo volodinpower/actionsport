@@ -32,7 +32,7 @@ function getHomeLimit(cols) {
   if (cols === 5) return 20;
   if (cols === 4) return 20;
   if (cols === 3) return 18;
-  return 10;
+  return 20;
 }
 function groupProducts(rawProducts) {
   return rawProducts.map(p => ({
