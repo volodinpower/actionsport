@@ -87,30 +87,38 @@ export default function Home() {
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
   // Обновляем фильтры при изменениях
-  useEffect(() => {
-    async function updateFilterOptions() {
-      let realCategoryKey = categoryKey;
-      let realSubcategoryKey = subcategoryKey;
-      if (realSubcategoryKey) realCategoryKey = "";
+useEffect(() => {
+  async function updateFilterOptions() {
+    let realCategoryKey = categoryKey === "sale" ? "sale" : categoryKey;
+    let realSubcategoryKey = subcategoryKey;
+    if (realSubcategoryKey) realCategoryKey = "";
 
-      const params = {
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        gender: genderFilter,
-        size: sizeFilter,
-        search: searchQuery,
-      };
+    const params = {
+      categoryKey: realCategoryKey,
+      subcategoryKey: realSubcategoryKey,
+      gender: genderFilter,
+      size: sizeFilter,
+      search: searchQuery,
+      brand: brandFilter,
+    };
 
-      const brands = await fetchFilteredBrands({ ...params });
-      const sizes = await fetchFilteredSizes({ ...params });
-      const genders = await fetchFilteredGenders({ ...params, brand: brandFilter });
+    try {
+      const brands = await fetchFilteredBrands(params);
+      const sizes = await fetchFilteredSizes(params);
+      const genders = await fetchFilteredGenders(params);
 
       setBrandsInFilter(brands);
       setSizesInFilter(sizes);
       setGendersInFilter(genders);
+    } catch (e) {
+      setBrandsInFilter([]);
+      setSizesInFilter([]);
+      setGendersInFilter([]);
     }
-    updateFilterOptions();
-  }, [categoryKey, subcategoryKey, genderFilter, sizeFilter, searchQuery, brandFilter]);
+  }
+  updateFilterOptions();
+}, [categoryKey, subcategoryKey, genderFilter, sizeFilter, searchQuery, brandFilter]);
+
 
   // --- React Query infinite query ---
   const {
