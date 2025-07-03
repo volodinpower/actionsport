@@ -390,7 +390,7 @@ export default function ProductDetails() {
           <img
             src={rawImages[modalIndex]}
             alt={`${displayName} фото ${modalIndex + 1}`}
-            className="max-h-[80vh] max-w-[80vw] rounded-xl shadow-lg"
+            className="max-h-[80vh] max-w-[80vw] shadow-lg"
           />
           {rawImages.length > 1 && (
             <button
@@ -409,7 +409,7 @@ export default function ProductDetails() {
                   key={idx}
                   src={imgUrl}
                   alt={`миниатюра ${idx + 1}`}
-                  className={`w-12 h-12 rounded border-2 ${
+                  className={`w-12 h-12 ${
                     idx === modalIndex ? "border-white" : "border-transparent"
                   } cursor-pointer`}
                   onClick={() => setModalIndex(idx)}
