@@ -14,6 +14,7 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Получаем массив изображений (универсально)
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url
@@ -24,11 +25,13 @@ export default function ProductCard({ product, onClick }) {
     urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
 
+  // Для мобильного свайпера — показываем сначала _main, потом _prev
   const mobileSwipeUrls = [
     ...urls.filter((url) => url.toLowerCase().includes("_main")),
     ...urls.filter((url) => url.toLowerCase().includes("_prev")),
   ];
 
+  // Основное и превью изображение для десктопа
   const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
   const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
@@ -53,6 +56,7 @@ export default function ProductCard({ product, onClick }) {
     sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
+  // --- JSX ---
   return (
     <div
       className="product-card"
@@ -61,10 +65,9 @@ export default function ProductCard({ product, onClick }) {
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      {/* Всегда есть image-text-wrapper */}
       <div className="image-text-wrapper">
-        {/* Картинка или no-image */}
-        <div className={isMobile ? "swiper-container" : ""} style={{ height: "100%", minHeight: 0, flex: "1 0 auto" }}>
+        <div className={isMobile ? "swiper-container" : ""} style={{ height: "70%" }}>
+          {/* --- Логика рендера картинки --- */}
           {isMobile ? (
             mobileSwipeUrls.length > 0 ? (
               <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
@@ -96,7 +99,7 @@ export default function ProductCard({ product, onClick }) {
           )}
         </div>
 
-        {/* Контент всегда рендерится */}
+        {/* --- Контент карточки: ВСЕГДА показываем! --- */}
         <div className="product-content">
           <h2 className="product-card-title">{product.sitename}</h2>
           <div className="desc-group">
