@@ -14,7 +14,7 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Составляем массив изображений, но для свайпера в мобильной версии фильтруем только _main и _prev
+  // Составляем массив изображений
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url
@@ -25,11 +25,13 @@ export default function ProductCard({ product, onClick }) {
     urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
 
-  // Для мобильного свайпера — только _main и _prev
-  const mobileSwipeUrls = urls.filter((url) =>
-    url.toLowerCase().includes("_main") || url.toLowerCase().includes("_prev")
-  );
+  // Для мобильного свайпера — показываем сначала _prev, потом _main
+  const mobileSwipeUrls = [
+    ...urls.filter((url) => url.toLowerCase().includes("_prev")),
+    ...urls.filter((url) => url.toLowerCase().includes("_main")),
+  ];
 
+  // Для ховера и десктопа — основное и превью
   const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
   const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
@@ -67,7 +69,7 @@ export default function ProductCard({ product, onClick }) {
       ) : isMobile ? (
         <div className="image-text-wrapper">
           <div className="swiper-container">
-            <Swiper spaceBetween={10} slidesPerView={1}>
+            <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
               {mobileSwipeUrls.map((url, idx) => (
                 <SwiperSlide key={idx}>
                   <img
