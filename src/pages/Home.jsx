@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import Header from "../components/Header";
-import ProductCard from "../components/ProductCardDebug";
+import ProductCard from "../components/ProductCard";
 import Banner from "../components/Banner";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
