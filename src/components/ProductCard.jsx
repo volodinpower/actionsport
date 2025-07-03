@@ -27,8 +27,8 @@ export default function ProductCard({ product, onClick }) {
 
   // Для мобильного свайпера — показываем сначала _prev, потом _main
   const mobileSwipeUrls = [
-    ...urls.filter((url) => url.toLowerCase().includes("_prev")),
     ...urls.filter((url) => url.toLowerCase().includes("_main")),
+    ...urls.filter((url) => url.toLowerCase().includes("_prev")),
   ];
 
   // Для ховера и десктопа — основное и превью
