@@ -195,33 +195,33 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadProducts = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      if (isHome) {
-        const raw = await fetchPopularProducts(homeLimit);
-        setProducts(groupProducts(raw));
-      } else {
-        const raw = await fetchProducts(
-          filters.query,
-          CATEGORY_LIMIT,
-          0,
-          "",
-          filters.brand,
-          sort || "asc",
-          filters.categoryKey,
-          filters.subcategoryKey,
-          filters.gender,
-          filters.size
-        );
-        setProducts(groupProducts(raw));
-      }
-    } catch (e) {
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
+const loadProducts = useCallback(async () => {
+  setIsLoading(true);
+  try {
+    if (isHome) {
+      const raw = await fetchPopularProducts(homeLimit);
+      setProducts(groupProducts(raw));
+    } else {
+      const raw = await fetchProducts(
+        filters.categoryKey === "sale" ? "" : filters.query,
+        CATEGORY_LIMIT,
+        0,
+        "",
+        filters.brand,
+        sort || "asc",
+        filters.categoryKey,
+        filters.subcategoryKey,
+        filters.gender,
+        filters.size
+      );
+      setProducts(groupProducts(raw));
     }
-  }, [filters, isHome, sort, homeLimit]);
+  } catch (e) {
+    setProducts([]);
+  } finally {
+    setIsLoading(false);
+  }
+}, [filters, isHome, sort, homeLimit]);
 
   useEffect(() => {
     loadProducts();
