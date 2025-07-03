@@ -1,13 +1,15 @@
+/* ProductCard.css */
+
 .product-card {
   display: flex;
   border-radius: 0 !important;
   flex-direction: column;
-  height: 100%;              /* очень важно! */
+  height: 100%;              /* важно для равной высоты */
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 3/4;
+  aspect-ratio: 3 / 4;
   cursor: pointer;
   transition: box-shadow 0.2s;
   padding: 4px 4px 6px 4px;
@@ -16,11 +18,7 @@
 .product-card:hover {
   box-shadow: 0 6px 24px rgba(0,0,0,0.15);
 }
-.product-card h2{
-  font-size: 15px;
-  font-weight: bold;
-  margin-top: 4px;
-}
+
 .product-image, .no-image {
   width: 100%;
   border-radius: 0 !important;
@@ -49,10 +47,10 @@
   line-height: 1.1;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 2; /* ограничение в 2 строки */
   -webkit-box-orient: vertical;
   word-break: break-word;
-  min-height: 30px;
+  min-height: 30px; /* фиксированная высота для двух строк */
 }
 
 .desc-group {
@@ -60,6 +58,7 @@
   flex-direction: column;
   margin-bottom: 4px;
 }
+
 .desc-row {
   font-size: 10px;
   color: #888;
@@ -68,22 +67,27 @@
   white-space: normal;
   word-break: break-word;
 }
-.desc-row:last-child { margin-bottom: 0; }
+
+.desc-row:last-child {
+  margin-bottom: 0;
+}
 
 .price-block {
-  margin-top: auto;               /* гарантированно прибивает вниз */
+  margin-top: auto;               /* прижимает вниз */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   font-size: 13px;
   gap: 0px;
 }
+
 .sale-badge {
   font-size: 10px;
   color: #d32d2f;
   font-weight: 600;
   line-height: 1.05;
 }
+
 .old-price {
   font-size: 12px;
   color: #888;
@@ -91,12 +95,14 @@
   font-weight: 500;
   line-height: 1.05;
 }
+
 .new-price {
   font-size: 13px;
   color: #13971a;
   font-weight: 700;
   line-height: 1.05;
 }
+
 .cur-price {
   font-size: 13px;
   color: #333;
@@ -104,10 +110,10 @@
   line-height: 1.05;
 }
 
-/* ---- Мобильная адаптация ---- */
+/* Мобильная адаптация */
 @media (max-width: 640px) {
   .product-card {
-    aspect-ratio: 3/4;
+    aspect-ratio: 3 / 4;
     border-radius: 0 !important;
     padding: 2px 2px 4px 2px;
   }
