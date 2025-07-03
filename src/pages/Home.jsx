@@ -227,18 +227,35 @@ export default function Home() {
   const handleSearch = (query = "") => {
     updateUrlFilters({ search: query });
   };
-  const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
-    setCategoryLabel(catLabel || "");
+const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
+  setUseSearchInFilters(false); // ВЫКЛЮЧАЕМ поиск для фильтров
+  if (catKey === "sale") {
+    setCategoryLabel("Sale");
     updateUrlFilters({
-      category: catKey,
-      subcategory: subKey || "",
+      category: "sale",
+      subcategory: "",
       search: "",
       brand: "",
       size: "",
       gender: "",
       sort: "",
     });
-  };
+  } else {
+    setCategoryLabel(catLabel || "");
+    updateUrlFilters({
+      category: catKey,
+      subcategory: subKey || "",
+      search: "", // Сбрасываем поиск
+      brand: "",
+      size: "",
+      gender: "",
+      sort: "",
+    });
+  }
+  setProducts([]);
+  setOffset(0);
+  setHasMore(true);
+};
   const onCategoryChange = (subKey) => {
     updateUrlFilters({
       category: categoryKey,
