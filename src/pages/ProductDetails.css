@@ -349,3 +349,7 @@
   color: #666;
   margin-bottom: 8px;
 }
+.price-current-no-discount {
+  font-weight: bold;
+  color: #000; /* обычный цвет текста, без зелени */
+}
