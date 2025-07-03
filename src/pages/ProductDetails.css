@@ -110,7 +110,6 @@
   object-fit: cover;
   cursor: pointer;
   border-radius: 0 !important; /* Без скругления */
-  border: 2px solid #ddd;
   transition: border-color 0.2s ease;
 }
 
