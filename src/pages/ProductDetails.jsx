@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { fetchProductById, fetchProducts, incrementProductView } from "../api";
+import { fetchProductById, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -29,6 +29,11 @@ function useIsMobile() {
     return () => window.removeEventListener("resize", handler);
   }, []);
   return isMobile;
+}
+
+// --- кастомная сортировка цветов (по алфавиту, можно заменить на свой порядок)
+function sortColorVariants(a, b) {
+  return (a.color || "").localeCompare(b.color || "", undefined, { sensitivity: "base" });
 }
 
 export default function ProductDetails() {
@@ -62,27 +67,15 @@ export default function ProductDetails() {
     if (id) incrementProductView(id);
   }, [id]);
 
-  // Цветовые варианты по name
+  // Цветовые варианты по all_colors/other_colors (получаем с бэка)
   useEffect(() => {
-    if (!product || !product.name) {
+    if (!product || !Array.isArray(product.all_colors)) {
       setColorVariants([]);
       return;
     }
-    fetchProducts("", 1000).then((data) => {
-      const nameNorm = normalize(product.name);
-      const seen = new Set();
-      const variants = [];
-      for (const item of data) {
-        if (normalize(item.name) === nameNorm) {
-          const c = normalize(item.color || "");
-          if (!seen.has(c)) {
-            seen.add(c);
-            variants.push(item);
-          }
-        }
-      }
-      setColorVariants(variants);
-    });
+    // сортируем по color (можно поменять на другой порядок)
+    const variants = [...product.all_colors].sort(sortColorVariants);
+    setColorVariants(variants);
   }, [product]);
 
   // Картинки
@@ -112,7 +105,7 @@ export default function ProductDetails() {
     navigate(query ? "/?search=" + encodeURIComponent(query) : "/");
   };
 
-  // Возврат назад: только navigate(location.state?.from), всё остальное подтянется из URL
+  // Возврат назад
   const handleGoBack = () => {
     if (location.state?.from && location.state.from !== "/") {
       navigate(location.state.from);
@@ -123,7 +116,6 @@ export default function ProductDetails() {
     }
   };
 
-  // Рендер цены с учетом скидки
   function renderPrice() {
     const price = Number(product.price);
     const discount = Number(product.discount);
@@ -202,7 +194,6 @@ export default function ProductDetails() {
     </div>
   );
 
-  // --- Главное исправление: только product.sizes ---
   const sizeBlock = (
     <div className="mb-1 text-gray-600 text-sm">
       <b>size:</b>{" "}
