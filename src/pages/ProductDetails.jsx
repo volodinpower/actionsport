@@ -5,7 +5,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 
-import "./ProductDetails.css"; // импортируем стили
+import "./ProductDetails.css";
 
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
@@ -171,7 +171,9 @@ export default function ProductDetails() {
       </div>
     ) : (
       <div className="color-block multi-color">
-        <b>color:</b> {product.color}
+        <div className="color-text-line">
+          <b>color:</b> {product.color}
+        </div>
         <div className="color-variants-container">
           {colorVariants.map((item) => {
             const mainImg = item.image_url

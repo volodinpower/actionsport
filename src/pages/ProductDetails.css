@@ -341,3 +341,12 @@
 .modal-thumbnail.selected {
   border-color: white !important;
 }
+
+/* Для строки "color: название_цвета" в одну строку */
+.color-text-line {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* небольшой отступ между "color:" и цветом */
+  font-size: 14px;
+  margin-bottom: 8px; /* небольшой отступ снизу перед блоком с цветами */
+}
