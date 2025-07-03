@@ -35,7 +35,7 @@ function getHomeLimit(cols) {
   return 10;
 }
 function groupProducts(rawProducts) {
-  return rawProducts.map((p) => ({
+  return rawProducts.map(p => ({
     ...p,
     sizes: Array.isArray(p.sizes) ? p.sizes.filter(Boolean) : [],
   }));
@@ -45,10 +45,7 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const urlSearchParams = useMemo(
-    () => new URLSearchParams(location.search),
-    [location.search]
-  );
+  const urlSearchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
   const searchQuery = urlSearchParams.get("search") || "";
   const categoryKey = urlSearchParams.get("category") || "";
@@ -59,8 +56,7 @@ export default function Home() {
   const sort = urlSearchParams.get("sort") || "";
 
   const isHome = useMemo(
-    () =>
-      !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
+    () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
 
@@ -68,6 +64,7 @@ export default function Home() {
   const [columns, setColumns] = useState(getColumnsCount());
   const [homeLimit, setHomeLimit] = useState(getHomeLimit(columns));
 
+  // Пересчитываем колонки и лимит при ресайзе
   useEffect(() => {
     function handleResize() {
       const cols = getColumnsCount();
@@ -84,43 +81,36 @@ export default function Home() {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
-  // --- Фильтры ---
+  // --- Фильтры для FilterBar ---
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
+  // Обновляем фильтры при изменениях
   useEffect(() => {
     async function updateFilterOptions() {
-      let realCategoryKey = categoryKey === "sale" ? "" : categoryKey;
+      let realCategoryKey = categoryKey;
       let realSubcategoryKey = subcategoryKey;
+      if (realSubcategoryKey) realCategoryKey = "";
 
       const params = {
         categoryKey: realCategoryKey,
         subcategoryKey: realSubcategoryKey,
         gender: genderFilter,
         size: sizeFilter,
-        search: isHome ? "" : searchQuery,
-        brand: brandFilter,
+        search: searchQuery,
       };
 
-      const brands = await fetchFilteredBrands(params);
-      const sizes = await fetchFilteredSizes(params);
-      const genders = await fetchFilteredGenders(params);
+      const brands = await fetchFilteredBrands({ ...params });
+      const sizes = await fetchFilteredSizes({ ...params });
+      const genders = await fetchFilteredGenders({ ...params, brand: brandFilter });
 
       setBrandsInFilter(brands);
       setSizesInFilter(sizes);
       setGendersInFilter(genders);
     }
     updateFilterOptions();
-  }, [
-    categoryKey,
-    subcategoryKey,
-    genderFilter,
-    sizeFilter,
-    searchQuery,
-    brandFilter,
-    isHome,
-  ]);
+  }, [categoryKey, subcategoryKey, genderFilter, sizeFilter, searchQuery, brandFilter]);
 
   // --- React Query infinite query ---
   const {
@@ -128,10 +118,11 @@ export default function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch,
     isLoading,
     isFetching,
-  } = useInfiniteQuery(
-    [
+  } = useInfiniteQuery({
+    queryKey: [
       "products",
       {
         search: searchQuery,
@@ -145,23 +136,9 @@ export default function Home() {
         homeLimit,
       },
     ],
-    ({ pageParam = 0 }) => {
+    queryFn: ({ pageParam = 0 }) => {
       if (isHome) {
         return fetchPopularProducts(homeLimit, 0).then(groupProducts);
-      }
-      if (categoryKey === "sale") {
-        return fetchProducts(
-          "",
-          PAGE_LIMIT,
-          pageParam,
-          "",
-          brandFilter,
-          sort || "asc",
-          "sale",
-          "",
-          genderFilter,
-          sizeFilter
-        ).then(groupProducts);
       }
       return fetchProducts(
         searchQuery,
@@ -176,15 +153,15 @@ export default function Home() {
         sizeFilter
       ).then(groupProducts);
     },
-    {
-      getNextPageParam: (lastPage, pages) =>
-        lastPage.length === PAGE_LIMIT ? pages.length * PAGE_LIMIT : undefined,
-      keepPreviousData: true,
-      refetchOnWindowFocus: false,
-    }
-  );
+    getNextPageParam: (lastPage, allPages) => {
+      if (isHome) return undefined;
+      return lastPage.length === PAGE_LIMIT ? allPages.length * PAGE_LIMIT : undefined;
+    },
+    keepPreviousData: true,
+    refetchOnWindowFocus: false,
+  });
 
-  // Объединяем страницы
+  // Объединяем все страницы в один массив продуктов
   const products = useMemo(() => {
     if (!data) return [];
     return data.pages.flat();
@@ -192,22 +169,19 @@ export default function Home() {
 
   // --- Подкатегории ---
   const submenuList = useMemo(() => {
-    const cat = categories.find((c) => c.category_key === categoryKey);
+    const cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
-    return (cat.subcategories || []).map((sub) =>
+    return (cat.subcategories || []).map(sub =>
       typeof sub === "string" ? sub : sub.subcategory_key || sub.label
     );
   }, [categories, categoryKey]);
 
   // --- Сортировка ---
   const getEffectivePrice = (item) => {
-    const fix = (val) => {
+    const fix = val => {
       if (val == null) return Infinity;
       if (typeof val === "number") return val;
-      const str = String(val)
-        .replace(/\s| /g, "")
-        .replace(",", ".")
-        .replace(/[^0-9.]/g, "");
+      const str = String(val).replace(/\s| /g, "").replace(",", ".").replace(/[^0-9.]/g, "");
       const n = Number(str);
       return isNaN(n) ? Infinity : n;
     };
@@ -218,25 +192,21 @@ export default function Home() {
 
   const displayedProducts = useMemo(() => {
     let arr = [...products];
-    if (sort === "asc")
-      arr.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
-    else if (sort === "desc")
-      arr.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
-    else if (sort === "popular")
-      arr.sort((a, b) => (b.views || 0) - (a.views || 0));
-    else if (sort === "discount")
-      arr.sort((a, b) => (Number(b.discount) || 0) - (Number(a.discount) || 0));
+    if (sort === "asc") arr.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
+    else if (sort === "desc") arr.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
+    else if (sort === "popular") arr.sort((a, b) => (b.views || 0) - (a.views || 0));
+    else if (sort === "discount") arr.sort((a, b) => (Number(b.discount) || 0) - (Number(a.discount) || 0));
     return arr;
   }, [products, sort]);
 
-  // Навигация на страницу товара
+  // --- Навигация по карточкам ---
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`, {
       state: { from: location.pathname + location.search },
     });
   };
 
-  // Управление фильтрами в URL
+  // --- Управление фильтрами ---
   function updateUrlFilters(newFilters = {}) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries({
@@ -312,7 +282,6 @@ export default function Home() {
     sort,
   });
 
-  // Хлебные крошки
   const breadcrumbs = useMemo(() => {
     if (searchQuery) {
       return [
@@ -333,15 +302,15 @@ export default function Home() {
     if (idx === 0) clearFilters();
   };
 
-  // Скролл для подгрузки
+  // --- Обработчик скролла для подгрузки ---
   useEffect(() => {
     if (isHome) return;
     if (!hasNextPage || isFetchingNextPage) return;
 
     function onScroll() {
       if (
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 600
+        window.innerHeight + document.documentElement.scrollTop
+        >= document.documentElement.offsetHeight - 600
       ) {
         fetchNextPage();
       }
@@ -351,6 +320,7 @@ export default function Home() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, isHome]);
 
+  // --- Render ---
   return (
     <>
       <Header
@@ -370,7 +340,7 @@ export default function Home() {
       {isHome && <Banner />}
 
       {!isHome && (
-        <>
+        <div>
           <FilterBar
             allSizes={sizesInFilter}
             allBrands={brandsInFilter}
@@ -393,8 +363,10 @@ export default function Home() {
             onSizeChange={onSizeChange}
             onGenderChange={onGenderChange}
           />
-          <SortControl sort={sort} setSort={onSortChange} />
-        </>
+          <div>
+            <SortControl sort={sort} setSort={onSortChange} />
+          </div>
+        </div>
       )}
 
       <div className="mx-auto px-2 pb-12">
