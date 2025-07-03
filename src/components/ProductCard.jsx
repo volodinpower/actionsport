@@ -61,7 +61,7 @@ export default function ProductCard({ product, onClick }) {
         />
       )}
       <div className="product-content">
-        <h2 className="product-title">{product.sitename}</h2>
+        <h2 className="product-card-title">{product.sitename}</h2>
         <div className="desc-group">
           {product.color && (
             <div className="desc-row">
