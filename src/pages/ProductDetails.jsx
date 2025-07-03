@@ -35,7 +35,7 @@ function useIsMobile() {
 }
 
 function sortColorVariants(a, b) {
-  return (a.color || "").localeCompare(b.color || "", undefined, { sensitivity: "base" });
+  return (a?.color || "").localeCompare(b?.color || "", undefined, { sensitivity: "base" });
 }
 
 export default function ProductDetails() {
@@ -73,15 +73,15 @@ export default function ProductDetails() {
       setColorVariants([]);
       return;
     }
-    const variants = [...product.all_colors].sort(sortColorVariants);
+    // Фильтруем null/undefined и сортируем
+    const variants = product.all_colors.filter(c => c).sort(sortColorVariants);
     setColorVariants(variants);
   }, [product]);
 
   useEffect(() => {
     if (location.state && location.state.color) {
       const found = product?.all_colors?.find(
-        (c) =>
-          c.color === location.state.color || String(c.id) === String(location.state.color)
+        (c) => c && (c.color === location.state.color || String(c.id) === String(location.state.color))
       );
       if (found) {
         setSelectedColorId(found.id);
@@ -299,7 +299,6 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* Модалка открывается только на десктопе */}
       {!isMobile && showModal && rawImages.length > 0 && (
         <div className="modal-overlay">
           <button className="modal-close" onClick={() => setShowModal(false)}>
