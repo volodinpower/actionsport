@@ -100,20 +100,20 @@ export default function Home() {
     size: sizeFilter,
   }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  // Сброс offset и продуктов при смене фильтров, сортировки или homeLimit
+  // Сброс offset/продуктов при смене фильтров, сортировки или homeLimit
   useEffect(() => {
-    setOffset(0);
     setProducts([]);
+    setOffset(0);
     setHasMore(true);
-  }, [searchQuery, categoryKey, subcategoryKey, brandFilter, sizeFilter, genderFilter, sort, homeLimit]);
+  }, [searchQuery, categoryKey, subcategoryKey, sizeFilter, brandFilter, genderFilter, sort, homeLimit]);
 
-  // Обновление опций фильтров с учётом флага useSearchInFilters
   useEffect(() => {
     async function updateOptions() {
       let realCategoryKey = filters.categoryKey;
       let realSubcategoryKey = filters.subcategoryKey;
       if (realSubcategoryKey) realCategoryKey = "";
 
+      // Учитываем useSearchInFilters
       const searchForFilters = useSearchInFilters ? filters.query : "";
 
       const paramsForFilters = {
@@ -134,16 +134,23 @@ export default function Home() {
     updateOptions();
   }, [filters, categories, useSearchInFilters]);
 
-  // --- Загрузка продуктов ---
+  // --- Загрузка карточек ---
   const loadProducts = useCallback(async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    try {
-      if (isHome) {
+    if (isHome) {
+      setIsLoading(true);
+      try {
         const raw = await fetchPopularProducts(homeLimit, 0);
         setProducts(groupProducts(raw));
         setHasMore(false);
-      } else {
+      } catch {
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      if (isLoading || !hasMore) return;
+      setIsLoading(true);
+      try {
         const raw = await fetchProducts(
           filters.query,
           PAGE_LIMIT,
@@ -157,26 +164,25 @@ export default function Home() {
           filters.size
         );
         const grouped = groupProducts(raw);
-        if (offset === 0) {
-          setProducts(grouped);
-        } else {
-          setProducts(prev => [...prev, ...grouped]);
-        }
+        setProducts(prev =>
+          offset === 0 ? grouped : [...prev, ...grouped]
+        );
         setHasMore(grouped.length === PAGE_LIMIT);
+      } catch {
+        if (offset === 0) setProducts([]);
+        setHasMore(false);
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      if (offset === 0) setProducts([]);
-      setHasMore(false);
-    } finally {
-      setIsLoading(false);
     }
-  }, [filters, isHome, sort, offset, homeLimit, isLoading]);
+  }, [filters, isHome, sort, offset, hasMore, isLoading, homeLimit]);
 
   useEffect(() => {
     loadProducts();
-  }, [loadProducts]);
+    // eslint-disable-next-line
+  }, [offset, filters, isHome, sort, homeLimit]);
 
-  // --- Infinite scroll (только для каталога) ---
+  // --- Infinite scroll с зависимостями ---
   useEffect(() => {
     if (isHome) return;
     if (!hasMore || isLoading) return;
@@ -188,6 +194,7 @@ export default function Home() {
         setOffset(prev => prev + PAGE_LIMIT);
       }
     }
+
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome, hasMore, isLoading]);
@@ -230,7 +237,7 @@ export default function Home() {
     });
   };
 
-  // --- Управление фильтрами ---
+  // --- Для управления фильтрами ---
   function updateUrlFilters(newFilters = {}) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries({
