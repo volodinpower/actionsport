@@ -1,30 +1,52 @@
-// ProductCard.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import "./ProductCard.css";
 
 export default function ProductCard({ product, onClick }) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
 
-  // Собираем массив картинок
+  // DEBUG! Показывает каждый рендер и входящие данные
+  useEffect(() => {
+    console.log("ProductCard render:", product);
+  }, [product]);
+
+  // Получаем массив изображений (универсально)
   let urls = [];
   if (typeof product.image_url === "string") {
-    urls = product.image_url.split(",").map(url => url && url.trim()).filter(Boolean);
+    urls = product.image_url
+      .split(",")
+      .map((url) => url && url.trim())
+      .filter(Boolean);
   } else if (Array.isArray(product.image_url)) {
-    urls = product.image_url.map(url => url && String(url).trim()).filter(Boolean);
+    urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
 
-  const mainImg = urls.find(url => url.toLowerCase().includes("_main")) || urls[0];
-  const prevImg = urls.find(url => url.toLowerCase().includes("_prev")) || mainImg;
+  // DEBUG! Если нет изображений, выведи отдельный лог
+  useEffect(() => {
+    if (!urls.length) {
+      console.warn("NO IMAGE FOR PRODUCT:", product);
+    }
+  }, [urls, product]);
+
+  // Для мобильного свайпера — показываем сначала _main, потом _prev
+  const mobileSwipeUrls = [
+    ...urls.filter((url) => url.toLowerCase().includes("_main")),
+    ...urls.filter((url) => url.toLowerCase().includes("_prev")),
+  ];
+
+  // Основное и превью изображение для десктопа
+  const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
+  const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
   function makeAbsUrl(url) {
-    if (!url) return "/no-image.jpg";
+    if (!url) return null;
     if (/^https?:\/\//.test(url)) return url;
     const base = import.meta.env.VITE_API_URL || "http://localhost:8000";
     return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
   }
-
-  const image = isHovered ? makeAbsUrl(prevImg) : makeAbsUrl(mainImg);
 
   const price = parseFloat(String(product.price ?? "").replace(/\s/g, "").replace(",", "."));
   const discount = parseFloat(String(product.discount ?? "").replace(/\s/g, "").replace(",", "."));
@@ -33,55 +55,82 @@ export default function ProductCard({ product, onClick }) {
     ? Math.ceil((price * (1 - discount / 100)) / 100) * 100
     : null;
 
-  // Всегда массив sizes, даже если пустой
   let sizes = [];
   if (Array.isArray(product.sizes)) {
     sizes = product.sizes;
   } else if (typeof product.sizes === "string" && product.sizes.trim()) {
-    sizes = product.sizes.split(",").map(s => s.trim()).filter(Boolean);
+    sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
+  // --- JSX ---
   return (
     <div
       className="product-card"
       onClick={onClick}
       title={product.sitename}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      {imgError ? (
-        <div className="no-image">no image</div>
-      ) : (
-        <img
-          src={image}
-          alt={product.sitename}
-          className="product-image"
-          onError={() => setImgError(true)}
-          draggable={false}
-        />
-      )}
-      <div className="product-content">
-        <h2 className="product-card-title">{product.sitename}</h2>
-        <div className="desc-group">
-          {product.color && (
-            <div className="desc-row">
-              {`color: ${product.color}`}
-            </div>
-          )}
-          <div className="desc-row">
-            {`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}
-          </div>
-        </div>
-        <div className="price-block">
-          {showDiscount ? (
-            <>
-              <span className="sale-badge">{`sale: -${discount}%`}</span>
-              <span className="old-price">{`${price} AMD`}</span>
-              <span className="new-price">{`${discountedPrice} AMD`}</span>
-            </>
+      <div className="image-text-wrapper">
+        <div className={isMobile ? "swiper-container" : ""} style={{ height: "70%" }}>
+          {/* --- Логика рендера картинки --- */}
+          {isMobile ? (
+            mobileSwipeUrls.length > 0 ? (
+              <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
+                {mobileSwipeUrls.map((url, idx) => (
+                  <SwiperSlide key={idx}>
+                    <img
+                      src={makeAbsUrl(url)}
+                      alt={product.sitename}
+                      className="product-image"
+                      onError={() => setImgError(true)}
+                      draggable={false}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            ) : (
+              <div className="no-image">no image</div>
+            )
+          ) : imgError || !mainImg ? (
+            <div className="no-image">no image</div>
           ) : (
-            <span className="cur-price">{`${price} AMD`}</span>
+            <img
+              src={makeAbsUrl(isHovered ? prevImg : mainImg)}
+              alt={product.sitename}
+              className="product-image"
+              onError={() => setImgError(true)}
+              draggable={false}
+            />
           )}
+        </div>
+        {/* --- Контент карточки: ВСЕГДА показываем! --- */}
+        <div className="product-content" style={{ background: "#fff8b1", border: "1px solid #eee" }}>
+          <h2 className="product-card-title">{product.sitename}</h2>
+          <div className="desc-group">
+            <div className="desc-row">{`color: ${product.color || "—"}`}</div>
+            <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
+          </div>
+          <div className="price-block">
+            {showDiscount ? (
+              <>
+                <span className="sale-badge">{`sale: -${discount}%`}</span>
+                <span className="old-price">{`${price} AMD`}</span>
+                <span className="new-price">{`${discountedPrice} AMD`}</span>
+              </>
+            ) : (
+              <span className="cur-price">{`${price} AMD`}</span>
+            )}
+          </div>
+          {/* Полный отладочный вывод */}
+          <div style={{ fontSize: 10, color: "#999", marginTop: 6, background: "#fafad2", padding: 2 }}>
+            <div>DEBUG: sitename: {String(product.sitename)}</div>
+            <div>DEBUG: color: {String(product.color)}</div>
+            <div>DEBUG: sizes: {Array.isArray(sizes) ? sizes.join(", ") : String(sizes)}</div>
+            <div>DEBUG: price: {String(product.price)}</div>
+            <div>DEBUG: discount: {String(product.discount)}</div>
+            <div>DEBUG: image_url: {String(product.image_url)}</div>
+          </div>
         </div>
       </div>
     </div>
