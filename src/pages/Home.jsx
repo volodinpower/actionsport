@@ -18,16 +18,16 @@ import SortControl from "../components/SortControl";
 
 const CATEGORY_LIMIT = 2000;
 
-// --- Автовычисление количества колонок ---
+// --- Получить кол-во колонок в сетке для текущей ширины экрана
 function getColumnsCount() {
   const width = window.innerWidth;
-  if (width >= 1280) return 5;   // xl:grid-cols-5
-  if (width >= 1024) return 4;   // lg:grid-cols-4
-  if (width >= 640) return 3;    // md:grid-cols-3
-  return 2;                      // мобила
+  if (width >= 1280) return 5;
+  if (width >= 1024) return 4;
+  if (width >= 640) return 3;
+  return 2;
 }
 
-// Подбираем limit: не меньше minLimit, кратно columns
+// Подобрать лимит чтобы карточки были кратны колонкам, minLimit - минимум карточек
 function computeLimit(minLimit, columns) {
   let limit = minLimit;
   while (limit % columns !== 0) limit++;
@@ -45,7 +45,7 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Получаем фильтры из query-параметров
+  // --- Query параметры
   const urlSearchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const [categoryLabel, setCategoryLabel] = useState("");
 
@@ -179,31 +179,29 @@ export default function Home() {
 
   // --- Колонки и лимит для главной ---
   const [columns, setColumns] = useState(getColumnsCount());
-  const [homeLimit, setHomeLimit] = useState(computeLimit(20, columns));
   useEffect(() => {
     function handleResize() {
-      const cols = getColumnsCount();
-      setColumns(cols);
-      setHomeLimit(computeLimit(20, cols));
+      setColumns(getColumnsCount());
     }
     window.addEventListener("resize", handleResize);
+    handleResize(); // Обновить при монтировании
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- Пагинация и сброс данных при фильтрации ---
+  // Лимит для популярки — всегда ровный ряд!
+  const homeLimit = useMemo(() => (isHome ? computeLimit(20, columns) : 20), [columns, isHome]);
+
+  // --- Товары и загрузка ---
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- Загрузка товаров (fetchProducts/fetchPopularProducts) ---
   const loadProducts = useCallback(async () => {
     setIsLoading(true);
     try {
       if (isHome) {
-        // Популярные товары для главной — с адаптивным лимитом!
         const raw = await fetchPopularProducts(homeLimit);
         setProducts(groupProducts(raw));
       } else {
-        // Все товары категории или по фильтру
         const raw = await fetchProducts(
           filters.query,
           CATEGORY_LIMIT,
@@ -239,6 +237,7 @@ export default function Home() {
     );
   }, [categories, categoryKey]);
 
+  // --- Сортировка ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -260,12 +259,14 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
+  // --- Карточка товара ---
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`, {
       state: { from: location.pathname + location.search }
     });
   };
 
+  // --- Хлебные крошки ---
   const breadcrumbs = useMemo(() => {
     if (searchQuery) {
       return [
@@ -286,6 +287,7 @@ export default function Home() {
     if (idx === 0) clearFilters();
   };
 
+  // --- Рендер ---
   return (
     <>
       <Header
