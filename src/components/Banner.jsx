@@ -6,7 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
-const API_BANNERS = (import.meta.env.VITE_API_URL || "") + "/images";
+const API_BANNERS = (import.meta.env.VITE_API_URL || "") + "static/images";
 
 function getImageUrl(url) {
   if (!url) return "/no-image.jpg";
