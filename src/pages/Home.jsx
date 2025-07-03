@@ -58,6 +58,9 @@ export default function Home() {
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
 
+  // Флаг, который контролирует, учитывать ли search при обновлении опций фильтров
+  const [useSearchInFilters, setUseSearchInFilters] = useState(false);
+
   // Колонки и лимит для главной
   const [columns, setColumns] = useState(getColumnsCount());
   const [homeLimit, setHomeLimit] = useState(getHomeLimit(getColumnsCount()));
@@ -87,6 +90,7 @@ export default function Home() {
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
+
   const filters = useMemo(() => ({
     query: searchQuery,
     categoryKey,
@@ -108,18 +112,27 @@ export default function Home() {
       let realCategoryKey = filters.categoryKey;
       let realSubcategoryKey = filters.subcategoryKey;
       if (realSubcategoryKey) realCategoryKey = "";
-      const brandsFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
+
+      // Здесь учитываем флаг useSearchInFilters, чтобы подставить search или пустую строку
+      const searchForFilters = useSearchInFilters ? filters.query : "";
+
+      const paramsForFilters = {
+        categoryKey: realCategoryKey,
+        subcategoryKey: realSubcategoryKey,
+        gender: filters.gender,
+        size: filters.size,
+        search: searchForFilters,
+      };
+
+      const brandsFilters = { ...paramsForFilters };
       delete brandsFilters.brand;
+
       setBrandsInFilter(await fetchFilteredBrands(brandsFilters));
-      const sizesFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
-      delete sizesFilters.size;
-      setSizesInFilter(await fetchFilteredSizes(sizesFilters));
-      const gendersFilters = { ...filters, categoryKey: realCategoryKey, subcategoryKey: realSubcategoryKey };
-      delete gendersFilters.gender;
-      setGendersInFilter(await fetchFilteredGenders(gendersFilters));
+      setSizesInFilter(await fetchFilteredSizes(paramsForFilters));
+      setGendersInFilter(await fetchFilteredGenders(paramsForFilters));
     }
     updateOptions();
-  }, [filters, categories]);
+  }, [filters, categories, useSearchInFilters]);
 
   // --- Загрузка карточек ---
   const loadProducts = useCallback(async () => {
@@ -244,6 +257,7 @@ export default function Home() {
   }
 
   const handleSearch = (query = "") => {
+    setUseSearchInFilters(true); // ВКЛЮЧАЕМ поиск для фильтров
     setProducts([]);
     setOffset(0);
     setHasMore(true);
@@ -251,6 +265,7 @@ export default function Home() {
   };
 
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
+    setUseSearchInFilters(false); // ВЫКЛЮЧАЕМ поиск для фильтров
     setCategoryLabel(catLabel || "");
     setProducts([]);
     setOffset(0);
@@ -258,7 +273,7 @@ export default function Home() {
     updateUrlFilters({
       category: catKey,
       subcategory: subKey || "",
-      search: "",
+      search: "", // Сбрасываем поиск
       brand: "",
       size: "",
       gender: "",
@@ -267,6 +282,7 @@ export default function Home() {
   };
 
   const onCategoryChange = (subKey) => {
+    setUseSearchInFilters(false);
     setProducts([]);
     setOffset(0);
     setHasMore(true);
@@ -280,30 +296,35 @@ export default function Home() {
     });
   };
   const onBrandChange = (brand) => {
+    setUseSearchInFilters(false);
     setProducts([]);
     setOffset(0);
     setHasMore(true);
     updateUrlFilters({ ...getCurrentFilters(), brand });
   };
   const onSizeChange = (size) => {
+    setUseSearchInFilters(false);
     setProducts([]);
     setOffset(0);
     setHasMore(true);
     updateUrlFilters({ ...getCurrentFilters(), size });
   };
   const onGenderChange = (gender) => {
+    setUseSearchInFilters(false);
     setProducts([]);
     setOffset(0);
     setHasMore(true);
     updateUrlFilters({ ...getCurrentFilters(), gender });
   };
   const onSortChange = (s) => {
+    setUseSearchInFilters(false);
     setProducts([]);
     setOffset(0);
     setHasMore(true);
     updateUrlFilters({ ...getCurrentFilters(), sort: s });
   };
   function clearFilters() {
+    setUseSearchInFilters(false);
     setProducts([]);
     setOffset(0);
     setHasMore(true);
