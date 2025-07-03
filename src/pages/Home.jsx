@@ -26,6 +26,7 @@ function getColumnsCount() {
   if (width >= 640) return 3;
   return 2;
 }
+
 function getHomeLimit(cols) {
   if (cols === 5) return 20;
   if (cols === 4) return 20;
@@ -59,7 +60,6 @@ export default function Home() {
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
 
-  // Колонки и лимит для главной
   const [columns, setColumns] = useState(getColumnsCount());
   const [homeLimit, setHomeLimit] = useState(getHomeLimit(getColumnsCount()));
 
@@ -73,14 +73,16 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- Загрузка категорий ---
-  const { data: categories = [], isLoading: loadingCategories } = useQuery(
+  // --- Categories ---
+  const { data: categories = [] } = useQuery(
     ["categories"],
     fetchCategories,
     { staleTime: 1000 * 60 * 5 }
   );
 
-  // --- Подготовка фильтров (без пагинации!) ---
+  // --- Filters for options ---
+  // При categoryKey="sale" фильтры должны учитывать товары с discount > 0,
+  // поэтому передаем categoryKey как "sale" в запросы фильтров.
   const filtersForOptions = useMemo(() => {
     let realCategoryKey = categoryKey;
     let realSubcategoryKey = subcategoryKey;
@@ -92,29 +94,30 @@ export default function Home() {
       gender: genderFilter,
       size: sizeFilter,
       brand: brandFilter,
-      search: isHome ? "" : searchQuery, // Можно по-разному
+      search: isHome ? "" : searchQuery,
     };
   }, [categoryKey, subcategoryKey, genderFilter, sizeFilter, brandFilter, searchQuery, isHome]);
 
-  // --- Фильтры ---
+  // --- Filter options queries ---
   const { data: brandsInFilter = [] } = useQuery(
     ["brandsFiltered", filtersForOptions],
     () => fetchFilteredBrands(filtersForOptions),
     { staleTime: 1000 * 60 * 5 }
   );
+
   const { data: sizesInFilter = [] } = useQuery(
     ["sizesFiltered", filtersForOptions],
     () => fetchFilteredSizes(filtersForOptions),
     { staleTime: 1000 * 60 * 5 }
   );
+
   const { data: gendersInFilter = [] } = useQuery(
     ["gendersFiltered", filtersForOptions],
     () => fetchFilteredGenders(filtersForOptions),
     { staleTime: 1000 * 60 * 5 }
   );
 
-  // --- Загрузка товаров с пагинацией (инфинити скролл) ---
-
+  // --- Infinite products query ---
   const productQueryKey = useMemo(() => {
     if (isHome) {
       return ["popularProducts", homeLimit];
@@ -141,15 +144,15 @@ export default function Home() {
     hasNextPage,
     isFetchingNextPage,
     isLoading: loadingProducts,
-    refetch: refetchProducts,
   } = useInfiniteQuery(
     productQueryKey,
     async ({ pageParam = 0 }) => {
       if (isHome) {
-        // Популярные - без пагинации
+        // На главной нет пагинации, берем popularProducts
         const raw = await fetchPopularProducts(homeLimit, 0);
         return { data: groupProducts(raw), nextOffset: null };
       } else {
+        // При category_key === "sale" сервер отдаст товары с discount > 0, фильтры работают корректно
         const raw = await fetchProducts(
           searchQuery,
           PAGE_LIMIT,
@@ -167,7 +170,7 @@ export default function Home() {
       }
     },
     {
-      getNextPageParam: (lastPage) => lastPage.nextOffset,
+      getNextPageParam: lastPage => lastPage.nextOffset,
       keepPreviousData: true,
       staleTime: 1000 * 60 * 2,
       cacheTime: 1000 * 60 * 10,
@@ -175,15 +178,15 @@ export default function Home() {
     }
   );
 
-  // --- Собираем все загруженные страницы в один массив ---
+  // --- Собираем все загруженные страницы ---
   const products = useMemo(() => {
     if (!data) return [];
     return data.pages.flatMap(page => page.data);
   }, [data]);
 
-  // --- Infinite scroll (пагинация) ---
+  // --- Infinite scroll для каталога ---
   useEffect(() => {
-    if (isHome) return; // отключаем инфинити скролл на главной
+    if (isHome) return;
 
     function onScroll() {
       if (
@@ -194,6 +197,7 @@ export default function Home() {
         fetchNextPage();
       }
     }
+
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, isHome]);
@@ -221,7 +225,7 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
-  // --- Обработчики кликов и смены фильтров ---
+  // --- Навигация с фильтрами ---
   const navigateWithFilters = useCallback((newFilters = {}) => {
     const params = new URLSearchParams();
     const currentFilters = {
@@ -245,7 +249,12 @@ export default function Home() {
   };
 
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
-    navigateWithFilters({ category: catKey, subcategory: subKey, search: "", brand: "", size: "", gender: "", sort: "" });
+    if (catKey === "sale") {
+      // Особая обработка для sale
+      navigateWithFilters({ category: "sale", subcategory: "", search: "", brand: "", size: "", gender: "", sort: "" });
+    } else {
+      navigateWithFilters({ category: catKey, subcategory: subKey, search: "", brand: "", size: "", gender: "", sort: "" });
+    }
   };
 
   const onCategoryChange = (subKey) => {
@@ -279,11 +288,11 @@ export default function Home() {
     if (categoryKey) {
       return [
         { label: "Main", query: "" },
-        { label: categoryKey, query: categoryKey }
+        { label: categoryLabel || categoryKey, query: categoryKey }
       ];
     }
     return [{ label: "Main", query: "" }];
-  }, [searchQuery, categoryKey]);
+  }, [searchQuery, categoryKey, categoryLabel]);
 
   const handleBreadcrumbClick = idx => {
     if (idx === 0) clearFilters();
@@ -298,7 +307,6 @@ export default function Home() {
     );
   }, [categories, categoryKey]);
 
-  // --- Render ---
   return (
     <>
       <Header
