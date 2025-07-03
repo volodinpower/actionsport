@@ -21,18 +21,6 @@ function normalize(val) {
   return (val || "").toString().trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function extractSizes(product) {
-  if (!product) return [];
-  if (Array.isArray(product.sizes))
-    return product.sizes.filter(Boolean).filter(s => s && s.toLowerCase() !== "нет");
-  if (typeof product.sizes === "string")
-    return product.sizes
-      .split(",")
-      .map((s) => s.trim())
-      .filter(s => s && s.toLowerCase() !== "нет");
-  return [];
-}
-
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
   useEffect(() => {
@@ -54,7 +42,6 @@ export default function ProductDetails() {
   const [showModal, setShowModal] = useState(false);
   const [mainIndex, setMainIndex] = useState(0);
   const [modalIndex, setModalIndex] = useState(0);
-  const [availableSizes, setAvailableSizes] = useState([]);
   const [colorVariants, setColorVariants] = useState([]);
 
   // Загрузка продукта по id
@@ -74,28 +61,6 @@ export default function ProductDetails() {
   useEffect(() => {
     if (id) incrementProductView(id);
   }, [id]);
-
-  // Размеры (по name + color)
-  useEffect(() => {
-    if (!product || !product.name || !product.color) {
-      setAvailableSizes([]);
-      return;
-    }
-    fetchProducts("", 1000).then((data) => {
-      const nameNorm = normalize(product.name);
-      const colorNorm = normalize(product.color);
-      const filtered = data.filter(
-        (item) =>
-          normalize(item.name) === nameNorm &&
-          normalize(item.color) === colorNorm
-      );
-      let sizes = [];
-      filtered.forEach((item) => {
-        sizes.push(...extractSizes(item));
-      });
-      setAvailableSizes(Array.from(new Set(sizes)));
-    });
-  }, [product]);
 
   // Цветовые варианты по name
   useEffect(() => {
@@ -237,6 +202,16 @@ export default function ProductDetails() {
     </div>
   );
 
+  // --- Главное исправление: только product.sizes ---
+  const sizeBlock = (
+    <div className="mb-1 text-gray-600 text-sm">
+      <b>size:</b>{" "}
+      {Array.isArray(product.sizes) && product.sizes.length > 0
+        ? product.sizes.join(", ")
+        : "—"}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header onSearch={handleHeaderSearch} breadcrumbs={breadcrumbs} isHome={false} />
@@ -293,9 +268,7 @@ export default function ProductDetails() {
           <div className="flex-1 flex flex-col justify-start mt-2">
             <h2 className="text-2xl font-bold mb-8">{displayName}</h2>
             {colorBlock}
-            <div className="mb-1 text-gray-600 text-sm">
-              <b>size:</b> {availableSizes.length > 0 ? availableSizes.join(", ") : "—"}
-            </div>
+            {sizeBlock}
             <div className="mt-8 mb-2">{renderPrice()}</div>
             <button className="mt-8 px-6 py-2 bg-black text-white w-max" onClick={handleGoBack}>Back</button>
           </div>
