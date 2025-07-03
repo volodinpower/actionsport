@@ -1,8 +1,10 @@
+/* ProductCard.css */
+
 .product-card {
   display: flex;
   border-radius: 0 !important;
   flex-direction: column;
-  height: 100%;
+  height: 100%;              /* важно для равной высоты */
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   overflow: hidden;
@@ -15,6 +17,15 @@
 }
 .product-card:hover {
   box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+
+/* Новая обёртка для слайдера и текста, чтобы не накладывались */
+.image-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: 8px;
+  box-sizing: border-box;
 }
 
 .product-image, .no-image {
@@ -71,7 +82,7 @@
 }
 
 .price-block {
-  margin-top: auto;
+  margin-top: auto;               /* прижимает вниз */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -108,69 +119,56 @@
   line-height: 1.05;
 }
 
+/* Контейнер Swiper в карточке */
+.swiper-container {
+  width: 100%;
+  height: 70%; /* как у картинки */
+}
+
+/* Изображения в слайдах Swiper */
+.swiper-slide img {
+  width: 100%;
+  height: 70%;
+  object-fit: contain;
+  user-select: none;
+  border-radius: 0 !important;
+}
+
 /* Мобильная адаптация */
 @media (max-width: 640px) {
   .product-card {
-    aspect-ratio: 3 / 4;
+    aspect-ratio: auto; /* отключаем фиксированное соотношение для гибкости */
     border-radius: 0 !important;
-    padding: 2px 2px 4px 2px;
+    padding: 8px 6px 6px 6px;
+  }
+  .swiper-container, .swiper-slide img {
+    height: auto !important;
+    max-height: 180px;
   }
   .product-image, .no-image {
-    height: 65%;
-    padding: 6px 1px 3px 1px;
-    font-size: 11px;
-    border-radius: 0 !important;
+    /* убираем фиксированную высоту чтобы не перекрывал заголовок */
+    height: auto !important;
+    max-height: 180px;
+    padding: 0;
+  }
+  .product-content {
+    flex: none;
+    padding-top: 8px;
   }
   .product-card-title {
-    font-size: 12px;
-    min-height: 22px;
+    font-size: 14px;
+    min-height: auto;
   }
   .desc-group {
-    margin-top: 2px;
+    margin-top: 4px;
   }
   .desc-row {
-    font-size: 9px;
-    margin-bottom: 0;
-    line-height: 1.02;
+    font-size: 11px;
   }
   .price-block {
     font-size: 12px;
   }
   .old-price, .new-price, .cur-price {
     font-size: 11px;
-  }
-
-  /* Swiper контейнер в карточке */
-  .swiper-container {
-    width: 100%;
-    height: 65%; /* высота как у картинки */
-  }
-
-  /* Изображения в слайдах Swiper */
-  .swiper-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    user-select: none;
-    border-radius: 0 !important;
-  }
-
-  /* Пагинация (точки) */
-  .swiper-pagination {
-    bottom: 6px !important;
-  }
-
-  .swiper-pagination-bullet {
-    width: 8px;
-    height: 8px;
-    background-color: #d32d2f; /* красный */
-    opacity: 0.9;
-    margin: 0 4px !important;
-    transition: background-color 0.3s;
-  }
-
-  .swiper-pagination-bullet-active {
-    background-color: #9b1a1a; /* темнее активная */
-    opacity: 1;
   }
 }
