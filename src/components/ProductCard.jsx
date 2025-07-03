@@ -14,23 +14,24 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Собираем массив картинок
+  // Составляем массив изображений, но для свайпера в мобильной версии фильтруем только _main и _prev
   let urls = [];
   if (typeof product.image_url === "string") {
-    urls = product.image_url.split(",").map(url => url && url.trim()).filter(Boolean);
+    urls = product.image_url
+      .split(",")
+      .map((url) => url && url.trim())
+      .filter(Boolean);
   } else if (Array.isArray(product.image_url)) {
-    urls = product.image_url.map(url => url && String(url).trim()).filter(Boolean);
+    urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
 
-  // Для мобильной версии — оставляем только _main и _prev
-  const mobileUrls = urls.filter(url => 
+  // Для мобильного свайпера — только _main и _prev
+  const mobileSwipeUrls = urls.filter((url) =>
     url.toLowerCase().includes("_main") || url.toLowerCase().includes("_prev")
   );
-  // Если нет ни _main ни _prev, то берем все
-  const imagesToShow = mobileUrls.length > 0 ? mobileUrls : urls;
 
-  const mainImg = urls.find(url => url.toLowerCase().includes("_main")) || urls[0];
-  const prevImg = urls.find(url => url.toLowerCase().includes("_prev")) || mainImg;
+  const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
+  const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
   function makeAbsUrl(url) {
     if (!url) return "/no-image.jpg";
@@ -50,7 +51,7 @@ export default function ProductCard({ product, onClick }) {
   if (Array.isArray(product.sizes)) {
     sizes = product.sizes;
   } else if (typeof product.sizes === "string" && product.sizes.trim()) {
-    sizes = product.sizes.split(",").map(s => s.trim()).filter(Boolean);
+    sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
   return (
@@ -64,55 +65,71 @@ export default function ProductCard({ product, onClick }) {
       {imgError ? (
         <div className="no-image">no image</div>
       ) : isMobile ? (
-        <div className="swiper-container">
-          <Swiper spaceBetween={10} slidesPerView={1}>
-            {imagesToShow.map((url, idx) => (
-              <SwiperSlide key={idx}>
-                <img
-                  src={makeAbsUrl(url)}
-                  alt={product.sitename}
-                  className="product-image-mobile"
-                  onError={() => setImgError(true)}
-                  draggable={false}
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-      ) : (
-        <img
-          src={makeAbsUrl(isHovered ? prevImg : mainImg)}
-          alt={product.sitename}
-          className="product-image"
-          onError={() => setImgError(true)}
-          draggable={false}
-        />
-      )}
+        <div className="image-text-wrapper">
+          <div className="swiper-container">
+            <Swiper spaceBetween={10} slidesPerView={1}>
+              {mobileSwipeUrls.map((url, idx) => (
+                <SwiperSlide key={idx}>
+                  <img
+                    src={makeAbsUrl(url)}
+                    alt={product.sitename}
+                    className="product-image"
+                    onError={() => setImgError(true)}
+                    draggable={false}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
 
-      <div className="product-content">
-        <h2 className="product-card-title">{product.sitename}</h2>
-        <div className="desc-group">
-          {product.color && (
-            <div className="desc-row">
-              {`color: ${product.color}`}
+          <div className="product-content">
+            <h2 className="product-card-title">{product.sitename}</h2>
+            <div className="desc-group">
+              {product.color && <div className="desc-row">{`color: ${product.color}`}</div>}
+              <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
             </div>
-          )}
-          <div className="desc-row">
-            {`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}
+            <div className="price-block">
+              {showDiscount ? (
+                <>
+                  <span className="sale-badge">{`sale: -${discount}%`}</span>
+                  <span className="old-price">{`${price} AMD`}</span>
+                  <span className="new-price">{`${discountedPrice} AMD`}</span>
+                </>
+              ) : (
+                <span className="cur-price">{`${price} AMD`}</span>
+              )}
+            </div>
           </div>
         </div>
-        <div className="price-block">
-          {showDiscount ? (
-            <>
-              <span className="sale-badge">{`sale: -${discount}%`}</span>
-              <span className="old-price">{`${price} AMD`}</span>
-              <span className="new-price">{`${discountedPrice} AMD`}</span>
-            </>
-          ) : (
-            <span className="cur-price">{`${price} AMD`}</span>
-          )}
-        </div>
-      </div>
+      ) : (
+        <>
+          <img
+            src={makeAbsUrl(isHovered ? prevImg : mainImg)}
+            alt={product.sitename}
+            className="product-image"
+            onError={() => setImgError(true)}
+            draggable={false}
+          />
+          <div className="product-content">
+            <h2 className="product-card-title">{product.sitename}</h2>
+            <div className="desc-group">
+              {product.color && <div className="desc-row">{`color: ${product.color}`}</div>}
+              <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
+            </div>
+            <div className="price-block">
+              {showDiscount ? (
+                <>
+                  <span className="sale-badge">{`sale: -${discount}%`}</span>
+                  <span className="old-price">{`${price} AMD`}</span>
+                  <span className="new-price">{`${discountedPrice} AMD`}</span>
+                </>
+              ) : (
+                <span className="cur-price">{`${price} AMD`}</span>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
