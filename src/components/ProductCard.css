@@ -19,6 +19,7 @@
 .product-card h2{
   font-size: 15px;
   font-weight: bold;
+  padding-top: 2px;
 }
 .product-image, .no-image {
   width: 100%;
