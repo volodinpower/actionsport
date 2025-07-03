@@ -25,12 +25,14 @@ function getColumnsCount() {
   if (width >= 640) return 3;
   return 2;
 }
+
 function getHomeLimit(cols) {
   if (cols === 5) return 20;
   if (cols === 4) return 20;
   if (cols === 3) return 18;
   return 10;
 }
+
 function groupProducts(rawProducts) {
   return rawProducts.map(p => ({
     ...p,
@@ -58,12 +60,12 @@ export default function Home() {
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
 
-  // Флаг, который контролирует, учитывать ли search при обновлении опций фильтров
+  // Флаг для учета search при обновлении фильтров
   const [useSearchInFilters, setUseSearchInFilters] = useState(false);
 
-  // Колонки и лимит для главной
   const [columns, setColumns] = useState(getColumnsCount());
   const [homeLimit, setHomeLimit] = useState(getHomeLimit(getColumnsCount()));
+
   useEffect(() => {
     function handleResize() {
       const cols = getColumnsCount();
@@ -74,7 +76,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- State для карточек ---
+  // --- State карточек ---
   const [products, setProducts] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -86,7 +88,7 @@ export default function Home() {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
-  // --- FilterBar списки ---
+  // --- Опции фильтров ---
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
@@ -100,20 +102,20 @@ export default function Home() {
     size: sizeFilter,
   }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  // Сброс offset/продуктов при смене фильтров, сортировки или homeLimit
+  // Сбрасываем товары и offset при смене фильтров/сортировки/homeLimit
   useEffect(() => {
     setProducts([]);
     setOffset(0);
     setHasMore(true);
   }, [searchQuery, categoryKey, subcategoryKey, sizeFilter, brandFilter, genderFilter, sort, homeLimit]);
 
+  // Обновляем опции фильтров в зависимости от текущих фильтров и флага useSearchInFilters
   useEffect(() => {
     async function updateOptions() {
       let realCategoryKey = filters.categoryKey;
       let realSubcategoryKey = filters.subcategoryKey;
       if (realSubcategoryKey) realCategoryKey = "";
 
-      // Учитываем useSearchInFilters
       const searchForFilters = useSearchInFilters ? filters.query : "";
 
       const paramsForFilters = {
@@ -134,7 +136,7 @@ export default function Home() {
     updateOptions();
   }, [filters, categories, useSearchInFilters]);
 
-  // --- Загрузка карточек ---
+  // --- Загрузка товаров ---
   const loadProducts = useCallback(async () => {
     if (isHome) {
       setIsLoading(true);
@@ -147,33 +149,36 @@ export default function Home() {
       } finally {
         setIsLoading(false);
       }
-    } else {
-      if (isLoading || !hasMore) return;
-      setIsLoading(true);
-      try {
-        const raw = await fetchProducts(
-          filters.query,
-          PAGE_LIMIT,
-          offset,
-          "",
-          filters.brand,
-          sort || "asc",
-          filters.categoryKey,
-          filters.subcategoryKey,
-          filters.gender,
-          filters.size
-        );
-        const grouped = groupProducts(raw);
-        setProducts(prev =>
-          offset === 0 ? grouped : [...prev, ...grouped]
-        );
-        setHasMore(grouped.length === PAGE_LIMIT);
-      } catch {
-        if (offset === 0) setProducts([]);
-        setHasMore(false);
-      } finally {
-        setIsLoading(false);
-      }
+      return;
+    }
+
+    if (isLoading || !hasMore) return;
+
+    setIsLoading(true);
+    try {
+      const raw = await fetchProducts(
+        filters.query,
+        PAGE_LIMIT,
+        offset,
+        "",
+        filters.brand,
+        sort || "asc",
+        filters.categoryKey,
+        filters.subcategoryKey,
+        filters.gender,
+        filters.size
+      );
+      const grouped = groupProducts(raw);
+
+      // При offset === 0 заменяем, иначе дополняем список товаров
+      setProducts(prev => (offset === 0 ? grouped : [...prev, ...grouped]));
+
+      setHasMore(grouped.length === PAGE_LIMIT);
+    } catch {
+      if (offset === 0) setProducts([]);
+      setHasMore(false);
+    } finally {
+      setIsLoading(false);
     }
   }, [filters, isHome, sort, offset, hasMore, isLoading, homeLimit]);
 
@@ -182,18 +187,18 @@ export default function Home() {
     // eslint-disable-next-line
   }, [offset, filters, isHome, sort, homeLimit]);
 
-  // --- Infinite scroll с зависимостями ---
+  // --- Infinite scroll ---
   useEffect(() => {
     if (isHome) return;
     if (!hasMore || isLoading) return;
 
-    function onScroll() {
+    const onScroll = () => {
       if (
         window.innerHeight + window.scrollY >= document.documentElement.offsetHeight - 600
       ) {
         setOffset(prev => prev + PAGE_LIMIT);
       }
-    }
+    };
 
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
@@ -201,7 +206,7 @@ export default function Home() {
 
   // --- Подкатегории ---
   const submenuList = useMemo(() => {
-    let cat = categories.find(c => c.category_key === categoryKey);
+    const cat = categories.find(c => c.category_key === categoryKey);
     if (!cat) return [];
     return (cat.subcategories || []).map(sub =>
       typeof sub === "string" ? sub : sub.subcategory_key || sub.label
@@ -237,7 +242,7 @@ export default function Home() {
     });
   };
 
-  // --- Для управления фильтрами ---
+  // --- Управление фильтрами ---
   function updateUrlFilters(newFilters = {}) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries({
