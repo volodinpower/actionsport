@@ -18,7 +18,6 @@ import SortControl from "../components/SortControl";
 
 const PAGE_LIMIT = 20;
 
-// Для главной страницы подбираем красивое количество карточек
 function getColumnsCount() {
   const width = window.innerWidth;
   if (width >= 1280) return 5;
@@ -27,7 +26,6 @@ function getColumnsCount() {
   return 2;
 }
 function getHomeLimit(cols) {
-  // Можно кастомно подогнать
   if (cols === 5) return 20;
   if (cols === 4) return 20;
   if (cols === 3) return 18;
@@ -55,7 +53,6 @@ export default function Home() {
   const genderFilter = urlSearchParams.get("gender") || "";
   const sort = urlSearchParams.get("sort") || "";
 
-  // Главная ли это страница? (без фильтров)
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
@@ -99,12 +96,12 @@ export default function Home() {
     size: sizeFilter,
   }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  // Сброс состояния при смене фильтров/сортировки или homeLimit (для главной)
+  // Сброс offset/продуктов при смене фильтров, сортировки или homeLimit
   useEffect(() => {
     setProducts([]);
     setOffset(0);
     setHasMore(true);
-  }, [location.search, homeLimit]);
+  }, [searchQuery, categoryKey, subcategoryKey, sizeFilter, brandFilter, genderFilter, sort, homeLimit]);
 
   useEffect(() => {
     async function updateOptions() {
@@ -131,7 +128,7 @@ export default function Home() {
       try {
         const raw = await fetchPopularProducts(homeLimit, 0); // только один запрос!
         setProducts(groupProducts(raw));
-        setHasMore(false); // отключить дозагрузку
+        setHasMore(false);
       } catch {
         setProducts([]);
       } finally {
@@ -169,7 +166,6 @@ export default function Home() {
     filters, isHome, sort, offset, hasMore, isLoading, homeLimit
   ]);
 
-  // Триггер загрузки товаров
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line
@@ -229,7 +225,7 @@ export default function Home() {
     });
   };
 
-  // --- Для управления фильтрами (твои функции) ---
+  // --- Для управления фильтрами ---
   function updateUrlFilters(newFilters = {}) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries({
@@ -247,9 +243,18 @@ export default function Home() {
     navigate({ pathname: "/", search: params.toString() });
   }
 
-  const handleSearch = (query = "") => updateUrlFilters({ search: query });
+  const handleSearch = (query = "") => {
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
+    updateUrlFilters({ search: query });
+  };
+
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     setCategoryLabel(catLabel || "");
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
     updateUrlFilters({
       category: catKey,
       subcategory: subKey || "",
@@ -260,7 +265,11 @@ export default function Home() {
       sort: "",
     });
   };
-  const onCategoryChange = (subKey) =>
+
+  const onCategoryChange = (subKey) => {
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
     updateUrlFilters({
       category: categoryKey,
       subcategory: subKey,
@@ -269,11 +278,35 @@ export default function Home() {
       gender: "",
       sort: "",
     });
-  const onBrandChange = (brand) => updateUrlFilters({ ...getCurrentFilters(), brand });
-  const onSizeChange = (size) => updateUrlFilters({ ...getCurrentFilters(), size });
-  const onGenderChange = (gender) => updateUrlFilters({ ...getCurrentFilters(), gender });
-  const onSortChange = (s) => updateUrlFilters({ ...getCurrentFilters(), sort: s });
+  };
+  const onBrandChange = (brand) => {
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
+    updateUrlFilters({ ...getCurrentFilters(), brand });
+  };
+  const onSizeChange = (size) => {
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
+    updateUrlFilters({ ...getCurrentFilters(), size });
+  };
+  const onGenderChange = (gender) => {
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
+    updateUrlFilters({ ...getCurrentFilters(), gender });
+  };
+  const onSortChange = (s) => {
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
+    updateUrlFilters({ ...getCurrentFilters(), sort: s });
+  };
   function clearFilters() {
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
     updateUrlFilters({
       search: "",
       category: "",
@@ -383,7 +416,6 @@ export default function Home() {
             </div>
           )}
         </div>
-        {/* Только для каталога! */}
         {!isHome && isLoading && (
           <div className="text-center text-gray-400 py-4">Loading more...</div>
         )}
