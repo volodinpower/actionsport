@@ -16,8 +16,23 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
 
-// Используем большой лимит для получения всех товаров категории
 const CATEGORY_LIMIT = 2000;
+
+// --- Автовычисление количества колонок ---
+function getColumnsCount() {
+  const width = window.innerWidth;
+  if (width >= 1280) return 5;   // xl:grid-cols-5
+  if (width >= 1024) return 4;   // lg:grid-cols-4
+  if (width >= 640) return 3;    // md:grid-cols-3
+  return 2;                      // мобила
+}
+
+// Подбираем limit: не меньше minLimit, кратно columns
+function computeLimit(minLimit, columns) {
+  let limit = minLimit;
+  while (limit % columns !== 0) limit++;
+  return limit;
+}
 
 function groupProducts(rawProducts) {
   return rawProducts.map(p => ({
@@ -34,7 +49,6 @@ export default function Home() {
   const urlSearchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const [categoryLabel, setCategoryLabel] = useState("");
 
-  // Синхронизация стейтов с URL
   const searchQuery = urlSearchParams.get("search") || "";
   const categoryKey = urlSearchParams.get("category") || "";
   const subcategoryKey = urlSearchParams.get("subcategory") || "";
@@ -43,7 +57,6 @@ export default function Home() {
   const genderFilter = urlSearchParams.get("gender") || "";
   const sort = urlSearchParams.get("sort") || "";
 
-  // --- Изменение фильтров — только через обновление URL! ---
   function updateUrlFilters(newFilters = {}) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries({
@@ -61,9 +74,7 @@ export default function Home() {
     navigate({ pathname: "/", search: params.toString() });
   }
 
-  // --- Коллбеки для всех фильтров/поиска ---
-  const handleSearch = (query = "") =>
-    updateUrlFilters({ search: query });
+  const handleSearch = (query = "") => updateUrlFilters({ search: query });
 
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     setCategoryLabel(catLabel || "");
@@ -166,6 +177,19 @@ export default function Home() {
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
 
+  // --- Колонки и лимит для главной ---
+  const [columns, setColumns] = useState(getColumnsCount());
+  const [homeLimit, setHomeLimit] = useState(computeLimit(20, columns));
+  useEffect(() => {
+    function handleResize() {
+      const cols = getColumnsCount();
+      setColumns(cols);
+      setHomeLimit(computeLimit(20, cols));
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // --- Пагинация и сброс данных при фильтрации ---
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -175,8 +199,8 @@ export default function Home() {
     setIsLoading(true);
     try {
       if (isHome) {
-        // Популярные товары для главной
-        const raw = await fetchPopularProducts(20);
+        // Популярные товары для главной — с адаптивным лимитом!
+        const raw = await fetchPopularProducts(homeLimit);
         setProducts(groupProducts(raw));
       } else {
         // Все товары категории или по фильтру
@@ -199,13 +223,12 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters, isHome, sort]);
+  }, [filters, isHome, sort, homeLimit]);
 
-  // Загрузка товаров при любом изменении фильтра/категории/поиска
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line
-  }, [filters, isHome, sort]);
+  }, [filters, isHome, sort, homeLimit]);
 
   // --- Подкатегории ---
   const submenuList = useMemo(() => {
@@ -216,7 +239,6 @@ export default function Home() {
     );
   }, [categories, categoryKey]);
 
-  // --- Для сортировки ---
   const getEffectivePrice = (item) => {
     const fix = val => {
       if (val == null) return Infinity;
@@ -238,14 +260,12 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
-  // --- Переход к карточке товара ---
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`, {
       state: { from: location.pathname + location.search }
     });
   };
 
-  // --- Хлебные крошки ---
   const breadcrumbs = useMemo(() => {
     if (searchQuery) {
       return [
@@ -266,7 +286,6 @@ export default function Home() {
     if (idx === 0) clearFilters();
   };
 
-  // --- render ---
   return (
     <>
       <Header
