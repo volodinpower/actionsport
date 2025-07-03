@@ -70,7 +70,6 @@ export default function ProductDetails() {
     setColorVariants(variants);
   }, [product]);
 
-  // Исправленный useEffect для установки выбранного цвета сразу:
   useEffect(() => {
     if (location.state && location.state.color) {
       const found = product?.all_colors?.find(
@@ -79,11 +78,11 @@ export default function ProductDetails() {
       );
       if (found) {
         setSelectedColorId(found.id);
-      } else if (product?.all_colors?.length > 0) {
-        setSelectedColorId(product.all_colors[0].id);
+      } else if (product?.id) {
+        setSelectedColorId(product.id);
       }
-    } else if (product?.all_colors?.length > 0) {
-      setSelectedColorId(product.all_colors[0].id);
+    } else if (product?.id) {
+      setSelectedColorId(product.id);
     }
   }, [product, location.state]);
 
@@ -145,49 +144,45 @@ export default function ProductDetails() {
     return discount > 0 && discountPrice > 0 ? (
       <div>
         <div>
-          <span style={{textDecoration:"line-through", color:"#888", fontSize: "1.25rem", marginRight: "0.5rem"}}>
+          <span style={{ textDecoration: "line-through", color: "#888", fontSize: "1.25rem", marginRight: "0.5rem" }}>
             {price.toLocaleString()} AMD
           </span>
-          <span style={{color:"#e53935", fontWeight:"600", fontSize: "1.25rem", marginRight: "0.5rem"}}>
+          <span style={{ color: "red", fontWeight: "600", fontSize: "1.25rem" }}>
             -{discount}%
           </span>
         </div>
         <div>
-          <span style={{color:"#2e7d32", fontWeight:"700", fontSize: "1.5rem"}}>
+          <span style={{ color: "green", fontWeight: "700", fontSize: "1.5rem" }}>
             {discountPrice.toLocaleString()} AMD
           </span>
         </div>
       </div>
     ) : (
-      <span style={{fontWeight:"700", fontSize: "1.5rem"}}>
-        {price.toLocaleString()} AMD
-      </span>
+      <span style={{ fontWeight: "700", fontSize: "1.5rem" }}>{price.toLocaleString()} AMD</span>
     );
   }
 
   if (error)
     return (
-      <div style={{ padding: 32, textAlign: "center", color: "#b00020" }}>
-        Ошибка: {error}
-      </div>
+      <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>
     );
   if (!product) return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
 
   const colorBlock =
     colorVariants.length <= 1 ? (
-      <div style={{ marginBottom: 4, color: "#555", fontSize: 14 }}>
+      <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
         <b>color:</b> {product.color}
       </div>
     ) : (
-      <div style={{ marginBottom: 4, color: "#555", fontSize: 14 }}>
+      <div style={{ marginBottom: 4, color: "#666", fontSize: 14, gap: 10 }}>
         <b>color:</b> {product.color}
         <div
           style={{
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
-            marginTop: 6,    // уменьшенный отступ сверху
-            marginBottom: 6, // уменьшенный отступ снизу
+            marginTop: 10,
+            marginBottom: 10,
             maxWidth: 6 * 70,
           }}
         >
@@ -213,12 +208,12 @@ export default function ProductDetails() {
                   tabIndex={isCurrent ? -1 : 0}
                   style={{
                     pointerEvents: isCurrent ? "none" : "auto",
-                    borderRadius: 12,
-                    border: isCurrent ? "3px solid #e53935" : "2px solid #eee",
+                    borderRadius: 0,
+                    border: isCurrent ? "3px solid red" : "2px solid #eee",
                     boxShadow: isCurrent
-                      ? "0 0 0 4px #f8c1c1"
+                      ? "0 0 0 4px rgba(255, 0, 0, 0.4)"
                       : "0 1px 8px #0002",
-                    background: isCurrent ? "#ffe5e5" : "#fafbfc",
+                    background: isCurrent ? "#ffe7e7" : "#fafbfc",
                     outline: "none",
                     width: 65,
                     height: 65,
@@ -245,8 +240,8 @@ export default function ProductDetails() {
                       width: 60,
                       height: 60,
                       objectFit: "cover",
-                      borderRadius: 10,
                       opacity: isCurrent ? 1 : 0.82,
+                      borderRadius: 0, // убрали скругление
                     }}
                     draggable={false}
                   />
@@ -259,7 +254,7 @@ export default function ProductDetails() {
     );
 
   const sizeBlock = (
-    <div style={{ marginBottom: 4, color: "#555", fontSize: 14 }}>
+    <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
       <b>size:</b>{" "}
       {Array.isArray(product.sizes) && product.sizes.length > 0
         ? product.sizes.join(", ")
@@ -275,22 +270,63 @@ export default function ProductDetails() {
         breadcrumbs={breadcrumbs}
         isHome={false}
       />
-      <div style={{ width: "100%", margin: "0 auto", paddingTop: 4 }}>
+      <div style={{ width: "100%", margin: "auto", paddingTop: 8 }}>
         <Breadcrumbs
           items={breadcrumbs}
           onBreadcrumbClick={(idx) => {
             if (idx === 0) handleGoBack();
           }}
         />
-        <div style={{ backgroundColor: "#fff", boxShadow: "0 4px 8px rgb(0 0 0 / 0.1)", padding: 24, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 32, marginTop: 8, width: "100%" }}>
-          <div style={{ flexShrink: 0, flex: 1, minWidth: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            backgroundColor: "white",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+            padding: 24,
+            display: "flex",
+            flexDirection: isMobile ? "column" : "row",
+            gap: 32,
+            marginTop: 8,
+            width: "100%",
+            maxWidth: 1200,
+          }}
+        >
+          <div
+            style={{
+              flexShrink: 0,
+              flex: 1,
+              minWidth: 300,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             {isMobile ? (
               <div
-                style={{ position: "relative", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 280 }}
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: 280,
+                }}
               >
                 {rawImages.length > 1 && (
                   <button
-                    style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", backgroundColor: "rgba(0,0,0,0.2)", color: "white", padding: "4px 8px", border: "none", cursor: "pointer" }}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      backgroundColor: "rgba(0,0,0,0.2)",
+                      color: "white",
+                      padding: "6px 10px",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 20,
+                      userSelect: "none",
+                    }}
                     onClick={() =>
                       setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)
                     }
@@ -301,7 +337,16 @@ export default function ProductDetails() {
                 <img
                   src={rawImages[mainIndex]}
                   alt={displayName}
-                  style={{ width: "100%", objectFit: "contain", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", marginBottom: 12, userSelect: "none", cursor: "pointer", maxHeight: 340 }}
+                  style={{
+                    width: "100%",
+                    maxHeight: 340,
+                    objectFit: "contain",
+                    boxShadow: "0 1px 6px rgba(0,0,0,0.2)",
+                    marginBottom: 12,
+                    cursor: "pointer",
+                    userSelect: "none",
+                    borderRadius: 0, // убрали скругления
+                  }}
                   onClick={() => {
                     setShowModal(true);
                     setModalIndex(mainIndex);
@@ -310,7 +355,19 @@ export default function ProductDetails() {
                 />
                 {rawImages.length > 1 && (
                   <button
-                    style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", backgroundColor: "rgba(0,0,0,0.2)", color: "white", padding: "4px 8px", border: "none", cursor: "pointer" }}
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      backgroundColor: "rgba(0,0,0,0.2)",
+                      color: "white",
+                      padding: "6px 10px",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 20,
+                      userSelect: "none",
+                    }}
                     onClick={() =>
                       setMainIndex((mainIndex + 1) % rawImages.length)
                     }
@@ -324,13 +381,28 @@ export default function ProductDetails() {
                 <img
                   src={rawImages[mainIndex]}
                   alt={displayName}
-                  style={{ width: "75%", objectFit: "contain", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", marginBottom: 12, cursor: "pointer" }}
+                  style={{
+                    width: "75%",
+                    objectFit: "contain",
+                    boxShadow: "0 1px 6px rgba(0,0,0,0.2)",
+                    marginBottom: 12,
+                    cursor: "pointer",
+                    borderRadius: 0, // убрали скругления
+                  }}
                   onClick={() => {
                     setShowModal(true);
                     setModalIndex(mainIndex);
                   }}
                 />
-                <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 12,
+                    marginTop: 8,
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                  }}
+                >
                   {rawImages.map((imgUrl, idx) => (
                     <img
                       key={idx}
@@ -340,10 +412,9 @@ export default function ProductDetails() {
                         width: 80,
                         height: 80,
                         objectFit: "cover",
-                        borderRadius: 10,
-                        border: idx === mainIndex ? "2px solid black" : "2px solid #ddd",
-                        boxShadow: idx === mainIndex ? "0 0 8px #333" : "none",
                         cursor: "pointer",
+                        borderRadius: 0, // убрали скругления
+                        border: idx === mainIndex ? "2px solid black" : "2px solid #ddd",
                       }}
                       onClick={() => setMainIndex(idx)}
                     />
@@ -353,23 +424,20 @@ export default function ProductDetails() {
             )}
           </div>
 
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-start", marginTop: isMobile ? 16 : 0 }}>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: 32 }}>{displayName}</h2>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", marginTop: isMobile ? 16 : 0 }}>
+            <h2 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}>{displayName}</h2>
             {colorBlock}
             {sizeBlock}
             <div style={{ marginTop: 32, marginBottom: 8 }}>{renderPrice()}</div>
             <button
               style={{
                 marginTop: 32,
-                padding: "12px 24px",
+                padding: "10px 20px",
                 backgroundColor: "black",
                 color: "white",
-                width: "max-content",
-                cursor: "pointer",
+                maxWidth: 160,
                 border: "none",
-                borderRadius: 4,
-                fontWeight: "600",
-                fontSize: "1rem",
+                cursor: "pointer",
               }}
               onClick={handleGoBack}
             >
@@ -380,27 +448,28 @@ export default function ProductDetails() {
       </div>
 
       {showModal && rawImages.length > 0 && (
-        <div style={{
-          position: "fixed",
-          zIndex: 50,
-          inset: 0,
-          backgroundColor: "rgba(0,0,0,0.8)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}>
+        <div
+          style={{
+            position: "fixed",
+            zIndex: 50,
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <button
             style={{
               position: "absolute",
               top: 16,
               right: 24,
               color: "white",
-              fontSize: 36,
-              fontWeight: "bold",
+              fontSize: 32,
+              fontWeight: "700",
               background: "none",
               border: "none",
               cursor: "pointer",
-              lineHeight: 1,
             }}
             onClick={() => setShowModal(false)}
           >
@@ -414,12 +483,11 @@ export default function ProductDetails() {
                 top: "50%",
                 transform: "translateY(-50%)",
                 color: "white",
-                fontSize: 36,
-                fontWeight: "bold",
+                fontSize: 32,
+                fontWeight: "700",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                lineHeight: 1,
               }}
               onClick={() =>
                 setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length)
@@ -431,7 +499,12 @@ export default function ProductDetails() {
           <img
             src={rawImages[modalIndex]}
             alt={`${displayName} фото ${modalIndex + 1}`}
-            style={{ maxHeight: "80vh", maxWidth: "80vw", boxShadow: "0 0 20px rgba(0,0,0,0.8)" }}
+            style={{
+              maxHeight: "80vh",
+              maxWidth: "80vw",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.3)",
+              borderRadius: 0, // убрали скругления
+            }}
           />
           {rawImages.length > 1 && (
             <button
@@ -441,12 +514,11 @@ export default function ProductDetails() {
                 top: "50%",
                 transform: "translateY(-50%)",
                 color: "white",
-                fontSize: 36,
-                fontWeight: "bold",
+                fontSize: 32,
+                fontWeight: "700",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                lineHeight: 1,
               }}
               onClick={() =>
                 setModalIndex((modalIndex + 1) % rawImages.length)
@@ -476,8 +548,7 @@ export default function ProductDetails() {
                     height: 48,
                     border: idx === modalIndex ? "2px solid white" : "2px solid transparent",
                     cursor: "pointer",
-                    objectFit: "cover",
-                    borderRadius: 6,
+                    borderRadius: 0, // убрали скругления
                   }}
                   onClick={() => setModalIndex(idx)}
                 />
