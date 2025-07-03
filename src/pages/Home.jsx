@@ -106,48 +106,39 @@ export default function Home() {
       setColumns(getColumnsCount());
     }
     window.addEventListener("resize", handleResize);
-    handleResize(); // Обновить при монтировании
+    handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // --- Сброс при смене фильтров ---
   const prevFilterKey = useRef("");
-  function getFilterKey() {
-    return JSON.stringify([filters, sort, isHome]);
-  }
-
-  // --- Пагинация ---
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  // Сброс при смене фильтров/категорий
-  useEffect(() => {
-    if (prevFilterKey.current !== getFilterKey()) {
-      setProducts([]);
-      setOffset(0);
-      setHasMore(true);
-      prevFilterKey.current = getFilterKey();
-    }
-  }, [filters, sort, isHome]);
+  function getFilterKey() {
+    return JSON.stringify([filters, sort, isHome]);
+  }
 
   // --- Подгрузка товаров ---
-  const loadProducts = useCallback(async () => {
-    if (isLoading || !hasMore) return;
+  const loadProducts = useCallback(async (reset = false) => {
+    if (isLoading) return;
     setIsLoading(true);
+
     try {
       let newProducts = [];
       if (isHome) {
-        // Для главной — не делаем скролл, просто ровно один раз
+        // На главной всегда только первая порция, без скролла
         newProducts = await fetchPopularProducts(LIMIT * columns);
         setProducts(groupProducts(newProducts));
         setHasMore(false);
       } else {
+        const usedOffset = reset ? 0 : offset;
         newProducts = await fetchProducts(
           filters.categoryKey === "sale" ? "" : filters.query,
           LIMIT,
-          offset,
+          usedOffset,
           "",
           filters.brand,
           sort || "asc",
@@ -156,30 +147,34 @@ export default function Home() {
           filters.gender,
           filters.size
         );
-        setProducts(prev => [...prev, ...groupProducts(newProducts)]);
+        setProducts(prev =>
+          reset ? groupProducts(newProducts) : [...prev, ...groupProducts(newProducts)]
+        );
         setHasMore(newProducts.length === LIMIT);
-        setOffset(prev => prev + LIMIT);
+        setOffset(usedOffset + LIMIT);
       }
     } catch (e) {
       setHasMore(false);
     } finally {
       setIsLoading(false);
     }
-    // eslint-disable-next-line
-  }, [filters, sort, offset, columns, isHome, hasMore, isLoading]);
+  // eslint-disable-next-line
+  }, [filters, sort, offset, columns, isHome, isLoading]);
 
-  // --- Инициализация и подгрузка при скролле ---
+  // --- Сброс и первая загрузка при смене фильтра/категории ---
   useEffect(() => {
-    if (isHome && products.length === 0) {
-      loadProducts();
-      return;
-    }
-    if (!isHome && offset === 0) {
-      loadProducts();
+    const currentKey = getFilterKey();
+    if (prevFilterKey.current !== currentKey) {
+      setProducts([]);
+      setOffset(0);
+      setHasMore(true);
+      prevFilterKey.current = currentKey;
+      loadProducts(true); // reset = true
     }
     // eslint-disable-next-line
   }, [filters, sort, isHome, columns]);
 
+  // --- Infinity scroll ---
   useEffect(() => {
     if (isHome) return;
     const handleScroll = () => {
@@ -384,7 +379,6 @@ export default function Home() {
             </div>
           )}
         </div>
-        {/* Infinity Loader */}
         {!isHome && isLoading && (
           <div className="text-center py-6 text-lg text-gray-400">Loading...</div>
         )}
