@@ -42,9 +42,8 @@ export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Парсим URL-параметры
+  // Парсим параметры из URL
   const urlSearchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-  const categoryLabel = useState("")[0]; // можно убрать, если не нужен
 
   const searchQuery = urlSearchParams.get("search") || "";
   const categoryKey = urlSearchParams.get("category") || "";
@@ -89,7 +88,7 @@ export default function Home() {
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
-  // Для обновления опций фильтров (без использования search для фильтров)
+  // Параметры для получения фильтров (без search)
   const filtersForOptions = useMemo(() => {
     let realCategoryKey = categoryKey;
     if (subcategoryKey) realCategoryKey = "";
@@ -98,11 +97,11 @@ export default function Home() {
       subcategoryKey,
       gender: genderFilter,
       size: sizeFilter,
-      search: "", // не учитываем поиск для фильтров
+      search: "", // не учитываем поиск при обновлении опций фильтров
     };
   }, [categoryKey, subcategoryKey, genderFilter, sizeFilter]);
 
-  // Обновление опций фильтров при изменении зависимостей
+  // Обновляем фильтры в боксе при изменении зависимостей
   useEffect(() => {
     async function updateOptions() {
       const brandsFilters = { ...filtersForOptions };
@@ -114,7 +113,13 @@ export default function Home() {
     updateOptions();
   }, [filtersForOptions, categories]);
 
-  // --- Загрузка карточек ---
+  // Сбрасываем offset при изменении параметров фильтрации (search, category, subcategory, brand, size, gender, sort)
+  useEffect(() => {
+    setOffset(0);
+    setHasMore(true);
+  }, [searchQuery, categoryKey, subcategoryKey, sizeFilter, brandFilter, genderFilter, sort]);
+
+  // --- Загрузка товаров ---
   const loadProducts = useCallback(async () => {
     if (isHome) {
       setIsLoading(true);
@@ -229,9 +234,8 @@ export default function Home() {
     });
   };
 
-  // --- Для управления фильтрами ---
+  // --- Управление URL фильтрами ---
   function updateUrlFilters(newFilters = {}) {
-    // Берём текущие параметры и поверх обновляем newFilters
     const params = new URLSearchParams(location.search);
     for (const [key, value] of Object.entries(newFilters)) {
       if (value) params.set(key, value);
@@ -240,9 +244,9 @@ export default function Home() {
     navigate({ pathname: "/", search: params.toString() });
   }
 
-  // Обработчики фильтров и сортировки — обновляем только изменённый параметр
+  // Обработчики для фильтров
   const handleSearch = (query = "") => {
-    updateUrlFilters({ search: query, offset: undefined });
+    updateUrlFilters({ search: query });
   };
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     updateUrlFilters({
@@ -253,14 +257,13 @@ export default function Home() {
       size: "",
       gender: "",
       sort: "",
-      offset: undefined,
     });
   };
-  const onCategoryChange = (subKey) => updateUrlFilters({ subcategory: subKey, offset: undefined });
-  const onBrandChange = (brand) => updateUrlFilters({ brand, offset: undefined });
-  const onSizeChange = (size) => updateUrlFilters({ size, offset: undefined });
-  const onGenderChange = (gender) => updateUrlFilters({ gender, offset: undefined });
-  const onSortChange = (sortValue) => updateUrlFilters({ sort: sortValue, offset: undefined });
+  const onCategoryChange = (subKey) => updateUrlFilters({ subcategory: subKey });
+  const onBrandChange = (brand) => updateUrlFilters({ brand });
+  const onSizeChange = (size) => updateUrlFilters({ size });
+  const onGenderChange = (gender) => updateUrlFilters({ gender });
+  const onSortChange = (sortValue) => updateUrlFilters({ sort: sortValue });
 
   function clearFilters() {
     navigate({ pathname: "/" });
