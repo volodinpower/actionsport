@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
@@ -18,6 +18,7 @@ import SortControl from "../components/SortControl";
 
 const PAGE_LIMIT = 20;
 
+// Для главной страницы подбираем красивое количество карточек
 function getColumnsCount() {
   const width = window.innerWidth;
   if (width >= 1280) return 5;
@@ -25,7 +26,13 @@ function getColumnsCount() {
   if (width >= 640) return 3;
   return 2;
 }
-
+function getHomeLimit(cols) {
+  // Можно кастомно подогнать
+  if (cols === 5) return 20;
+  if (cols === 4) return 20;
+  if (cols === 3) return 18;
+  return 10;
+}
 function groupProducts(rawProducts) {
   return rawProducts.map(p => ({
     ...p,
@@ -48,7 +55,26 @@ export default function Home() {
   const genderFilter = urlSearchParams.get("gender") || "";
   const sort = urlSearchParams.get("sort") || "";
 
-  // State для инфинит-скролла
+  // Главная ли это страница? (без фильтров)
+  const isHome = useMemo(
+    () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
+    [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
+  );
+
+  // Колонки и лимит для главной
+  const [columns, setColumns] = useState(getColumnsCount());
+  const [homeLimit, setHomeLimit] = useState(getHomeLimit(getColumnsCount()));
+  useEffect(() => {
+    function handleResize() {
+      const cols = getColumnsCount();
+      setColumns(cols);
+      setHomeLimit(getHomeLimit(cols));
+    }
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // --- State для карточек ---
   const [products, setProducts] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -64,7 +90,6 @@ export default function Home() {
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
-
   const filters = useMemo(() => ({
     query: searchQuery,
     categoryKey,
@@ -74,17 +99,12 @@ export default function Home() {
     size: sizeFilter,
   }), [searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter]);
 
-  // Для сброса offset/products только при смене фильтра или сортировки
-  const prevFilters = useRef();
+  // Сброс состояния при смене фильтров/сортировки или homeLimit (для главной)
   useEffect(() => {
-    const key = JSON.stringify(filters) + sort;
-    if (prevFilters.current !== key) {
-      setProducts([]);
-      setOffset(0);
-      setHasMore(true);
-    }
-    prevFilters.current = key;
-  }, [filters, sort]);
+    setProducts([]);
+    setOffset(0);
+    setHasMore(true);
+  }, [location.search, homeLimit]);
 
   useEffect(() => {
     async function updateOptions() {
@@ -104,22 +124,24 @@ export default function Home() {
     updateOptions();
   }, [filters, categories]);
 
-  // --- isHome ---
-  const isHome = useMemo(
-    () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
-    [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
-  );
-
-  // --- Загрузка товаров (странично!) ---
+  // --- Загрузка карточек ---
   const loadProducts = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-    setIsLoading(true);
-    try {
-      let raw = [];
-      if (isHome) {
-        raw = await fetchPopularProducts(PAGE_LIMIT, offset);
-      } else {
-        raw = await fetchProducts(
+    if (isHome) {
+      setIsLoading(true);
+      try {
+        const raw = await fetchPopularProducts(homeLimit, 0); // только один запрос!
+        setProducts(groupProducts(raw));
+        setHasMore(false); // отключить дозагрузку
+      } catch {
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      if (isLoading || !hasMore) return;
+      setIsLoading(true);
+      try {
+        const raw = await fetchProducts(
           filters.query,
           PAGE_LIMIT,
           offset,
@@ -131,30 +153,31 @@ export default function Home() {
           filters.gender,
           filters.size
         );
+        const grouped = groupProducts(raw);
+        setProducts(prev =>
+          offset === 0 ? grouped : [...prev, ...grouped]
+        );
+        setHasMore(grouped.length === PAGE_LIMIT);
+      } catch {
+        if (offset === 0) setProducts([]);
+        setHasMore(false);
+      } finally {
+        setIsLoading(false);
       }
-      const grouped = groupProducts(raw);
-      setProducts(prev =>
-        offset === 0 ? grouped : [...prev, ...grouped]
-      );
-      setHasMore(grouped.length === PAGE_LIMIT);
-    } catch (e) {
-      if (offset === 0) setProducts([]);
-      setHasMore(false);
-    } finally {
-      setIsLoading(false);
     }
   }, [
-    filters, isHome, sort, offset, hasMore, isLoading
+    filters, isHome, sort, offset, hasMore, isLoading, homeLimit
   ]);
 
-  // Загружаем товары при первом рендере и смене offset (или фильтров)
+  // Триггер загрузки товаров
   useEffect(() => {
     loadProducts();
     // eslint-disable-next-line
-  }, [offset, filters, isHome, sort]);
+  }, [offset, filters, isHome, sort, homeLimit]);
 
-  // --- Infinite scroll ---
+  // --- Infinite scroll только для каталога ---
   useEffect(() => {
+    if (isHome) return;
     if (!hasMore || isLoading) return;
     function onScroll() {
       if (
@@ -166,7 +189,7 @@ export default function Home() {
     }
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [hasMore, isLoading]);
+  }, [isHome, hasMore, isLoading]);
 
   // --- Подкатегории ---
   const submenuList = useMemo(() => {
@@ -206,7 +229,7 @@ export default function Home() {
     });
   };
 
-  // --- Для управления фильтрами (все твои функции сохранены) ---
+  // --- Для управления фильтрами (твои функции) ---
   function updateUrlFilters(newFilters = {}) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries({
@@ -291,9 +314,6 @@ export default function Home() {
 
   const handleBreadcrumbClick = idx => {
     if (idx === 0) {
-      setProducts([]);
-      setOffset(0);
-      setHasMore(true);
       clearFilters();
     }
   };
@@ -302,18 +322,8 @@ export default function Home() {
   return (
     <>
       <Header
-        onSearch={(q) => {
-          setProducts([]);
-          setOffset(0);
-          setHasMore(true);
-          handleSearch(q);
-        }}
-        onMenuCategoryClick={(...args) => {
-          setProducts([]);
-          setOffset(0);
-          setHasMore(true);
-          handleMenuCategoryClick(...args);
-        }}
+        onSearch={handleSearch}
+        onMenuCategoryClick={handleMenuCategoryClick}
         breadcrumbs={breadcrumbs}
         isHome={isHome}
         setCategoryFilter={() => {}}
@@ -343,46 +353,16 @@ export default function Home() {
             }))}
             forceOpenCategory={false}
             setForceOpenCategory={() => {}}
-            clearFilters={() => {
-              setProducts([]);
-              setOffset(0);
-              setHasMore(true);
-              clearFilters();
-            }}
+            clearFilters={clearFilters}
             showGender={gendersInFilter.length > 1 || !!genderFilter}
             showCategory={!!categoryKey && categoryKey !== "sale"}
-            onCategoryChange={(sub) => {
-              setProducts([]);
-              setOffset(0);
-              setHasMore(true);
-              onCategoryChange(sub);
-            }}
-            onBrandChange={(brand) => {
-              setProducts([]);
-              setOffset(0);
-              setHasMore(true);
-              onBrandChange(brand);
-            }}
-            onSizeChange={(size) => {
-              setProducts([]);
-              setOffset(0);
-              setHasMore(true);
-              onSizeChange(size);
-            }}
-            onGenderChange={(g) => {
-              setProducts([]);
-              setOffset(0);
-              setHasMore(true);
-              onGenderChange(g);
-            }}
+            onCategoryChange={onCategoryChange}
+            onBrandChange={onBrandChange}
+            onSizeChange={onSizeChange}
+            onGenderChange={onGenderChange}
           />
           <div>
-            <SortControl sort={sort} setSort={(s) => {
-              setProducts([]);
-              setOffset(0);
-              setHasMore(true);
-              onSortChange(s);
-            }} />
+            <SortControl sort={sort} setSort={onSortChange} />
           </div>
         </div>
       )}
@@ -403,10 +383,11 @@ export default function Home() {
             </div>
           )}
         </div>
-        {isLoading && (
+        {/* Только для каталога! */}
+        {!isHome && isLoading && (
           <div className="text-center text-gray-400 py-4">Loading more...</div>
         )}
-        {!hasMore && (
+        {!isHome && !hasMore && (
           <div className="text-center text-gray-400 py-4">End of list</div>
         )}
       </div>
