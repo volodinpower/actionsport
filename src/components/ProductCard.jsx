@@ -8,11 +8,10 @@ export default function ProductCard({ product, onClick }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
 
+  // DEBUG! Показывает каждый рендер и входящие данные
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 900);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    console.log("ProductCard render:", product);
+  }, [product]);
 
   // Получаем массив изображений (универсально)
   let urls = [];
@@ -24,6 +23,13 @@ export default function ProductCard({ product, onClick }) {
   } else if (Array.isArray(product.image_url)) {
     urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
+
+  // DEBUG! Если нет изображений, выведи отдельный лог
+  useEffect(() => {
+    if (!urls.length) {
+      console.warn("NO IMAGE FOR PRODUCT:", product);
+    }
+  }, [urls, product]);
 
   // Для мобильного свайпера — показываем сначала _main, потом _prev
   const mobileSwipeUrls = [
@@ -98,12 +104,11 @@ export default function ProductCard({ product, onClick }) {
             />
           )}
         </div>
-
         {/* --- Контент карточки: ВСЕГДА показываем! --- */}
-        <div className="product-content">
+        <div className="product-content" style={{ background: "#fff8b1", border: "1px solid #eee" }}>
           <h2 className="product-card-title">{product.sitename}</h2>
           <div className="desc-group">
-            {product.color && <div className="desc-row">{`color: ${product.color}`}</div>}
+            <div className="desc-row">{`color: ${product.color || "—"}`}</div>
             <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
           </div>
           <div className="price-block">
@@ -116,6 +121,15 @@ export default function ProductCard({ product, onClick }) {
             ) : (
               <span className="cur-price">{`${price} AMD`}</span>
             )}
+          </div>
+          {/* Полный отладочный вывод */}
+          <div style={{ fontSize: 10, color: "#999", marginTop: 6, background: "#fafad2", padding: 2 }}>
+            <div>DEBUG: sitename: {String(product.sitename)}</div>
+            <div>DEBUG: color: {String(product.color)}</div>
+            <div>DEBUG: sizes: {Array.isArray(sizes) ? sizes.join(", ") : String(sizes)}</div>
+            <div>DEBUG: price: {String(product.price)}</div>
+            <div>DEBUG: discount: {String(product.discount)}</div>
+            <div>DEBUG: image_url: {String(product.image_url)}</div>
           </div>
         </div>
       </div>
