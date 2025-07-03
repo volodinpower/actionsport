@@ -14,12 +14,20 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Собираем массив картинок
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url.split(",").map(url => url && url.trim()).filter(Boolean);
   } else if (Array.isArray(product.image_url)) {
     urls = product.image_url.map(url => url && String(url).trim()).filter(Boolean);
   }
+
+  // Для мобильной версии — оставляем только _main и _prev
+  const mobileUrls = urls.filter(url => 
+    url.toLowerCase().includes("_main") || url.toLowerCase().includes("_prev")
+  );
+  // Если нет ни _main ни _prev, то берем все
+  const imagesToShow = mobileUrls.length > 0 ? mobileUrls : urls;
 
   const mainImg = urls.find(url => url.toLowerCase().includes("_main")) || urls[0];
   const prevImg = urls.find(url => url.toLowerCase().includes("_prev")) || mainImg;
@@ -58,12 +66,12 @@ export default function ProductCard({ product, onClick }) {
       ) : isMobile ? (
         <div className="swiper-container">
           <Swiper spaceBetween={10} slidesPerView={1}>
-            {urls.map((url, idx) => (
+            {imagesToShow.map((url, idx) => (
               <SwiperSlide key={idx}>
                 <img
                   src={makeAbsUrl(url)}
                   alt={product.sitename}
-                  className="product-image"
+                  className="product-image-mobile"
                   onError={() => setImgError(true)}
                   draggable={false}
                 />
