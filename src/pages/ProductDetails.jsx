@@ -4,6 +4,13 @@ import { fetchProductById, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/pagination";
+
+import "./ProductDetails.css";
 
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
@@ -143,49 +150,28 @@ export default function ProductDetails() {
     }
     return discount > 0 && discountPrice > 0 ? (
       <div>
-        <div>
-          <span style={{ textDecoration: "line-through", color: "#888", fontSize: "1.25rem", marginRight: "0.5rem" }}>
-            {price.toLocaleString()} AMD
-          </span>
-          <span style={{ color: "red", fontWeight: "600", fontSize: "1.25rem" }}>
-            -{discount}%
-          </span>
+        <div className="price-old-discount">
+          <span className="price-old">{price.toLocaleString()} AMD</span>
+          <span className="price-discount">-{discount}%</span>
         </div>
         <div>
-          <span style={{ color: "green", fontWeight: "700", fontSize: "1.5rem" }}>
-            {discountPrice.toLocaleString()} AMD
-          </span>
+          <span className="price-current">{discountPrice.toLocaleString()} AMD</span>
         </div>
       </div>
     ) : (
-      <span style={{ fontWeight: "700", fontSize: "1.5rem" }}>{price.toLocaleString()} AMD</span>
+      <span className="price-current-no-discount">{price.toLocaleString()} AMD</span>
     );
   }
 
-  if (error)
-    return (
-      <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>
-    );
-  if (!product) return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
-
   const colorBlock =
     colorVariants.length <= 1 ? (
-      <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
+      <div className="color-block single-color">
         <b>color:</b> {product.color}
       </div>
     ) : (
-      <div style={{ marginBottom: 4, color: "#666", fontSize: 14, gap: 10 }}>
+      <div className="color-block multi-color">
         <b>color:</b> {product.color}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginTop: 10,
-            marginBottom: 10,
-            maxWidth: 6 * 70,
-          }}
-        >
+        <div className="color-variants-container">
           {colorVariants.map((item) => {
             const mainImg = item.image_url
               ?.split(",")
@@ -194,30 +180,11 @@ export default function ProductDetails() {
             const imgSrc = mainImg ? apiUrl(mainImg) : "/no-image.jpg";
             const isCurrent = String(item.id) === String(selectedColorId);
             return (
-              <div
-                key={item.id}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  width: 75,
-                }}
-              >
+              <div className="color-variant" key={item.id}>
                 <a
                   href={isCurrent ? undefined : `/product/${item.id}`}
                   tabIndex={isCurrent ? -1 : 0}
-                  style={{
-                    pointerEvents: isCurrent ? "none" : "auto",
-                    borderRadius: 0,
-                    border: isCurrent ? "3px solid red" : "2px solid #eee",
-                    boxShadow: isCurrent
-                      ? "0 0 0 4px rgba(255, 0, 0, 0.4)"
-                      : "0 1px 8px #0002",
-                    background: isCurrent ? "#ffe7e7" : "#fafbfc",
-                    outline: "none",
-                    width: 65,
-                    height: 65,
-                  }}
+                  className={isCurrent ? "color-current" : ""}
                   title={item.color || ""}
                   onClick={(e) => {
                     e.preventDefault();
@@ -236,13 +203,7 @@ export default function ProductDetails() {
                   <img
                     src={imgSrc}
                     alt={item.color || displayName}
-                    style={{
-                      width: 60,
-                      height: 60,
-                      objectFit: "cover",
-                      opacity: isCurrent ? 1 : 0.82,
-                      borderRadius: 0, // убрали скругление
-                    }}
+                    className="color-variant-image"
                     draggable={false}
                   />
                 </a>
@@ -254,7 +215,7 @@ export default function ProductDetails() {
     );
 
   const sizeBlock = (
-    <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
+    <div className="size-block">
       <b>size:</b>{" "}
       {Array.isArray(product.sizes) && product.sizes.length > 0
         ? product.sizes.join(", ")
@@ -263,159 +224,62 @@ export default function ProductDetails() {
   );
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", display: "flex", flexDirection: "column" }}>
+    <div className="product-details-wrapper">
       <Header
         onSearch={handleHeaderSearch}
         onMenuCategoryClick={handleMenuCategoryClick}
         breadcrumbs={breadcrumbs}
         isHome={false}
       />
-      <div style={{ width: "100%", margin: "auto", paddingTop: 8 }}>
+      <div className="product-details-content">
         <Breadcrumbs
           items={breadcrumbs}
           onBreadcrumbClick={(idx) => {
             if (idx === 0) handleGoBack();
           }}
         />
-        <div
-          style={{
-            backgroundColor: "white",
-            boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
-            padding: 24,
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            gap: 32,
-            marginTop: 8,
-            width: "100%",
-            maxWidth: 1200,
-          }}
-        >
-          <div
-            style={{
-              flexShrink: 0,
-              flex: 1,
-              minWidth: 300,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+        <div className="product-main">
+          <div className="product-images">
             {isMobile ? (
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: 280,
-                }}
+              <Swiper
+                modules={[Pagination]}
+                pagination={{ clickable: true }}
+                spaceBetween={10}
+                slidesPerView={1}
+                onSlideChange={(swiper) => setMainIndex(swiper.activeIndex)}
+                onSwiper={(swiper) => setMainIndex(swiper.activeIndex)}
               >
-                {rawImages.length > 1 && (
-                  <button
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      backgroundColor: "rgba(0,0,0,0.2)",
-                      color: "white",
-                      padding: "6px 10px",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 20,
-                      userSelect: "none",
-                    }}
-                    onClick={() =>
-                      setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)
-                    }
-                  >
-                    ‹
-                  </button>
-                )}
+                {rawImages.map((imgUrl, idx) => (
+                  <SwiperSlide key={idx}>
+                    <img
+                      src={imgUrl}
+                      alt={`Фото ${idx + 1}`}
+                      className="main-image"
+                      draggable={false}
+                      style={{ cursor: "default" }}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            ) : (
+              <>
                 <img
                   src={rawImages[mainIndex]}
                   alt={displayName}
-                  style={{
-                    width: "100%",
-                    maxHeight: 340,
-                    objectFit: "contain",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.2)",
-                    marginBottom: 12,
-                    cursor: "pointer",
-                    userSelect: "none",
-                    borderRadius: 0, // убрали скругления
-                  }}
+                  className="main-image desktop"
                   onClick={() => {
                     setShowModal(true);
                     setModalIndex(mainIndex);
                   }}
                   draggable={false}
                 />
-                {rawImages.length > 1 && (
-                  <button
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      backgroundColor: "rgba(0,0,0,0.2)",
-                      color: "white",
-                      padding: "6px 10px",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 20,
-                      userSelect: "none",
-                    }}
-                    onClick={() =>
-                      setMainIndex((mainIndex + 1) % rawImages.length)
-                    }
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <img
-                  src={rawImages[mainIndex]}
-                  alt={displayName}
-                  style={{
-                    width: "75%",
-                    objectFit: "contain",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.2)",
-                    marginBottom: 12,
-                    cursor: "pointer",
-                    borderRadius: 0, // убрали скругления
-                  }}
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalIndex(mainIndex);
-                  }}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    marginTop: 8,
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                  }}
-                >
+                <div className="thumbnails-container">
                   {rawImages.map((imgUrl, idx) => (
                     <img
                       key={idx}
                       src={imgUrl}
                       alt={`Фото ${idx + 1}`}
-                      style={{
-                        width: 80,
-                        height: 80,
-                        objectFit: "cover",
-                        cursor: "pointer",
-                        borderRadius: 0, // убрали скругления
-                        border: idx === mainIndex ? "2px solid black" : "2px solid #ddd",
-                      }}
+                      className={`thumbnail-image ${idx === mainIndex ? "selected" : ""}`}
                       onClick={() => setMainIndex(idx)}
                     />
                   ))}
@@ -424,71 +288,27 @@ export default function ProductDetails() {
             )}
           </div>
 
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", marginTop: isMobile ? 16 : 0 }}>
-            <h2 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}>{displayName}</h2>
+          <div className="product-info">
+            <h2 className="product-title">{displayName}</h2>
             {colorBlock}
             {sizeBlock}
-            <div style={{ marginTop: 32, marginBottom: 8 }}>{renderPrice()}</div>
-            <button
-              style={{
-                marginTop: 32,
-                padding: "10px 20px",
-                backgroundColor: "black",
-                color: "white",
-                maxWidth: 160,
-                border: "none",
-                cursor: "pointer",
-              }}
-              onClick={handleGoBack}
-            >
+            <div className="price-container">{renderPrice()}</div>
+            <button className="back-button" onClick={handleGoBack}>
               Back
             </button>
           </div>
         </div>
       </div>
 
-      {showModal && rawImages.length > 0 && (
-        <div
-          style={{
-            position: "fixed",
-            zIndex: 50,
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <button
-            style={{
-              position: "absolute",
-              top: 16,
-              right: 24,
-              color: "white",
-              fontSize: 32,
-              fontWeight: "700",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-            onClick={() => setShowModal(false)}
-          >
+      {/* Модалка открывается только на десктопе */}
+      {!isMobile && showModal && rawImages.length > 0 && (
+        <div className="modal-overlay">
+          <button className="modal-close" onClick={() => setShowModal(false)}>
             ×
           </button>
           {rawImages.length > 1 && (
             <button
-              style={{
-                position: "absolute",
-                left: 24,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "white",
-                fontSize: 32,
-                fontWeight: "700",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
+              className="modal-prev"
               onClick={() =>
                 setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length)
               }
@@ -499,27 +319,11 @@ export default function ProductDetails() {
           <img
             src={rawImages[modalIndex]}
             alt={`${displayName} фото ${modalIndex + 1}`}
-            style={{
-              maxHeight: "80vh",
-              maxWidth: "80vw",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.3)",
-              borderRadius: 0, // убрали скругления
-            }}
+            className="modal-image"
           />
           {rawImages.length > 1 && (
             <button
-              style={{
-                position: "absolute",
-                right: 24,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "white",
-                fontSize: 32,
-                fontWeight: "700",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
+              className="modal-next"
               onClick={() =>
                 setModalIndex((modalIndex + 1) % rawImages.length)
               }
@@ -528,28 +332,13 @@ export default function ProductDetails() {
             </button>
           )}
           {!isMobile && rawImages.length > 1 && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 32,
-                left: "50%",
-                transform: "translateX(-50%)",
-                display: "flex",
-                gap: 8,
-              }}
-            >
+            <div className="modal-thumbnails">
               {rawImages.map((imgUrl, idx) => (
                 <img
                   key={idx}
                   src={imgUrl}
                   alt={`миниатюра ${idx + 1}`}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    border: idx === modalIndex ? "2px solid white" : "2px solid transparent",
-                    cursor: "pointer",
-                    borderRadius: 0, // убрали скругления
-                  }}
+                  className={`modal-thumbnail ${idx === modalIndex ? "selected" : ""}`}
                   onClick={() => setModalIndex(idx)}
                 />
               ))}
