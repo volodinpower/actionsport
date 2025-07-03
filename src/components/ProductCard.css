@@ -141,4 +141,18 @@
   .old-price, .new-price, .cur-price {
     font-size: 11px;
   }
+  /* Контейнер Swiper в карточке */
+.swiper-container {
+  width: 100%;
+  height: 70%; /* как у картинки */
+}
+
+/* Изображения в слайдах Swiper */
+.swiper-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  border-radius: 0 !important;
+}
 }

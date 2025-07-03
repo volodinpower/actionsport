@@ -38,7 +38,6 @@ export default function ProductCard({ product, onClick }) {
     ? Math.ceil((price * (1 - discount / 100)) / 100) * 100
     : null;
 
-  // sizes массив
   let sizes = [];
   if (Array.isArray(product.sizes)) {
     sizes = product.sizes;
@@ -57,19 +56,21 @@ export default function ProductCard({ product, onClick }) {
       {imgError ? (
         <div className="no-image">no image</div>
       ) : isMobile ? (
-        <Swiper spaceBetween={10} slidesPerView={1}>
-          {urls.map((url, idx) => (
-            <SwiperSlide key={idx}>
-              <img
-                src={makeAbsUrl(url)}
-                alt={product.sitename}
-                className="product-image"
-                onError={() => setImgError(true)}
-                draggable={false}
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <div className="swiper-container">
+          <Swiper spaceBetween={10} slidesPerView={1}>
+            {urls.map((url, idx) => (
+              <SwiperSlide key={idx}>
+                <img
+                  src={makeAbsUrl(url)}
+                  alt={product.sitename}
+                  className="product-image"
+                  onError={() => setImgError(true)}
+                  draggable={false}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       ) : (
         <img
           src={makeAbsUrl(isHovered ? prevImg : mainImg)}
@@ -79,6 +80,7 @@ export default function ProductCard({ product, onClick }) {
           draggable={false}
         />
       )}
+
       <div className="product-content">
         <h2 className="product-card-title">{product.sitename}</h2>
         <div className="desc-group">
