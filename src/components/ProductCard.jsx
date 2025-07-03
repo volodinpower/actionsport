@@ -35,7 +35,6 @@ export default function ProductCard({ product, onClick }) {
   const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
   const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
-  // Формируем абсолютный URL
   function makeAbsUrl(url) {
     if (!url) return null;
     if (/^https?:\/\//.test(url)) return url;
@@ -57,8 +56,6 @@ export default function ProductCard({ product, onClick }) {
     sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
-  const noImages = mobileSwipeUrls.length === 0;
-
   return (
     <div
       className="product-card"
@@ -67,24 +64,28 @@ export default function ProductCard({ product, onClick }) {
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      {/* Картинка или no-image */}
       <div className={isMobile ? "swiper-container" : ""} style={{ height: "70%" }}>
-        {imgError || noImages ? (
+        {isMobile ? (
+          mobileSwipeUrls.length > 0 ? (
+            <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
+              {mobileSwipeUrls.map((url, idx) => (
+                <SwiperSlide key={idx}>
+                  <img
+                    src={makeAbsUrl(url)}
+                    alt={product.sitename}
+                    className="product-image"
+                    onError={() => setImgError(true)}
+                    draggable={false}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            // Пустой контейнер swiper, чтобы сохранить размер
+            <div className="no-image">no image</div>
+          )
+        ) : imgError || !mainImg ? (
           <div className="no-image">no image</div>
-        ) : isMobile ? (
-          <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
-            {mobileSwipeUrls.map((url, idx) => (
-              <SwiperSlide key={idx}>
-                <img
-                  src={makeAbsUrl(url)}
-                  alt={product.sitename}
-                  className="product-image"
-                  onError={() => setImgError(true)}
-                  draggable={false}
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
         ) : (
           <img
             src={makeAbsUrl(isHovered ? prevImg : mainImg)}
