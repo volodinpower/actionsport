@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
+import "swiper/css/pagination";
+import { Pagination } from "swiper";
+
 import "./ProductCard.css";
 
 export default function ProductCard({ product, onClick }) {
@@ -14,7 +17,6 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Составляем массив изображений
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url
@@ -25,18 +27,17 @@ export default function ProductCard({ product, onClick }) {
     urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
 
-  // Для мобильного свайпера — показываем сначала _prev, потом _main
+  // Для мобильного свайпера — сначала _prev, потом _main
   const mobileSwipeUrls = [
     ...urls.filter((url) => url.toLowerCase().includes("_main")),
     ...urls.filter((url) => url.toLowerCase().includes("_prev")),
   ];
 
-  // Для ховера и десктопа — основное и превью
   const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
   const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
   function makeAbsUrl(url) {
-    if (!url) return "/no-image.jpg";
+    if (!url) return null;
     if (/^https?:\/\//.test(url)) return url;
     const base = import.meta.env.VITE_API_URL || "http://localhost:8000";
     return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
@@ -56,6 +57,21 @@ export default function ProductCard({ product, onClick }) {
     sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
+  const renderImage = (url) => {
+    if (imgError || !url) {
+      return <div className="no-image-block">no image</div>;
+    }
+    return (
+      <img
+        src={makeAbsUrl(url)}
+        alt={product.sitename}
+        className="product-image"
+        onError={() => setImgError(true)}
+        draggable={false}
+      />
+    );
+  };
+
   return (
     <div
       className="product-card"
@@ -64,21 +80,18 @@ export default function ProductCard({ product, onClick }) {
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      {imgError ? (
-        <div className="no-image">no image</div>
-      ) : isMobile ? (
+      {isMobile ? (
         <div className="image-text-wrapper">
           <div className="swiper-container">
-            <Swiper spaceBetween={10} slidesPerView={1} pagination={{ clickable: true }}>
+            <Swiper
+              spaceBetween={10}
+              slidesPerView={1}
+              pagination={{ clickable: true }}
+              modules={[Pagination]}
+            >
               {mobileSwipeUrls.map((url, idx) => (
                 <SwiperSlide key={idx}>
-                  <img
-                    src={makeAbsUrl(url)}
-                    alt={product.sitename}
-                    className="product-image"
-                    onError={() => setImgError(true)}
-                    draggable={false}
-                  />
+                  {renderImage(url)}
                 </SwiperSlide>
               ))}
             </Swiper>
@@ -105,13 +118,7 @@ export default function ProductCard({ product, onClick }) {
         </div>
       ) : (
         <>
-          <img
-            src={makeAbsUrl(isHovered ? prevImg : mainImg)}
-            alt={product.sitename}
-            className="product-image"
-            onError={() => setImgError(true)}
-            draggable={false}
-          />
+          {renderImage(isHovered ? prevImg : mainImg)}
           <div className="product-content">
             <h2 className="product-card-title">{product.sitename}</h2>
             <div className="desc-group">
