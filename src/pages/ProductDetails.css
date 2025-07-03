@@ -344,7 +344,8 @@
 .color-text-line {
   display: flex;
   align-items: center;
-  gap: 6px; /* небольшой отступ между "color:" и цветом */
+  gap: 6px;
   font-size: 14px;
-  margin-bottom: 8px; /* небольшой отступ снизу перед блоком с цветами */
+  color: #666;
+  margin-bottom: 8px;
 }

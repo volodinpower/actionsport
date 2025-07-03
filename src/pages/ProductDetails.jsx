@@ -154,15 +154,9 @@ export default function ProductDetails() {
         </div>
       </div>
     ) : (
-      <span className="price-current">{price.toLocaleString()} AMD</span>
+      <span className="price-current-no-discount">{price.toLocaleString()} AMD</span>
     );
   }
-
-  if (error)
-    return (
-      <div className="error-message">Ошибка: {error}</div>
-    );
-  if (!product) return <div className="loading-message">Loading...</div>;
 
   const colorBlock =
     colorVariants.length <= 1 ? (
