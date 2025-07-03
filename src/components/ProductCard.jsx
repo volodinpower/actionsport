@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";  // <--- здесь импорт
 import "swiper/css";
 import "swiper/css/pagination";
-import { Pagination } from "swiper";
 
 import "./ProductCard.css";
 
@@ -17,7 +17,6 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Собираем все картинки из product.image_url
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url.split(",").map(url => url.trim()).filter(Boolean);
@@ -25,11 +24,8 @@ export default function ProductCard({ product, onClick }) {
     urls = product.image_url.map(url => String(url).trim()).filter(Boolean);
   }
 
-  // Находим _main и _prev картинки
   const mainImg = urls.find(url => url.toLowerCase().includes("_main")) || urls[0];
   const prevImg = urls.find(url => url.toLowerCase().includes("_prev")) || mainImg;
-
-  // Для мобильной версии свайп только по двум картинкам
   const mobileImgs = [mainImg, prevImg].filter(Boolean);
 
   function makeAbsUrl(url) {
@@ -78,7 +74,6 @@ export default function ProductCard({ product, onClick }) {
             ))}
           </Swiper>
         )}
-
         <div className="product-content">
           <h2 className="product-card-title">{product.sitename}</h2>
           <div className="desc-group">
@@ -101,7 +96,6 @@ export default function ProductCard({ product, onClick }) {
     );
   }
 
-  // Десктоп - переключаем картинки при hover
   const image = isHovered ? makeAbsUrl(prevImg) : makeAbsUrl(mainImg);
 
   return (
