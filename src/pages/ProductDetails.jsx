@@ -45,7 +45,6 @@ export default function ProductDetails() {
   const [colorVariants, setColorVariants] = useState([]);
   const [selectedColorId, setSelectedColorId] = useState(null);
 
-  // Загрузка продукта по id
   useEffect(() => {
     fetchProductById(id)
       .then((data) => {
@@ -58,12 +57,10 @@ export default function ProductDetails() {
       });
   }, [id]);
 
-  // Увеличение счётчика просмотров
   useEffect(() => {
     if (id) incrementProductView(id);
   }, [id]);
 
-  // Обновление цветовых вариантов и сортировка
   useEffect(() => {
     if (!product || !Array.isArray(product.all_colors)) {
       setColorVariants([]);
@@ -73,7 +70,7 @@ export default function ProductDetails() {
     setColorVariants(variants);
   }, [product]);
 
-  // Выставляем выбранный цвет при загрузке продукта или изменении location.state
+  // Исправленный useEffect для установки выбранного цвета сразу:
   useEffect(() => {
     if (location.state && location.state.color) {
       const found = product?.all_colors?.find(
@@ -82,15 +79,14 @@ export default function ProductDetails() {
       );
       if (found) {
         setSelectedColorId(found.id);
-      } else if (product?.id) {
-        setSelectedColorId(product.id);
+      } else if (product?.all_colors?.length > 0) {
+        setSelectedColorId(product.all_colors[0].id);
       }
-    } else if (product?.id) {
-      setSelectedColorId(product.id);
+    } else if (product?.all_colors?.length > 0) {
+      setSelectedColorId(product.all_colors[0].id);
     }
   }, [product, location.state]);
 
-  // Картинки для отображения
   let rawImages = [];
   if (typeof product?.image_url === "string" && product.image_url.trim()) {
     const urls = product.image_url
@@ -107,14 +103,12 @@ export default function ProductDetails() {
   }
   if (rawImages.length === 0) rawImages = ["/no-image.jpg"];
 
-  // При смене продукта или url картинок сбрасываем выбранное главное изображение
   useEffect(() => {
     setMainIndex(0);
   }, [id, product?.image_url]);
 
   const displayName = product?.sitename || product?.name || "";
 
-  // Хлебные крошки
   const breadcrumbs = [
     { label: "Main", query: "" },
     { label: displayName, query: "" },
@@ -124,7 +118,6 @@ export default function ProductDetails() {
     navigate(query ? "/?search=" + encodeURIComponent(query) : "/");
   };
 
-  // --- обработчик перехода по меню (главное!)
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     const params = new URLSearchParams();
     if (catKey) params.set("category", catKey);
@@ -132,7 +125,6 @@ export default function ProductDetails() {
     navigate({ pathname: "/", search: params.toString() });
   };
 
-  // Возврат назад в каталог с фильтрами, если есть в location.state.from
   const handleGoBack = () => {
     if (location.state?.from && location.state.from !== "/") {
       navigate(location.state.from);
@@ -153,46 +145,49 @@ export default function ProductDetails() {
     return discount > 0 && discountPrice > 0 ? (
       <div>
         <div>
-          <span className="line-through text-gray-400 text-xl mr-2">
+          <span style={{textDecoration:"line-through", color:"#888", fontSize: "1.25rem", marginRight: "0.5rem"}}>
             {price.toLocaleString()} AMD
           </span>
-          <span className="text-red-500 text-xl font-semibold mr-2">
+          <span style={{color:"#e53935", fontWeight:"600", fontSize: "1.25rem", marginRight: "0.5rem"}}>
             -{discount}%
           </span>
         </div>
         <div>
-          <span className="text-green-700 text-2xl font-bold">
+          <span style={{color:"#2e7d32", fontWeight:"700", fontSize: "1.5rem"}}>
             {discountPrice.toLocaleString()} AMD
           </span>
         </div>
       </div>
     ) : (
-      <span className="text-2xl font-bold">{price.toLocaleString()} AMD</span>
+      <span style={{fontWeight:"700", fontSize: "1.5rem"}}>
+        {price.toLocaleString()} AMD
+      </span>
     );
   }
 
   if (error)
     return (
-      <div className="p-8 text-center text-red-600">Ошибка: {error}</div>
+      <div style={{ padding: 32, textAlign: "center", color: "#b00020" }}>
+        Ошибка: {error}
+      </div>
     );
-  if (!product) return <div className="p-8 text-center">Loading...</div>;
+  if (!product) return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
 
-  // Цветовые варианты
   const colorBlock =
     colorVariants.length <= 1 ? (
-      <div className="mb-1 text-gray-600 text-sm">
+      <div style={{ marginBottom: 4, color: "#555", fontSize: 14 }}>
         <b>color:</b> {product.color}
       </div>
     ) : (
-      <div className="mb-1 text-gray-600 text-sm gap-10">
+      <div style={{ marginBottom: 4, color: "#555", fontSize: 14 }}>
         <b>color:</b> {product.color}
         <div
           style={{
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
-            marginTop: 10,
-            marginBottom: 10,
+            marginTop: 6,    // уменьшенный отступ сверху
+            marginBottom: 6, // уменьшенный отступ снизу
             maxWidth: 6 * 70,
           }}
         >
@@ -219,11 +214,11 @@ export default function ProductDetails() {
                   style={{
                     pointerEvents: isCurrent ? "none" : "auto",
                     borderRadius: 12,
-                    border: isCurrent ? "3px solid #0070f3" : "2px solid #eee",
+                    border: isCurrent ? "3px solid #e53935" : "2px solid #eee",
                     boxShadow: isCurrent
-                      ? "0 0 0 4px #aad8ff"
+                      ? "0 0 0 4px #f8c1c1"
                       : "0 1px 8px #0002",
-                    background: isCurrent ? "#e7f3ff" : "#fafbfc",
+                    background: isCurrent ? "#ffe5e5" : "#fafbfc",
                     outline: "none",
                     width: 65,
                     height: 65,
@@ -264,7 +259,7 @@ export default function ProductDetails() {
     );
 
   const sizeBlock = (
-    <div className="mb-1 text-gray-600 text-sm">
+    <div style={{ marginBottom: 4, color: "#555", fontSize: 14 }}>
       <b>size:</b>{" "}
       {Array.isArray(product.sizes) && product.sizes.length > 0
         ? product.sizes.join(", ")
@@ -273,30 +268,29 @@ export default function ProductDetails() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", display: "flex", flexDirection: "column" }}>
       <Header
         onSearch={handleHeaderSearch}
         onMenuCategoryClick={handleMenuCategoryClick}
         breadcrumbs={breadcrumbs}
         isHome={false}
       />
-      <div className="w-full mx-auto pt-1">
+      <div style={{ width: "100%", margin: "0 auto", paddingTop: 4 }}>
         <Breadcrumbs
           items={breadcrumbs}
           onBreadcrumbClick={(idx) => {
             if (idx === 0) handleGoBack();
           }}
         />
-        <div className="bg-white shadow-md p-6 flex flex-col md:flex-row gap-8 mt-2 w-full">
-          <div className="flex-shrink-0 flex-1 min-w-[300px] flex flex-col items-center justify-center">
+        <div style={{ backgroundColor: "#fff", boxShadow: "0 4px 8px rgb(0 0 0 / 0.1)", padding: 24, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 32, marginTop: 8, width: "100%" }}>
+          <div style={{ flexShrink: 0, flex: 1, minWidth: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             {isMobile ? (
               <div
-                className="relative w-full flex items-center justify-center"
-                style={{ minHeight: 280 }}
+                style={{ position: "relative", width: "100%", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 280 }}
               >
                 {rawImages.length > 1 && (
                   <button
-                    className="absolute left-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-20 text-white px-2 py-1"
+                    style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", backgroundColor: "rgba(0,0,0,0.2)", color: "white", padding: "4px 8px", border: "none", cursor: "pointer" }}
                     onClick={() =>
                       setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)
                     }
@@ -307,8 +301,7 @@ export default function ProductDetails() {
                 <img
                   src={rawImages[mainIndex]}
                   alt={displayName}
-                  className="w-full object-contain shadow mb-3 select-none"
-                  style={{ maxHeight: 340, cursor: "pointer" }}
+                  style={{ width: "100%", objectFit: "contain", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", marginBottom: 12, userSelect: "none", cursor: "pointer", maxHeight: 340 }}
                   onClick={() => {
                     setShowModal(true);
                     setModalIndex(mainIndex);
@@ -317,7 +310,7 @@ export default function ProductDetails() {
                 />
                 {rawImages.length > 1 && (
                   <button
-                    className="absolute right-0 top-1/2 -translate-y-1/2 bg-black bg-opacity-20 text-white px-2 py-1"
+                    style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", backgroundColor: "rgba(0,0,0,0.2)", color: "white", padding: "4px 8px", border: "none", cursor: "pointer" }}
                     onClick={() =>
                       setMainIndex((mainIndex + 1) % rawImages.length)
                     }
@@ -331,21 +324,27 @@ export default function ProductDetails() {
                 <img
                   src={rawImages[mainIndex]}
                   alt={displayName}
-                  className="w-3/4 object-contain shadow mb-3 cursor-pointer"
+                  style={{ width: "75%", objectFit: "contain", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", marginBottom: 12, cursor: "pointer" }}
                   onClick={() => {
                     setShowModal(true);
                     setModalIndex(mainIndex);
                   }}
                 />
-                <div className="flex gap-3 mt-2 flex-wrap justify-center">
+                <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
                   {rawImages.map((imgUrl, idx) => (
                     <img
                       key={idx}
                       src={imgUrl}
                       alt={`Фото ${idx + 1}`}
-                      className={`w-20 h-20 object-cover rounded-lg border-2 shadow-sm cursor-pointer ${
-                        idx === mainIndex ? "border-black" : "border-gray-200"
-                      }`}
+                      style={{
+                        width: 80,
+                        height: 80,
+                        objectFit: "cover",
+                        borderRadius: 10,
+                        border: idx === mainIndex ? "2px solid black" : "2px solid #ddd",
+                        boxShadow: idx === mainIndex ? "0 0 8px #333" : "none",
+                        cursor: "pointer",
+                      }}
                       onClick={() => setMainIndex(idx)}
                     />
                   ))}
@@ -354,13 +353,24 @@ export default function ProductDetails() {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col justify-start mt-2">
-            <h2 className="text-2xl font-bold mb-8">{displayName}</h2>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-start", marginTop: isMobile ? 16 : 0 }}>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: "700", marginBottom: 32 }}>{displayName}</h2>
             {colorBlock}
             {sizeBlock}
-            <div className="mt-8 mb-2">{renderPrice()}</div>
+            <div style={{ marginTop: 32, marginBottom: 8 }}>{renderPrice()}</div>
             <button
-              className="mt-8 px-6 py-2 bg-black text-white w-max"
+              style={{
+                marginTop: 32,
+                padding: "12px 24px",
+                backgroundColor: "black",
+                color: "white",
+                width: "max-content",
+                cursor: "pointer",
+                border: "none",
+                borderRadius: 4,
+                fontWeight: "600",
+                fontSize: "1rem",
+              }}
               onClick={handleGoBack}
             >
               Back
@@ -370,16 +380,47 @@ export default function ProductDetails() {
       </div>
 
       {showModal && rawImages.length > 0 && (
-        <div className="fixed z-50 inset-0 bg-black bg-opacity-80 flex items-center justify-center">
+        <div style={{
+          position: "fixed",
+          zIndex: 50,
+          inset: 0,
+          backgroundColor: "rgba(0,0,0,0.8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
           <button
-            className="absolute top-4 right-6 text-white text-4xl font-bold"
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 24,
+              color: "white",
+              fontSize: 36,
+              fontWeight: "bold",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
             onClick={() => setShowModal(false)}
           >
             ×
           </button>
           {rawImages.length > 1 && (
             <button
-              className="absolute left-6 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
+              style={{
+                position: "absolute",
+                left: 24,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "white",
+                fontSize: 36,
+                fontWeight: "bold",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                lineHeight: 1,
+              }}
               onClick={() =>
                 setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length)
               }
@@ -390,11 +431,23 @@ export default function ProductDetails() {
           <img
             src={rawImages[modalIndex]}
             alt={`${displayName} фото ${modalIndex + 1}`}
-            className="max-h-[80vh] max-w-[80vw] shadow-lg"
+            style={{ maxHeight: "80vh", maxWidth: "80vw", boxShadow: "0 0 20px rgba(0,0,0,0.8)" }}
           />
           {rawImages.length > 1 && (
             <button
-              className="absolute right-6 top-1/2 -translate-y-1/2 text-white text-4xl font-bold"
+              style={{
+                position: "absolute",
+                right: 24,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "white",
+                fontSize: 36,
+                fontWeight: "bold",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                lineHeight: 1,
+              }}
               onClick={() =>
                 setModalIndex((modalIndex + 1) % rawImages.length)
               }
@@ -403,15 +456,29 @@ export default function ProductDetails() {
             </button>
           )}
           {!isMobile && rawImages.length > 1 && (
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+            <div
+              style={{
+                position: "absolute",
+                bottom: 32,
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                gap: 8,
+              }}
+            >
               {rawImages.map((imgUrl, idx) => (
                 <img
                   key={idx}
                   src={imgUrl}
                   alt={`миниатюра ${idx + 1}`}
-                  className={`w-12 h-12 ${
-                    idx === modalIndex ? "border-white" : "border-transparent"
-                  } cursor-pointer`}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    border: idx === modalIndex ? "2px solid white" : "2px solid transparent",
+                    cursor: "pointer",
+                    objectFit: "cover",
+                    borderRadius: 6,
+                  }}
                   onClick={() => setModalIndex(idx)}
                 />
               ))}
