@@ -134,6 +134,23 @@
   border-radius: 0 !important;
 }
 
+/* Стили пагинации Swiper (точки) */
+.swiper-pagination {
+  bottom: 6px !important;
+}
+
+.swiper-pagination-bullet {
+  width: 8px !important;
+  height: 8px !important;
+  background: #d32d2f !important; /* красный цвет */
+  opacity: 1 !important;
+  margin: 0 3px !important;
+}
+
+.swiper-pagination-bullet-active {
+  background: #9b1b1f !important; /* темнее красный для активной точки */
+}
+
 /* Мобильная адаптация */
 @media (max-width: 640px) {
   .product-card {
@@ -171,5 +188,4 @@
   .old-price, .new-price, .cur-price {
     font-size: 11px;
   }
-  /* Стили пагинации swiper (точки) */
 }

@@ -14,7 +14,7 @@ export default function ProductCard({ product, onClick }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Составляем массив изображений
+  // Собираем массив изображений
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url
@@ -36,7 +36,7 @@ export default function ProductCard({ product, onClick }) {
   const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
   function makeAbsUrl(url) {
-    if (!url) return "/no-image.jpg";
+    if (!url) return "";
     if (/^https?:\/\//.test(url)) return url;
     const base = import.meta.env.VITE_API_URL || "http://localhost:8000";
     return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
@@ -56,6 +56,8 @@ export default function ProductCard({ product, onClick }) {
     sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
+  const hasImages = mobileSwipeUrls.length > 0 && !imgError;
+
   return (
     <div
       className="product-card"
@@ -64,8 +66,10 @@ export default function ProductCard({ product, onClick }) {
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
-      {imgError ? (
-        <div className="no-image">no image</div>
+      {!hasImages ? (
+        <div className="no-image">
+          no image
+        </div>
       ) : isMobile ? (
         <div className="image-text-wrapper">
           <div className="swiper-container">
