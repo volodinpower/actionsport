@@ -322,3 +322,8 @@ export async function fetchCategories() {
   const data = await res.json();
   return Array.isArray(data) ? data : [];
 }
+export async function fetchPopularBrands(limit = 18) {
+  const res = await fetch(apiUrl(`/brands/popular?limit=${limit}`));
+  if (!res.ok) throw new Error(await res.text());
+  return await res.json(); // [{brand, count}]
+}

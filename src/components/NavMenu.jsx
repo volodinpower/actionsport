@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchPopularBrands } from "../api"; // добавь функцию, как писал выше
 
 const MENU_ORDER = [
+  "brands",     // новый пункт
   "snowboard",
   "skateboard",
   "wake",
@@ -18,6 +20,12 @@ const SALE_CATEGORY = {
   subcategories: [],
 };
 
+const BRANDS_CATEGORY = {
+  category_key: "brands",
+  label: "Brands",
+  subcategories: [],
+};
+
 export default function NavMenu({
   onMainCategorySelect,
   activeMenu,
@@ -28,13 +36,14 @@ export default function NavMenu({
   const [categories, setCategories] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
   const [openSubmenus, setOpenSubmenus] = useState([]);
+  const [popularBrands, setPopularBrands] = useState([]);
 
+  // --- Загрузка популярных брендов ---
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 900);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
+    fetchPopularBrands().then(setPopularBrands).catch(() => setPopularBrands([]));
   }, []);
 
+  // --- Категории ---
   useEffect(() => {
     fetch(import.meta.env.VITE_API_URL + "/categories")
       .then((res) => res.json())
@@ -66,13 +75,18 @@ export default function NavMenu({
           ])
         );
         dict["sale"] = SALE_CATEGORY;
+        dict["brands"] = { ...BRANDS_CATEGORY, subcategories: popularBrands.map(b => ({
+          label: b.brand,
+          subcategory_key: b.brand
+        }))};
         const ordered = MENU_ORDER.map((key) => dict[key]).filter(Boolean);
         setCategories(ordered.length ? ordered : [SALE_CATEGORY]);
       })
       .catch(() => {
         setCategories([SALE_CATEGORY]);
       });
-  }, []);
+    // eslint-disable-next-line
+  }, [popularBrands]);
 
   const toggleSubmenu = (name) => {
     setOpenSubmenus((prev) =>
@@ -103,15 +117,20 @@ export default function NavMenu({
                     cat.category_key === "sale" ? "nav-menu-sale" : ""
                   }`}
                   onClick={() => {
-                    onMainCategorySelect?.(cat.category_key, cat.label, "");
-                    setMobileMenuOpen(false);
-                    setOpenSubmenus([]);
-                    setActiveMenu(null);
+                    // Для Brands не фильтруем по категории, а открываем подменю
+                    if (cat.category_key === "brands") {
+                      toggleSubmenu("brands");
+                    } else {
+                      onMainCategorySelect?.(cat.category_key, cat.label, "");
+                      setMobileMenuOpen(false);
+                      setOpenSubmenus([]);
+                      setActiveMenu(null);
+                    }
                   }}
                 >
                   {cat.label}
                 </button>
-                {cat.category_key !== "sale" && cat.subcategories.length > 0 && (
+                {(cat.category_key !== "sale" && cat.subcategories.length > 0) || cat.category_key === "brands" ? (
                   <button
                     className="mobile-menu-plus"
                     onClick={(e) => {
@@ -122,40 +141,41 @@ export default function NavMenu({
                   >
                     {openSubmenus.includes(cat.category_key) ? "−" : "+"}
                   </button>
-                )}
+                ) : null}
               </div>
               <AnimatePresence initial={false}>
-                {cat.category_key !== "sale" && openSubmenus.includes(cat.category_key) && (
-                  <motion.ul
-                    className="mobile-submenu-list"
-                    style={{ paddingLeft: 14 }}
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    {cat.subcategories.map((sub) => (
-                      <li key={sub.subcategory_key}>
-                        <button
-                          className="mobile-menu-item"
-                          style={{ fontSize: "1.05em" }}
-                          onClick={() => {
-                            onMainCategorySelect?.(
-                              cat.category_key,
-                              cat.label,
-                              sub.subcategory_key
-                            );
-                            setMobileMenuOpen(false);
-                            setOpenSubmenus([]);
-                            setActiveMenu(null);
-                          }}
-                        >
-                          {sub.label}
-                        </button>
-                      </li>
-                    ))}
-                  </motion.ul>
-                )}
+                {cat.category_key !== "sale" &&
+                  openSubmenus.includes(cat.category_key) && (
+                    <motion.ul
+                      className="mobile-submenu-list"
+                      style={{ paddingLeft: 14 }}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                    >
+                      {cat.subcategories.map((sub) => (
+                        <li key={sub.subcategory_key}>
+                          <button
+                            className="mobile-menu-item"
+                            style={{ fontSize: "1.05em" }}
+                            onClick={() => {
+                              onMainCategorySelect?.(
+                                "brands",
+                                "Brands",
+                                sub.subcategory_key // === название бренда
+                              );
+                              setMobileMenuOpen(false);
+                              setOpenSubmenus([]);
+                              setActiveMenu(null);
+                            }}
+                          >
+                            {sub.label}
+                          </button>
+                        </li>
+                      ))}
+                    </motion.ul>
+                  )}
               </AnimatePresence>
             </li>
           ))}
@@ -193,8 +213,12 @@ export default function NavMenu({
                 <span
                   className={cat.category_key === "sale" ? "nav-menu-sale" : ""}
                   onClick={() => {
-                    onMainCategorySelect?.(cat.category_key, cat.label, "");
-                    setActiveMenu(null);
+                    if (cat.category_key === "brands") {
+                      setActiveMenu("brands");
+                    } else {
+                      onMainCategorySelect?.(cat.category_key, cat.label, "");
+                      setActiveMenu(null);
+                    }
                   }}
                   style={{ display: "inline-block", width: "100%" }}
                 >
@@ -231,14 +255,22 @@ export default function NavMenu({
                             key={sub.subcategory_key}
                             className="text-left text-sm text-gray-400 hover:text-white h-8 leading-tight w-40"
                             onClick={() => {
-                              const parent = categories.find(
-                                (c) => c.category_key === activeMenu
-                              );
-                              onMainCategorySelect?.(
-                                parent?.category_key,
-                                parent?.label,
-                                sub.subcategory_key
-                              );
+                              if (activeMenu === "brands") {
+                                onMainCategorySelect?.(
+                                  "brands",
+                                  "Brands",
+                                  sub.subcategory_key // === название бренда
+                                );
+                              } else {
+                                const parent = categories.find(
+                                  (c) => c.category_key === activeMenu
+                                );
+                                onMainCategorySelect?.(
+                                  parent?.category_key,
+                                  parent?.label,
+                                  sub.subcategory_key
+                                );
+                              }
                               setActiveMenu(null);
                             }}
                           >

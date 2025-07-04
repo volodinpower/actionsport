@@ -1,6 +1,3 @@
-import { useRef, useEffect } from "react";
-import Select from "react-select";
-
 export default function FilterBar({
   submenuList = [],
   sizeFilter,
@@ -14,6 +11,7 @@ export default function FilterBar({
   setForceOpenCategory = () => {},
   showGender = true,
   showCategory = true,
+  brandsMode = false,  // <--- добавляем режим брендов!
   onCategoryChange,
   onBrandChange,
   onSizeChange,
@@ -46,7 +44,7 @@ export default function FilterBar({
         <Select
           classNamePrefix="react-select"
           placeholder="Category"
-          isClearable={true}  // <--- здесь включён сброс категории
+          isClearable={true}
           isSearchable={false}
           value={selectedCategory}
           onChange={opt => onCategoryChange(opt ? opt.value : "")}
@@ -55,17 +53,21 @@ export default function FilterBar({
           ref={categorySelectRef}
         />
       )}
+
       {/* BRAND */}
-      <Select
-        classNamePrefix="react-select"
-        placeholder="Brand"
-        isClearable={true}
-        isSearchable={false}
-        value={brandFilter ? { value: brandFilter, label: brandFilter } : null}
-        onChange={opt => onBrandChange(opt ? opt.value : "")}
-        options={allBrands.map(brand => ({ value: brand, label: brand }))}
-        menuPlacement="auto"
-      />
+      {!brandsMode && (
+        <Select
+          classNamePrefix="react-select"
+          placeholder="Brand"
+          isClearable={true}
+          isSearchable={false}
+          value={brandFilter ? { value: brandFilter, label: brandFilter } : null}
+          onChange={opt => onBrandChange(opt ? opt.value : "")}
+          options={allBrands.map(brand => ({ value: brand, label: brand }))}
+          menuPlacement="auto"
+        />
+      )}
+
       {/* SIZE */}
       <Select
         classNamePrefix="react-select"
@@ -77,6 +79,7 @@ export default function FilterBar({
         options={allSizes.map(size => ({ value: size, label: size }))}
         menuPlacement="auto"
       />
+
       {/* GENDER */}
       {shouldShowGender && (
         <Select
