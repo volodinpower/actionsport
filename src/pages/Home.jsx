@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
-
+import { AnimatePresence, motion } from "framer-motion";
 import Header from "../components/Header";
-import ProductCard from "../components/ProductCardDebug";
+import ProductCard from "../components/ProductCard";
 import Banner from "../components/Banner";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import FilterBar from "../components/FilterBar";
 import SortControl from "../components/SortControl";
-
+import ScrollTopButton from "../components/ScrollTopButton";
 import {
   fetchProducts,
   fetchPopularProducts,
@@ -46,7 +46,6 @@ export default function Home() {
   const navigate = useNavigate();
 
   const urlSearchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
-
   const searchQuery = urlSearchParams.get("search") || "";
   const categoryKey = urlSearchParams.get("category") || "";
   const subcategoryKey = urlSearchParams.get("subcategory") || "";
@@ -64,7 +63,6 @@ export default function Home() {
   const [columns, setColumns] = useState(getColumnsCount());
   const [homeLimit, setHomeLimit] = useState(getHomeLimit(columns));
 
-  // Пересчитываем колонки и лимит при ресайзе
   useEffect(() => {
     function handleResize() {
       const cols = getColumnsCount();
@@ -86,39 +84,37 @@ export default function Home() {
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
 
-  // Обновляем фильтры при изменениях
-useEffect(() => {
-  async function updateFilterOptions() {
-    let realCategoryKey = categoryKey === "sale" ? "sale" : categoryKey;
-    let realSubcategoryKey = subcategoryKey;
-    if (realSubcategoryKey) realCategoryKey = "";
+  useEffect(() => {
+    async function updateFilterOptions() {
+      let realCategoryKey = categoryKey === "sale" ? "sale" : categoryKey;
+      let realSubcategoryKey = subcategoryKey;
+      if (realSubcategoryKey) realCategoryKey = "";
 
-    const params = {
-      categoryKey: realCategoryKey,
-      subcategoryKey: realSubcategoryKey,
-      gender: genderFilter,
-      size: sizeFilter,
-      search: searchQuery,
-      brand: brandFilter,
-    };
+      const params = {
+        categoryKey: realCategoryKey,
+        subcategoryKey: realSubcategoryKey,
+        gender: genderFilter,
+        size: sizeFilter,
+        search: searchQuery,
+        brand: brandFilter,
+      };
 
-    try {
-      const brands = await fetchFilteredBrands(params);
-      const sizes = await fetchFilteredSizes(params);
-      const genders = await fetchFilteredGenders(params);
+      try {
+        const brands = await fetchFilteredBrands(params);
+        const sizes = await fetchFilteredSizes(params);
+        const genders = await fetchFilteredGenders(params);
 
-      setBrandsInFilter(brands);
-      setSizesInFilter(sizes);
-      setGendersInFilter(genders);
-    } catch (e) {
-      setBrandsInFilter([]);
-      setSizesInFilter([]);
-      setGendersInFilter([]);
+        setBrandsInFilter(brands);
+        setSizesInFilter(sizes);
+        setGendersInFilter(genders);
+      } catch (e) {
+        setBrandsInFilter([]);
+        setSizesInFilter([]);
+        setGendersInFilter([]);
+      }
     }
-  }
-  updateFilterOptions();
-}, [categoryKey, subcategoryKey, genderFilter, sizeFilter, searchQuery, brandFilter]);
-
+    updateFilterOptions();
+  }, [categoryKey, subcategoryKey, genderFilter, sizeFilter, searchQuery, brandFilter]);
 
   // --- React Query infinite query ---
   const {
@@ -126,7 +122,6 @@ useEffect(() => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch,
     isLoading,
     isFetching,
   } = useInfiniteQuery({
@@ -169,7 +164,23 @@ useEffect(() => {
     refetchOnWindowFocus: false,
   });
 
-  // Объединяем все страницы в один массив продуктов
+  // --- Анимация только для новых карточек (после первой) ---
+  const prevCountRef = useRef(PAGE_LIMIT);
+
+  // обновляем prevCountRef только если длина массива увеличилась
+  useEffect(() => {
+    if (!data) return;
+    const flatLength = data.pages.flat().length;
+    // если уже больше первой страницы — запоминаем сколько было
+    if (flatLength > prevCountRef.current) {
+      prevCountRef.current = flatLength - PAGE_LIMIT;
+    }
+    // сброс при смене категории/фильтра/поиска/главной
+    if (isHome || (data.pages && data.pages.length === 1)) {
+      prevCountRef.current = PAGE_LIMIT;
+    }
+  }, [data, isHome, searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter, sort]);
+
   const products = useMemo(() => {
     if (!data) return [];
     return data.pages.flat();
@@ -310,6 +321,28 @@ useEffect(() => {
     if (idx === 0) clearFilters();
   };
 
+  // --- Кнопка наверх ---
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [pageLoads, setPageLoads] = useState(0);
+
+  useEffect(() => {
+    if (data && data.pages && data.pages.length > 1) {
+      setPageLoads(data.pages.length - 1);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400 && pageLoads > 0) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [pageLoads]);
+
   // --- Обработчик скролла для подгрузки ---
   useEffect(() => {
     if (isHome) return;
@@ -379,21 +412,56 @@ useEffect(() => {
 
       <div className="mx-auto px-2 pb-12">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
-          {displayedProducts.length > 0 ? (
-            displayedProducts.map((product) => (
-              <ProductCard
-                key={product.id || product.name + product.color}
-                product={product}
-                onClick={() => handleCardClick(product.id)}
-              />
-            ))
-          ) : (
-            <div className="col-span-5 text-center text-gray-500 py-12">
-              {isLoading || isFetching ? "Loading..." : "No products to display"}
-            </div>
-          )}
+          <AnimatePresence initial={false}>
+            {displayedProducts.map((product, idx) => {
+              // Только НЕ на первой странице и НЕ на главной (isHome)
+              const isAnimated = !isHome && idx >= prevCountRef.current;
+              if (isAnimated) {
+                return (
+                  <motion.div
+                    key={product.id || product.name + product.color}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.18,
+                      delay: (idx - prevCountRef.current) * 0.03,
+                      type: "spring",
+                      stiffness: 120,
+                      damping: 20,
+                    }}
+                    exit={false}
+                  >
+                    <ProductCard
+                      product={product}
+                      onClick={() => handleCardClick(product.id)}
+                    />
+                  </motion.div>
+                );
+              } else {
+                return (
+                  <div key={product.id || product.name + product.color}>
+                    <ProductCard
+                      product={product}
+                      onClick={() => handleCardClick(product.id)}
+                    />
+                  </div>
+                );
+              }
+            })}
+          </AnimatePresence>
         </div>
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+              className="w-8 h-8 border-4 border-neutral-300 border-t-neutral-900 rounded-full"
+            />
+          </div>
+        )}
       </div>
+
+      <ScrollTopButton show={showScrollTop} />
       <Footer />
     </>
   );

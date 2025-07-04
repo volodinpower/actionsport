@@ -2,7 +2,7 @@
   display: flex;
   border-radius: 0 !important;
   flex-direction: column;
-  height: 100%;              /* важно для равной высоты */
+  height: 100%;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   overflow: hidden;
@@ -16,24 +16,26 @@
 .product-card:hover {
   box-shadow: 0 6px 24px rgba(0,0,0,0.15);
 }
-
-/* Обертка для мобильного свайпера + текста, чтобы они были друг под другом */
 .image-text-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-top: 8px;
   box-sizing: border-box;
 }
-
-/* Картинка и блок no-image занимают одинаковое место */
+.swiper-container,
+.image-container {
+  width: 100%;
+  height: 70%;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  display: block;
+}
 .product-image, .no-image {
   width: 100%;
-  border-radius: 0 !important;
-  height: 70%;
+  height: 90%;
   object-fit: contain;
   background: #fff;
-  padding: 8px 2px 4px 2px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -42,13 +44,9 @@
   text-align: center;
   user-select: none;
 }
-
-/* Для десктопа отдельно */
-.product-image {
-  display: block;
+.no-image {
+  background: #f6f6f6;
 }
-
-/* Контент под картинкой */
 .product-content {
   display: flex;
   flex-direction: column;
@@ -56,136 +54,129 @@
   min-height: 0;
   padding: 0 2px;
 }
-
 .product-card-title {
-  font-size: 13px;
+  font-size: 13px !important;  /* фиксированный размер */
   font-weight: 700;
   margin: 3px 0 2px 0;
   line-height: 1.1;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* ограничение в 2 строки */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
-  min-height: 30px; /* фиксированная высота для двух строк */
+  min-height: 30px;
+  max-height: 32px;
 }
-
 .desc-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 4px;
 }
-
 .desc-row {
-  font-size: 10px;
+  font-size: 10px !important;  /* Всегда 10px */
   color: #888;
   line-height: 1.05;
   margin-bottom: 1px;
   white-space: normal;
   word-break: break-word;
 }
-
 .desc-row:last-child {
   margin-bottom: 0;
 }
 
+/* PRICE BLOCK — увеличенный размер шрифта */
 .price-block {
-  margin-top: auto;               /* прижимает вниз */
+  margin-top: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  font-size: 13px;
-  gap: 0px;
+  font-size: 16px;
+  line-height: 1.07;
+  gap: 0;
+}
+.price-block span,
+.price-block .sale-badge,
+.price-block .old-price,
+.price-block .new-price,
+.price-block .cur-price {
+  margin: 0;
+  padding: 0;
+  line-height: 1.07;
+  font-size: 12px;
 }
 
 .sale-badge {
-  font-size: 10px;
   color: #d32d2f;
   font-weight: 600;
-  line-height: 1.05;
 }
-
 .old-price {
-  font-size: 12px;
   color: #888;
   text-decoration: line-through;
   font-weight: 500;
-  line-height: 1.05;
 }
-
 .new-price {
-  font-size: 13px;
   color: #13971a;
   font-weight: 700;
-  line-height: 1.05;
 }
-
 .cur-price {
-  font-size: 13px;
   color: #333;
   font-weight: 600;
-  line-height: 1.05;
 }
 
-/* Контейнер Swiper в карточке */
-.swiper-container {
-  width: 100%;
-  height: 70%; /* как у картинки */
-}
-
-/* Изображения в слайдах Swiper */
-.swiper-slide img {
-  width: 100%;
-  height: 70%;
-  object-fit: contain;
-  user-select: none;
-  border-radius: 0 !important;
-}
-
-/* Мобильная адаптация */
-@media (max-width: 640px) {
+/* MOBILE */
+@media (max-width: 900px) {
   .product-card {
-    aspect-ratio: auto; /* отключаем фиксированное соотношение для гибкости */
+    aspect-ratio: auto;
     border-radius: 0 !important;
     padding: 8px 6px 6px 6px;
   }
-  .swiper-container, .swiper-slide img {
+  .swiper-container, .image-container {
     height: auto !important;
     max-height: 180px;
   }
   .product-image, .no-image {
-    height: auto !important;
+    height: 180px !important;
     max-height: 180px;
     padding: 0;
   }
   .product-content {
-    flex: none;
+    position: relative;
     padding-top: 8px;
-  }
-  .product-card-title {
-    font-size: 14px;
-    min-height: auto;
-  }
-  .desc-group {
-    margin-top: 4px;
-  }
-  .desc-row {
-    font-size: 11px;
+    padding-bottom: 40px;
+    min-height: 72px;
+    flex: none;
   }
   .price-block {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    margin-top: 0;
+    padding-left: 2px;
+    width: auto;
+    font-size: 16px;
+    line-height: 1.07;
+  }
+  .price-block span,
+  .price-block .sale-badge,
+  .price-block .old-price,
+  .price-block .new-price,
+  .price-block .cur-price {
     font-size: 12px;
+    line-height: 1.07;
+  }
+  .product-card-title {
+    font-size: 13px !important;  /* Фикс: одинаковый на всех экранах */
+    min-height: 30px;
+    max-height: 34px;
+  }
+  .desc-group {
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+  .desc-row {
+    font-size: 10px !important; /* Одинаково на всех экранах */
   }
   .old-price, .new-price, .cur-price {
-    font-size: 11px;
-  }
-  /* Пагинация swiper (точки) */
-  .swiper-pagination-bullet {
-    width: 8px;
-    height: 8px;
-    background: red !important;
-    opacity: 0.8;
-  }
-  .swiper-pagination-bullet-active {
-    opacity: 1;
+    font-size: 16px;
   }
 }
