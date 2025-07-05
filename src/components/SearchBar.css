@@ -1,12 +1,13 @@
+/* ---------- МОДАЛКА ПОИСКА ---------- */
 .searchbar-modal-outer {
-  width: 100vw;
+  width: 100%;
   left: 0;
   top: 100%;
   position: absolute;
   z-index: 120;
   background: transparent;
   display: flex;
-  justify-content: center;
+  justify-content: stretch;
   align-items: flex-start;
   margin: 0 !important;
   padding: 0 !important;
@@ -14,17 +15,19 @@
 .searchbar-modal-outer-full {
   justify-content: stretch;
 }
+
+/* ---------- ВНУТРЕННИЙ КОНТЕЙНЕР МОДАЛКИ ---------- */
 .searchbar-modal-inner {
-  width: 100vw;
-  max-width: 700px;
+  width: 100%;
   background: #fff;
   box-shadow: 0 4px 28px 0 rgba(30,30,40,0.10);
   padding: 14px 20px 18px 20px;
   position: relative;
-  margin: 0 auto !important;
+  margin: 0 !important;
+  border-radius: 0;
 }
 
-/* Инпут и крестик в одной строке, занимают всю ширину */
+/* ---------- Строка с инпутом и крестиком ---------- */
 .search-input-and-close-row {
   display: flex;
   align-items: center;
@@ -93,7 +96,7 @@
   background: #f3f3f3;
 }
 
-/* Результаты поиска */
+/* ---------- РЕЗУЛЬТАТЫ ПОИСКА ---------- */
 .search-results-list {
   margin-top: 14px;
   list-style: none;
@@ -142,6 +145,7 @@
     width: 100vw !important;
     margin: 0 !important;
     z-index: 10002 !important;
+    border-radius: 0 !important;
   }
   .search-input, .search-input-full {
     font-size: 17px;

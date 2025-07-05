@@ -6,6 +6,7 @@ import Admin from "./pages/Admin";
 import ProductDetails from "./pages/ProductDetails";
 import AdminPanel from "./components/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
+import BrandsPage from "./pages/Brands";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ function App() {
             }
           />
           <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/brands" element={<BrandsPage />} />
         </Routes>
       </Router>
     </QueryClientProvider>

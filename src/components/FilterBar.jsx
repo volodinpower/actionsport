@@ -1,3 +1,6 @@
+import { useRef, useEffect } from "react";
+import Select from "react-select";
+
 export default function FilterBar({
   submenuList = [],
   sizeFilter,
@@ -11,7 +14,8 @@ export default function FilterBar({
   setForceOpenCategory = () => {},
   showGender = true,
   showCategory = true,
-  brandsMode = false,  // <--- добавляем режим брендов!
+  brandsMode = false,
+  hideBrandSelect = false, // <-- новый проп для скрытия brand select
   onCategoryChange,
   onBrandChange,
   onSizeChange,
@@ -55,7 +59,7 @@ export default function FilterBar({
       )}
 
       {/* BRAND */}
-      {!brandsMode && (
+      {!hideBrandSelect && (
         <Select
           classNamePrefix="react-select"
           placeholder="Brand"

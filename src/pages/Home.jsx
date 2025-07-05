@@ -17,12 +17,10 @@ import {
   fetchFilteredBrands,
   fetchFilteredSizes,
   fetchFilteredGenders,
-  fetchBrands, // <-- добавляем обычную загрузку всех брендов
-  fetchProductsCount,
 } from "../api";
 
-// --- utility ---
 const PAGE_LIMIT = 20;
+
 function getColumnsCount() {
   const width = window.innerWidth;
   if (width >= 1280) return 5;
@@ -43,7 +41,6 @@ function groupProducts(rawProducts) {
   }));
 }
 
-// --- основной компонент ---
 export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,15 +55,13 @@ export default function Home() {
   const genderFilter = urlSearchParams.get("gender") || "";
   const sort = urlSearchParams.get("sort") || "";
 
-  // --- режим home, brands или обычные товары ---
+  // --- режимы ---
   const isHome = useMemo(
     () => !searchQuery && !categoryKey && !brandFilter && !genderFilter && !sizeFilter,
     [searchQuery, categoryKey, brandFilter, genderFilter, sizeFilter]
   );
-  const isBrandsMode = useMemo(
-    () => categoryKey === "brands" && !brandFilter,
-    [categoryKey, brandFilter]
-  );
+  const isBrandPage = categoryKey === "brands" && !!brandFilter;
+  const isSale = categoryKey === "sale";
 
   const [categoryLabel, setCategoryLabel] = useState("");
   const [columns, setColumns] = useState(getColumnsCount());
@@ -82,69 +77,165 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- категории ---
+  // --- категории для меню/фильтра ---
   const [categories, setCategories] = useState([]);
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
-  // --- brands для brandsMode ---
-  const [popularBrands, setPopularBrands] = useState([]);
-  useEffect(() => {
-    if (!isBrandsMode) return;
-    // Загружаем все бренды и их количество товаров
-    fetchProductsCount().then(async () => {
-      const allBrands = await fetchBrands();
-      // Подсчитаем сколько товаров на каждый бренд
-      const counts = {};
-      for (const brand of allBrands) {
-        const products = await fetchProducts("", 1, 0, "", brand);
-        counts[brand] = products.length;
-      }
-      // Отсортируем по количеству и возьмём топ 18
-      const sorted = Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])
-        .map(x => x[0])
-        .slice(0, 18);
-      setPopularBrands(sorted);
-    });
-  }, [isBrandsMode]);
-
-  // --- фильтры ---
+  // --- фильтры для FilterBar ---
   const [brandsInFilter, setBrandsInFilter] = useState([]);
   const [sizesInFilter, setSizesInFilter] = useState([]);
   const [gendersInFilter, setGendersInFilter] = useState([]);
+  const [submenuList, setSubmenuList] = useState([]);
+
+  // --- Фильтры: логика для sale, brands, остальных
   useEffect(() => {
     async function updateFilterOptions() {
-      let realCategoryKey = categoryKey === "sale" ? "sale" : categoryKey;
-      let realSubcategoryKey = subcategoryKey;
-      if (realSubcategoryKey) realCategoryKey = "";
+      // --- BRANDS (при выбранном бренде) ---
+      if (isBrandPage) {
+        setBrandsInFilter([]); // Скрываем селектор бренда
+        // подкатегории только по товарам бренда
+        const products = await fetchProducts(
+          searchQuery, 500, 0, "", brandFilter
+        );
+        const setSubs = new Set();
+        products.forEach(p => {
+          if (p.subcategory_key) setSubs.add(p.subcategory_key);
+        });
+        const subcategories = Array.from(setSubs);
+        setSubmenuList(subcategories);
 
-      const params = {
-        categoryKey: realCategoryKey,
-        subcategoryKey: realSubcategoryKey,
-        gender: genderFilter,
-        size: sizeFilter,
-        search: searchQuery,
-        brand: brandFilter,
-      };
-
-      try {
-        const brands = await fetchFilteredBrands(params);
-        const sizes = await fetchFilteredSizes(params);
-        const genders = await fetchFilteredGenders(params);
-
-        setBrandsInFilter(brands);
+        const sizes = await fetchFilteredSizes({
+          categoryKey: "",
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
         setSizesInFilter(sizes);
+
+        const genders = await fetchFilteredGenders({
+          categoryKey: "",
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
         setGendersInFilter(genders);
-      } catch (e) {
-        setBrandsInFilter([]);
-        setSizesInFilter([]);
-        setGendersInFilter([]);
+      }
+      // --- SALE ---
+      else if (isSale) {
+        // 1. Подкатегории по текущей выборке
+        const saleProducts = await fetchProducts(
+          searchQuery,
+          500,
+          0,
+          "",
+          brandFilter,
+          "asc",
+          "sale",
+          subcategoryKey,
+          genderFilter,
+          sizeFilter
+        );
+        const setSubs = new Set();
+        saleProducts.forEach(p => {
+          if (p.subcategory_key) setSubs.add(p.subcategory_key);
+        });
+        const subcategories = Array.from(setSubs);
+        setSubmenuList(subcategories);
+
+        // 2. Все фильтры (brand, size, gender) ДОЛЖНЫ учитывать ВСЕ фильтры (subcategory тоже)
+        const brands = await fetchFilteredBrands({
+          categoryKey: "sale",
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
+        setBrandsInFilter(brands);
+
+        const sizes = await fetchFilteredSizes({
+          categoryKey: "sale",
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
+        setSizesInFilter(sizes);
+
+        const genders = await fetchFilteredGenders({
+          categoryKey: "sale",
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
+        setGendersInFilter(genders);
+      }
+      // --- ОСТАЛЬНЫЕ ---
+      else {
+        const brands = await fetchFilteredBrands({
+          categoryKey,
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
+        setBrandsInFilter(brands);
+
+        const sizes = await fetchFilteredSizes({
+          categoryKey,
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
+        setSizesInFilter(sizes);
+
+        const genders = await fetchFilteredGenders({
+          categoryKey,
+          subcategoryKey,
+          brand: brandFilter,
+          gender: genderFilter,
+          size: sizeFilter,
+          search: searchQuery,
+        });
+        setGendersInFilter(genders);
+
+        // подкатегории из categories
+        const cat = categories.find(c => c.category_key === categoryKey);
+        if (cat && cat.subcategories) {
+          setSubmenuList(
+            cat.subcategories.map(sub =>
+              typeof sub === "string" ? sub : sub.subcategory_key || sub.label
+            )
+          );
+        } else {
+          setSubmenuList([]);
+        }
       }
     }
-    if (!isBrandsMode) updateFilterOptions();
-  }, [categoryKey, subcategoryKey, genderFilter, sizeFilter, searchQuery, brandFilter, isBrandsMode]);
+    updateFilterOptions();
+  }, [
+    isBrandPage,
+    isSale,
+    categoryKey,
+    subcategoryKey,
+    genderFilter,
+    sizeFilter,
+    searchQuery,
+    brandFilter,
+    categories,
+  ]);
 
   // --- infinite query ---
   const {
@@ -173,6 +264,37 @@ export default function Home() {
       if (isHome) {
         return fetchPopularProducts(homeLimit, 0).then(groupProducts);
       }
+      // --- brands режим: фильтрация только по бренду и подкатегории
+      if (isBrandPage) {
+        return fetchProducts(
+          searchQuery,
+          PAGE_LIMIT,
+          pageParam,
+          "",
+          brandFilter,
+          sort || "asc",
+          "",
+          subcategoryKey,
+          genderFilter,
+          sizeFilter
+        ).then(groupProducts);
+      }
+      // --- sale ---
+      if (isSale) {
+        return fetchProducts(
+          searchQuery,
+          PAGE_LIMIT,
+          pageParam,
+          "",
+          brandFilter,
+          sort || "asc",
+          "sale",
+          subcategoryKey,
+          genderFilter,
+          sizeFilter
+        ).then(groupProducts);
+      }
+      // --- обычный режим
       return fetchProducts(
         searchQuery,
         PAGE_LIMIT,
@@ -208,15 +330,6 @@ export default function Home() {
   }, [data, isHome, searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter, sort]);
   const products = useMemo(() => (!data ? [] : data.pages.flat()), [data]);
 
-  // --- подкатегории ---
-  const submenuList = useMemo(() => {
-    const cat = categories.find(c => c.category_key === categoryKey);
-    if (!cat) return [];
-    return (cat.subcategories || []).map(sub =>
-      typeof sub === "string" ? sub : sub.subcategory_key || sub.label
-    );
-  }, [categories, categoryKey]);
-
   // --- сортировка ---
   const getEffectivePrice = (item) => {
     const fix = val => {
@@ -239,7 +352,7 @@ export default function Home() {
     return arr;
   }, [products, sort]);
 
-  // --- переход по карточке ---
+  // --- клик по карточке ---
   const handleCardClick = (productId) => {
     navigate(`/product/${productId}`, {
       state: { from: location.pathname + location.search },
@@ -265,12 +378,21 @@ export default function Home() {
   }
   const handleSearch = (query = "") => updateUrlFilters({ search: query });
 
-  // --- главный клик по меню ---
+  // --- обработчик клика по меню ---
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
     setCategoryLabel(catLabel || "");
-    // brands режим
-    if (catKey === "brands") {
-      updateUrlFilters({ category: "brands", brand: "", gender: "", size: "", sort: "" });
+    if (catKey === "brands" && subKey) {
+      updateUrlFilters({
+        category: "brands",
+        brand: subKey,
+        gender: "",
+        size: "",
+        sort: "",
+      });
+    }
+    else if (catKey === "brands") {
+      // теперь это не используется, /brands выводится отдельной страницей
+      navigate("/brands");
     } else {
       updateUrlFilters({
         category: catKey,
@@ -284,25 +406,10 @@ export default function Home() {
     }
   };
 
-  // --- клик по бренду (brandsMode) ---
-  const handleBrandClick = (brand) => {
-    updateUrlFilters({
-      category: "brands",
-      brand,
-      gender: "",
-      size: "",
-      sort: "",
-    });
-  };
-
   const onCategoryChange = (subKey) => {
     updateUrlFilters({
-      category: categoryKey,
+      ...getCurrentFilters(),
       subcategory: subKey,
-      brand: "",
-      size: "",
-      gender: "",
-      sort: "",
     });
   };
   const onBrandChange = (brand) => {
@@ -340,10 +447,11 @@ export default function Home() {
 
   // --- хлебные крошки ---
   const breadcrumbs = useMemo(() => {
-    if (isBrandsMode) {
+    if (brandFilter && categoryKey === "brands") {
       return [
         { label: "Main", query: "" },
         { label: "Brands", query: "brands" },
+        { label: brandFilter, query: "" },
       ];
     }
     if (searchQuery) {
@@ -359,11 +467,12 @@ export default function Home() {
       ];
     }
     return [{ label: "Main", query: "" }];
-  }, [searchQuery, categoryKey, categoryLabel, isBrandsMode]);
+  }, [searchQuery, categoryKey, categoryLabel, brandFilter]);
 
   const handleBreadcrumbClick = (idx) => {
     if (idx === 0) clearFilters();
-    if (idx === 1 && isBrandsMode) updateUrlFilters({ category: "brands", brand: "" });
+    if (idx === 1 && (brandFilter && categoryKey === "brands"))
+      updateUrlFilters({ category: "brands", brand: "" });
   };
 
   // --- Кнопка наверх ---
@@ -388,11 +497,9 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [pageLoads]);
 
-  // --- Обработчик скролла для подгрузки ---
   useEffect(() => {
-    if (isHome || isBrandsMode) return;
+    if (isHome) return;
     if (!hasNextPage || isFetchingNextPage) return;
-
     function onScroll() {
       if (
         window.innerHeight + document.documentElement.scrollTop
@@ -401,10 +508,9 @@ export default function Home() {
         fetchNextPage();
       }
     }
-
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isHome, isBrandsMode]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isHome]);
 
   // --- Render ---
   return (
@@ -417,7 +523,7 @@ export default function Home() {
         setCategoryFilter={() => {}}
         setForceOpenCategory={() => {}}
         navigate={navigate}
-        activeCategoryKey={isBrandsMode ? "brands" : categoryKey}
+        activeCategoryKey={categoryKey}
       />
 
       {!isHome && (
@@ -426,26 +532,8 @@ export default function Home() {
 
       {isHome && <Banner />}
 
-      {/* Brands Mode: сетка брендов */}
-      {isBrandsMode && (
-        <div className="brands-grid mx-auto px-2 pb-8 max-w-5xl">
-          <h2 className="text-2xl font-bold text-center py-4">Популярные бренды</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {popularBrands.map((brand) => (
-              <button
-                key={brand}
-                className="brand-item border border-gray-300 rounded-lg p-3 hover:bg-gray-100 text-center font-semibold text-lg"
-                onClick={() => handleBrandClick(brand)}
-              >
-                {brand}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Список товаров для выбранного бренда */}
-      {!isHome && !isBrandsMode && (
+      {/* Фильтры и товары */}
+      {!isHome && (
         <div>
           <FilterBar
             allSizes={sizesInFilter}
@@ -461,9 +549,10 @@ export default function Home() {
             }))}
             forceOpenCategory={false}
             setForceOpenCategory={() => {}}
-            clearFilters={clearFilters}
             showGender={gendersInFilter.length > 1 || !!genderFilter}
-            showCategory={!!categoryKey && categoryKey !== "sale" && categoryKey !== "brands"}
+            showCategory={true}
+            brandsMode={isBrandPage}
+            hideBrandSelect={isBrandPage}
             onCategoryChange={onCategoryChange}
             onBrandChange={onBrandChange}
             onSizeChange={onSizeChange}
@@ -476,58 +565,55 @@ export default function Home() {
       )}
 
       {/* Список товаров */}
-      {!isBrandsMode && (
-        <div className="mx-auto px-2 pb-12">
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
-            <AnimatePresence initial={false}>
-              {displayedProducts.map((product, idx) => {
-                // Только НЕ на первой странице и НЕ на главной (isHome)
-                const isAnimated = !isHome && idx >= prevCountRef.current;
-                if (isAnimated) {
-                  return (
-                    <motion.div
-                      key={product.id || product.name + product.color}
-                      initial={{ opacity: 0, y: 40 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: 0.18,
-                        delay: (idx - prevCountRef.current) * 0.03,
-                        type: "spring",
-                        stiffness: 120,
-                        damping: 20,
-                      }}
-                      exit={false}
-                    >
-                      <ProductCard
-                        product={product}
-                        onClick={() => handleCardClick(product.id)}
-                      />
-                    </motion.div>
-                  );
-                } else {
-                  return (
-                    <div key={product.id || product.name + product.color}>
-                      <ProductCard
-                        product={product}
-                        onClick={() => handleCardClick(product.id)}
-                      />
-                    </div>
-                  );
-                }
-              })}
-            </AnimatePresence>
-          </div>
-          {isFetchingNextPage && (
-            <div className="flex justify-center py-4">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                className="w-8 h-8 border-4 border-neutral-300 border-t-neutral-900 rounded-full"
-              />
-            </div>
-          )}
+      <div className="mx-auto px-2 pb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
+          <AnimatePresence initial={false}>
+            {displayedProducts.map((product, idx) => {
+              const isAnimated = !isHome && idx >= prevCountRef.current;
+              if (isAnimated) {
+                return (
+                  <motion.div
+                    key={product.id || product.name + product.color}
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.18,
+                      delay: (idx - prevCountRef.current) * 0.03,
+                      type: "spring",
+                      stiffness: 120,
+                      damping: 20,
+                    }}
+                    exit={false}
+                  >
+                    <ProductCard
+                      product={product}
+                      onClick={() => handleCardClick(product.id)}
+                    />
+                  </motion.div>
+                );
+              } else {
+                return (
+                  <div key={product.id || product.name + product.color}>
+                    <ProductCard
+                      product={product}
+                      onClick={() => handleCardClick(product.id)}
+                    />
+                  </div>
+                );
+              }
+            })}
+          </AnimatePresence>
         </div>
-      )}
+        {isFetchingNextPage && (
+          <div className="flex justify-center py-4">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+              className="w-8 h-8 border-4 border-neutral-300 border-t-neutral-900 rounded-full"
+            />
+          </div>
+        )}
+      </div>
 
       <ScrollTopButton show={showScrollTop} />
       <Footer />

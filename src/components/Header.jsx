@@ -112,7 +112,7 @@ export default function Header({
           </a>
         </div>
       </div>
-      <div className="nav-bar">
+      <div className="nav-bar" style={{ position: "relative" }}>
         <div className="nav-menu-wrap">
           <NavMenu
             onMainCategorySelect={onMenuCategoryClick}
@@ -139,6 +139,7 @@ export default function Header({
             />
           </svg>
         </button>
+        {/* МОДАЛКА ПОИСКА: ОСТАЁТСЯ ВНУТРИ .nav-bar */}
         {showSearch && (
           <div className="search-flyout searchbar-modal-outer-full">
             <SearchBar
