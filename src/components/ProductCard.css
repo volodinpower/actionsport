@@ -1,3 +1,56 @@
+/* Родитель растянут на всю ширину, а внутренняя сетка — с max-width по центру */
+.searchbar-modal-inner {
+  width: 100%;
+  max-width: 1200px; /* Ширина твоего основного контейнера, может быть 1128px, 1160px и т.д. */
+  margin: 0 auto;
+  background: #fff;
+}
+
+.search-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* 200px или под твой размер */
+  gap: 18px 14px;
+  width: 100%;
+  margin: 0;
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+/* Компактные карточки товаров */
+.product-card-compact {
+  max-width: 200px;   /* под размер карточки, ровно как minmax */
+  width: 100%;
+  margin: 0 auto;
+}
+
+
+.product-card-compact .product-image,
+.product-card-compact .image-container {
+  height: 120px !important;
+  min-height: 120px !important;
+  max-height: 120px !important;
+  object-fit: contain;
+}
+
+.product-card-compact .product-content {
+  padding: 6px 0 0 0;
+}
+
+.product-card-compact .product-card-title {
+  font-size: 1em;
+  line-height: 1.16;
+  margin-bottom: 4px;
+}
+
+.product-card-compact .desc-row {
+  font-size: 0.98em;
+}
+
+.product-card-compact .price-block {
+  margin-top: 2px;
+  font-size: 0.97em;
+}
+
 .product-card {
   display: flex;
   border-radius: 0 !important;

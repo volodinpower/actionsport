@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "./ProductCard.css";
 
-export default function ProductCard({ product, onClick }) {
+export default function ProductCard({ product, onClick, compact = false }) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
@@ -58,7 +58,7 @@ export default function ProductCard({ product, onClick }) {
 
   return (
     <div
-      className="product-card"
+      className={`product-card${compact ? " product-card-compact" : ""}`}
       onClick={onClick}
       title={product.sitename}
       onMouseEnter={() => !isMobile && setIsHovered(true)}

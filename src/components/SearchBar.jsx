@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import ProductCard from "./ProductCard";
 import "./SearchBar.css";
 
 export default function SearchBar({
   onSearch,
   autoFocus = false,
   onClose,
-  fullWidth = false,
+  fullWidth = true,  // будем растягивать на всю ширину
 }) {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -15,14 +16,12 @@ export default function SearchBar({
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "";
 
-  // Автофокус при открытии поиска
   useEffect(() => {
     if (autoFocus && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [autoFocus]);
 
-  // Поиск подсказок при наборе текста
   useEffect(() => {
     const delay = setTimeout(async () => {
       const query = searchText.trim();
@@ -30,11 +29,11 @@ export default function SearchBar({
         setLoading(true);
         try {
           const res = await fetch(
-            `${API_URL}/products?search=${encodeURIComponent(query)}&limit=15`
+            `${API_URL}/products?search=${encodeURIComponent(query)}&limit=30`
           );
           const data = await res.json();
           setSearchResults(Array.isArray(data) ? data : []);
-        } catch (err) {
+        } catch {
           setSearchResults([]);
         }
         setLoading(false);
@@ -45,29 +44,26 @@ export default function SearchBar({
     return () => clearTimeout(delay);
   }, [searchText, API_URL]);
 
-  // Обработка поиска по Enter или по кнопке
-const handleSearch = () => {
-  const trimmed = searchText.trim();
-  if (trimmed) {
-    onSearch(trimmed, [
-      { label: "Main", query: "", exclude: "" },
-      { label: `Search: ${trimmed}`, query: trimmed, exclude: "" }
-    ]);
-    setSearchResults([]);
-    if (onClose) onClose();
-    if (searchInputRef.current) searchInputRef.current.blur();
-  }
-};
+  const handleSearch = () => {
+    const trimmed = searchText.trim();
+    if (trimmed) {
+      onSearch(trimmed, [
+        { label: "Main", query: "", exclude: "" },
+        { label: `Search: ${trimmed}`, query: trimmed, exclude: "" }
+      ]);
+      setSearchResults([]);
+      if (onClose) onClose();
+      if (searchInputRef.current) searchInputRef.current.blur();
+    }
+  };
 
-  // Очистить поиск
   const handleClear = () => {
     setSearchText("");
     setSearchResults([]);
-    onSearch(""); // Сброс поиска (отображать все)
+    onSearch("");
     if (searchInputRef.current) searchInputRef.current.focus();
   };
 
-  // Выбор бренда из подсказок
   const handleBrandSelect = (sitename) => {
     setSearchText(sitename);
     setSearchResults([]);
@@ -76,7 +72,6 @@ const handleSearch = () => {
     if (searchInputRef.current) searchInputRef.current.blur();
   };
 
-  // Переход к товару из подсказок
   const handleProductSelect = (item) => {
     setSearchText(item.sitename);
     setSearchResults([]);
@@ -85,10 +80,13 @@ const handleSearch = () => {
     navigate(`/product/${item.id}`);
   };
 
+  const brands = searchResults.filter(r => r.is_brand);
+  const products = searchResults.filter(r => !r.is_brand);
+
   return (
     <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
       <div className="searchbar-modal-inner">
-        {/* Ряд с инпутом и крестиком */}
+        {/* Input + clear + close */}
         <div className="search-input-and-close-row">
           <div className="search-input-row">
             <input
@@ -107,11 +105,8 @@ const handleSearch = () => {
                   onClose();
                 }
               }}
-              style={{
-                paddingRight: searchText ? 64 : 16, // место для "Clear"
-              }}
+              style={{ paddingRight: searchText ? 64 : 16 }}
             />
-            {/* Кнопка очистки */}
             {searchText && (
               <button
                 type="button"
@@ -123,7 +118,6 @@ const handleSearch = () => {
               </button>
             )}
           </div>
-          {/* Крестик закрытия — справа от инпута */}
           {onClose && (
             <button
               className="search-close-inline"
@@ -135,43 +129,44 @@ const handleSearch = () => {
             </button>
           )}
         </div>
+
         {(searchText || loading) && (
           <div className="search-results-list">
             {loading ? (
               <div className="search-loading">Search...</div>
-            ) : searchResults.length > 0 ? (
-              searchResults.map((item) =>
-                item.is_brand ? (
-                  <div
-                    key={"brand-" + item.sitename}
-                    className="search-result-item brand"
-                    onClick={() => handleBrandSelect(item.sitename)}
-                  >
-                    <span>{item.sitename} - brand</span>
-                  </div>
-                ) : (
-                  <div
-                    key={item.id}
-                    className="search-result-item"
-                    onClick={() => handleProductSelect(item)}
-                  >
-                    <img
-                      src={
-                        item.main_img
-                          ? item.main_img.startsWith("http")
-                            ? item.main_img
-                            : `${API_URL}${item.main_img}`
-                          : "/no-image.jpg"
-                      }
-                      alt=""
-                      className="result-img"
-                    />
-                    <span>{item.sitename}</span>
-                  </div>
-                )
-              )
             ) : (
-              <div className="search-no-results">No results</div>
+              <>
+                {/* Бренды */}
+                {brands.length > 0 && (
+                  <div className="search-brands-block">
+                    {brands.map((brand) => (
+                      <div
+                        key={"brand-" + brand.sitename}
+                        className="search-result-item brand"
+                        onClick={() => handleBrandSelect(brand.sitename)}
+                      >
+                        <span>{brand.sitename} - brand</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Компактные карточки товаров */}
+                <div className="search-products-grid">
+                  {products.length > 0 ? (
+                    products.map((item) => (
+                      <ProductCard
+                        key={item.id}
+                        product={item}
+                        onClick={() => handleProductSelect(item)}
+                        compact={true}  // Важный проп для компактного стиля
+                      />
+                    ))
+                  ) : (
+                    <div className="search-no-results">No results</div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}

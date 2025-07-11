@@ -1,33 +1,34 @@
-/* ---------- МОДАЛКА ПОИСКА ---------- */
+/* --- Модалка поиска: внешний контейнер --- */
 .searchbar-modal-outer {
-  width: 100%;
-  left: 0;
-  top: 100%;
   position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100vw;
   z-index: 120;
   background: transparent;
   display: flex;
-  justify-content: stretch;
+  justify-content: flex-start;
   align-items: flex-start;
   margin: 0 !important;
   padding: 0 !important;
 }
 .searchbar-modal-outer-full {
-  justify-content: stretch;
+  justify-content: flex-start;
 }
 
-/* ---------- ВНУТРЕННИЙ КОНТЕЙНЕР МОДАЛКИ ---------- */
+/* --- Модалка поиска: внутренний контейнер --- */
 .searchbar-modal-inner {
-  width: 100%;
+  width: 100vw;
+  max-width: none;
   background: #fff;
-  box-shadow: 0 4px 28px 0 rgba(30,30,40,0.10);
+  box-shadow: 0 4px 28px rgba(30,30,40,0.1);
   padding: 14px 20px 18px 20px;
   position: relative;
   margin: 0 !important;
   border-radius: 0;
 }
 
-/* ---------- Строка с инпутом и крестиком ---------- */
+/* --- Поисковая строка и крестик --- */
 .search-input-and-close-row {
   display: flex;
   align-items: center;
@@ -51,7 +52,7 @@
   transition: border 0.2s;
 }
 .search-input:focus, .search-input-full:focus {
-  border: 1.5px solid #000000;
+  border: 1.5px solid #000;
   background: #fff;
 }
 .search-clear-btn {
@@ -75,7 +76,6 @@
   background: #f3f3f3;
   text-decoration: underline;
 }
-/* Крестик закрытия — справа от инпута */
 .search-close-inline {
   flex: 0 0 auto;
   margin-left: 8px;
@@ -91,53 +91,210 @@
   display: flex;
   align-items: center;
 }
-.search-close-inline:hover, .search-close-inline:focus {
+.search-close-inline:hover,
+.search-close-inline:focus {
   color: #ff4747;
   background: #f3f3f3;
 }
 
-/* ---------- РЕЗУЛЬТАТЫ ПОИСКА ---------- */
+/* --- Результаты поиска (скроллируемый блок) --- */
 .search-results-list {
   margin-top: 14px;
-  list-style: none;
-  padding: 0;
-  color: #333;
-  max-height: 60vh;
+  max-height: 65vh;
   overflow-y: auto;
   background: #fff;
   box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 0;
+  color: #333;
 }
-.search-result-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #f2f2f2;
-  font-size: 16px;
-  transition: background .15s;
-}
+
+/* --- Бренды --- */
 .search-result-item.brand {
   background: #f9f9f9;
   font-weight: 500;
+  padding: 9px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f2f2f2;
+  transition: background 0.15s;
+  font-size: 16px;
 }
-.search-result-item:hover {
+.search-result-item.brand:hover {
   background: #f1f1f1;
 }
-.result-img {
-  width: 38px;
-  height: 38px;
-  object-fit: cover;
-  border: 1px solid #ececec;
-}
-.search-no-results, .search-loading {
-  padding: 16px;
-  color: #888;
-  text-align: center;
-  font-style: italic;
+
+/* --- Сетка товаров (ТОЛЬКО GRID!) --- */
+.search-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 18px 14px;
+  width: 100%;
+  margin: 0;
+  align-items: stretch;
+  justify-items: start;
+  justify-content: start;
+  /* если хочешь ограничить максимальную ширину на огромных экранах:
+  max-width: 1240px;
+  margin-left: 0;
+  margin-right: auto;
+  */
 }
 
-/* ----------- Мобилка ----------- */
+/* --- Компактная карточка товара --- */
+.product-card-compact {
+  max-width: 200px;
+  width: 100%;
+  margin: 0;
+}
+
+/* --- Контент внутри карточки (по желанию, если нужно) --- */
+.product-card-compact .product-image,
+.product-card-compact .image-container {
+  height: 120px !important;
+  min-height: 120px !important;
+  max-height: 120px !important;
+  object-fit: contain;
+}
+.product-card-compact .product-content {
+  padding: 6px 0 0 0;
+}
+.product-card-compact .product-card-title {
+  font-size: 1em;
+  line-height: 1.16;
+  margin-bottom: 4px;
+}
+.product-card-compact .desc-row {
+  font-size: 0.98em;
+}
+.product-card-compact .price-block {
+  margin-top: 2px;
+  font-size: 0.97em;
+}
+
+/* --- Стандартная карточка товара (базовая стилизация) --- */
+.product-card {
+  display: flex;
+  border-radius: 0 !important;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  padding: 4px 4px 6px 4px;
+  min-width: 0;
+}
+.product-card:hover {
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+}
+.image-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+.swiper-container,
+.image-container {
+  width: 100%;
+  height: 70%;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  display: block;
+}
+.product-image, .no-image {
+  width: 100%;
+  height: 90%;
+  object-fit: contain;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  color: #aaa;
+  text-align: center;
+  user-select: none;
+}
+.no-image {
+  background: #f6f6f6;
+}
+.product-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 2px;
+}
+.product-card-title {
+  font-size: 13px !important;
+  font-weight: 700;
+  margin: 3px 0 2px 0;
+  line-height: 1.1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+  min-height: 30px;
+  max-height: 32px;
+}
+.desc-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+.desc-row {
+  font-size: 10px !important;
+  color: #888;
+  line-height: 1.05;
+  margin-bottom: 1px;
+  white-space: normal;
+  word-break: break-word;
+}
+.desc-row:last-child {
+  margin-bottom: 0;
+}
+/* PRICE BLOCK */
+.price-block {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 16px;
+  line-height: 1.07;
+  gap: 0;
+}
+.price-block span,
+.price-block .sale-badge,
+.price-block .old-price,
+.price-block .new-price,
+.price-block .cur-price {
+  margin: 0;
+  padding: 0;
+  line-height: 1.07;
+  font-size: 12px;
+}
+.sale-badge {
+  color: #d32d2f;
+  font-weight: 600;
+}
+.old-price {
+  color: #888;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+.new-price {
+  color: #13971a;
+  font-weight: 700;
+}
+.cur-price {
+  color: #333;
+  font-weight: 600;
+}
+
+/* --- Мобильные стили --- */
 @media (max-width: 900px) {
   .searchbar-modal-outer,
   .searchbar-modal-inner {
@@ -161,6 +318,60 @@
   }
   .search-input-and-close-row {
     margin-bottom: 8px;
+  }
+  .product-card {
+    aspect-ratio: auto;
+    border-radius: 0 !important;
+    padding: 8px 6px 6px 6px;
+  }
+  .swiper-container, .image-container {
+    height: auto !important;
+    max-height: 180px;
+  }
+  .product-image, .no-image {
+    height: 180px !important;
+    max-height: 180px;
+    padding: 0;
+  }
+  .product-content {
+    position: relative;
+    padding-top: 8px;
+    padding-bottom: 40px;
+    min-height: 72px;
+    flex: none;
+  }
+  .price-block {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    margin-top: 0;
+    padding-left: 2px;
+    width: auto;
+    font-size: 16px;
+    line-height: 1.07;
+  }
+  .price-block span,
+  .price-block .sale-badge,
+  .price-block .old-price,
+  .price-block .new-price,
+  .price-block .cur-price {
+    font-size: 12px;
+    line-height: 1.07;
+  }
+  .product-card-title {
+    font-size: 13px !important;
+    min-height: 30px;
+    max-height: 34px;
+  }
+  .desc-group {
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+  .desc-row {
+    font-size: 10px !important;
+  }
+  .old-price, .new-price, .cur-price {
+    font-size: 16px;
   }
 }
 @media (max-width: 600px) {
