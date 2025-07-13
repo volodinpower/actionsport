@@ -1,4 +1,4 @@
-/* ------ Глобальная сетка для поиска ------ */
+/* ------- Сетка результатов поиска ------- */
 .searchbar-modal-inner {
   width: 100%;
   max-width: 1200px;
@@ -7,58 +7,61 @@
 }
 .search-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px 10px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 15px 10px;
   width: 100%;
   align-items: stretch;
   justify-items: stretch;
 }
 
-/* ------ Компактная карточка товара ------ */
+/* ------- Компактная карточка ------- */
 .product-card-compact {
   display: flex;
   flex-direction: column;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   overflow: hidden;
   width: 100%;
-  max-width: 200px;
-  aspect-ratio: 1 / 1.18;
-  padding: 7px 7px 11px 7px;
-  cursor: pointer;
+  max-width: 170px;
   min-width: 0;
+  aspect-ratio: 1/1.15;
+  padding: 8px 7px 12px 7px;
+  cursor: pointer;
   transition: box-shadow 0.17s;
 }
 .product-card-compact:hover {
   box-shadow: 0 6px 24px rgba(0,0,0,0.13);
 }
 
-.product-card-compact .product-image,
-.product-card-compact .image-container {
+/* --- Обертка и картинка: всегда квадратная и широкая --- */
+.product-card-compact .image-container,
+.product-card-compact .product-image {
   width: 100%;
-  height: 112px !important;
-  min-height: 112px !important;
-  max-height: 112px !important;
+  aspect-ratio: 1/1;
   object-fit: contain;
-  background: #f9f9fa;
-  border-radius: 8px;
-  margin-bottom: 5px;
+  background: #f7f8fa;
+  border-radius: 7px;
+  margin-bottom: 7px;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  display: block;
 }
 
+/* --- Контент --- */
 .product-card-compact .product-content {
-  padding: 4px 0 0 0;
   display: flex;
   flex-direction: column;
   min-height: 0;
   flex: 1 1 auto;
+  padding: 4px 0 0 0;
 }
-
 .product-card-compact .product-card-title {
   font-size: 1.07em;
   font-weight: 700;
-  color: #24272e;
-  line-height: 1.15;
+  color: #262b32;
+  line-height: 1.14;
   margin-bottom: 3px;
   min-height: 28px;
   max-height: 32px;
@@ -88,7 +91,7 @@
   gap: 7px;
 }
 
-/* ------ PRICE: акценты ------ */
+/* --- PRICE --- */
 .product-card-compact .sale-badge {
   color: #d32d2f;
   font-weight: 700;
@@ -111,55 +114,53 @@
   font-size: 1em;
 }
 
-/* ------ MOBILE: сверх компактно! ------ */
+/* --------- Адаптивность для мобильных --------- */
 @media (max-width: 640px) {
   .search-products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 9px 6px;
+    grid-template-columns: repeat(auto-fill, minmax(98px, 1fr));
+    gap: 6px 4px;
   }
   .product-card-compact {
-    max-width: 120px;
-    border-radius: 7px;
-    aspect-ratio: 1/1.25;
-    padding: 3px 2px 6px 2px;
-    font-size: 0.93rem;
-  }
-  .product-card-compact .product-image,
-  .product-card-compact .image-container {
-    height: 68px !important;
-    min-height: 68px !important;
-    max-height: 68px !important;
+    max-width: 98px;
+    aspect-ratio: 1/1.20;
     border-radius: 5px;
+    font-size: 0.89rem;
+    padding: 3px 2px 6px 2px;
+  }
+  .product-card-compact .image-container,
+  .product-card-compact .product-image {
+    aspect-ratio: 1/1;
     margin-bottom: 3px;
+    border-radius: 4px;
   }
   .product-card-compact .product-card-title {
     font-size: 0.97em;
-    min-height: 17px;
-    max-height: 22px;
+    min-height: 14px;
+    max-height: 20px;
     margin-bottom: 1px;
   }
   .product-card-compact .desc-row {
-    font-size: 0.82em;
+    font-size: 0.81em;
     margin-bottom: 0;
   }
   .product-card-compact .price-block {
-    font-size: 0.98em;
-    margin-top: 2px;
-    gap: 3px;
+    font-size: 0.92em;
+    margin-top: 1px;
+    gap: 2px;
   }
 }
 
-/* ----------- EXTRA: универсальный скролл (по желанию) ----------- */
+/* --- Красивый скролл (по желанию) --- */
 .product-card-compact::-webkit-scrollbar {
-  width: 0.37em;
-  background: #ececec;
-  border-radius: 5px;
+  width: 0.34em;
+  background: #ededed;
+  border-radius: 4px;
 }
 .product-card-compact::-webkit-scrollbar-thumb {
-  background: #c6c6cc;
-  border-radius: 5px;
+  background: #e1e1e7;
+  border-radius: 4px;
 }
 .product-card-compact {
   scrollbar-width: thin;
-  scrollbar-color: #c6c6cc #ececec;
+  scrollbar-color: #e1e1e7 #ededed;
 }
