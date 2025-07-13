@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import NavMenu from "./NavMenu";
 import SearchBar from "./SearchBar";
 import "./Header.css";
@@ -16,6 +16,8 @@ export default function Header({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
   const [showSearch, setShowSearch] = useState(false);
+
+  const navBarRef = useRef();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 900);
@@ -112,9 +114,10 @@ export default function Header({
           </a>
         </div>
       </div>
-      <div className="nav-bar" style={{ position: "relative" }}>
+      <div className="nav-bar" ref={navBarRef} style={{ position: "relative" }}>
         <div className="nav-menu-wrap">
           <NavMenu
+            navBarRef={navBarRef} // <-- Передаем ref сюда!
             onMainCategorySelect={onMenuCategoryClick}
             activeMenu={activeMenu}
             setActiveMenu={setActiveMenu}
@@ -139,7 +142,6 @@ export default function Header({
             />
           </svg>
         </button>
-        {/* МОДАЛКА ПОИСКА: ОСТАЁТСЯ ВНУТРИ .nav-bar */}
         {showSearch && (
           <div className="search-flyout searchbar-modal-outer-full">
             <SearchBar

@@ -1,6 +1,14 @@
 import { useRef, useEffect } from "react";
 import Select from "react-select";
 
+// Для portal и высокого z-index для меню react-select
+const portalProps = {
+  menuPortalTarget: typeof window !== "undefined" ? document.body : null,
+  styles: {
+    menuPortal: base => ({ ...base, zIndex: 2000 }),
+  },
+};
+
 export default function FilterBar({
   submenuList = [],
   sizeFilter,
@@ -15,7 +23,7 @@ export default function FilterBar({
   showGender = true,
   showCategory = true,
   brandsMode = false,
-  hideBrandSelect = false, // <-- новый проп для скрытия brand select
+  hideBrandSelect = false,
   onCategoryChange,
   onBrandChange,
   onSizeChange,
@@ -55,6 +63,7 @@ export default function FilterBar({
           options={categoryOptions}
           menuPlacement="auto"
           ref={categorySelectRef}
+          {...portalProps}
         />
       )}
 
@@ -69,6 +78,7 @@ export default function FilterBar({
           onChange={opt => onBrandChange(opt ? opt.value : "")}
           options={allBrands.map(brand => ({ value: brand, label: brand }))}
           menuPlacement="auto"
+          {...portalProps}
         />
       )}
 
@@ -82,6 +92,7 @@ export default function FilterBar({
         onChange={opt => onSizeChange(opt ? opt.value : "")}
         options={allSizes.map(size => ({ value: size, label: size }))}
         menuPlacement="auto"
+        {...portalProps}
       />
 
       {/* GENDER */}
@@ -95,6 +106,7 @@ export default function FilterBar({
           onChange={opt => onGenderChange(opt ? opt.value : "")}
           options={genderOptions}
           menuPlacement="auto"
+          {...portalProps}
         />
       )}
     </div>

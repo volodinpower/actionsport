@@ -34,7 +34,7 @@
 }
 
 /* ---------- Меню навигации (десктоп) ---------- */
-.nav-menu-wrap ul {
+.nav-menu-wrap {
   display: flex;
   gap: 32px;
   align-items: center;
@@ -51,6 +51,7 @@
 .nav-menu-sale {
   color: #ef4444 !important;
   letter-spacing: 0.03em;
+  font-weight: 700;
 }
 .nav-menu-sale:hover,
 .nav-menu-sale:focus {
@@ -115,111 +116,10 @@
   .search-btn { color: #fff; }
 }
 
-/* ---------- Мобильное меню ---------- */
-.mobile-menu-modal {
-  position: absolute;
-  left: 0; right: 0;
-  top: 54px;
-  background: #222;
-  min-height: 320px;
-  box-shadow: 0 6px 28px 0 rgba(20,20,40,0.10);
-  border-top: 1px solid #292929;
-  padding-bottom: 24px;
-  animation: slideDown .22s;
-}
-@keyframes slideDown {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: none; opacity: 1; }
-}
-.mobile-menu-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 2.1rem;
-  color: #fff;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.mobile-menu-list {
-  align-items: flex-start;
-  list-style: none;
-  margin: 0 0;
-  width: 100%;
-  max-width: 150px;
-  display: flex;
-  flex-direction: column;
-  padding-left: 0;
-  padding-top: 26px;
-}
-.mobile-menu-li {
-  width: 100%;
-  display: block;
-  align-items: center;
-  padding-left: 0;
-  gap: 1;
-}
-.mobile-menu-item {
-  width: 100%;
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1.06rem;
-  padding: 7px 0 7px 8px;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  transition: color 0.17s;
-  cursor: pointer;
-  min-height: 36px;
-}
-.mobile-menu-item.sale { color: #ff4747; }
-.mobile-menu-item:active,
-.mobile-menu-item:focus { color: #d1d1d1; }
-.mobile-menu-plus {
-  color: #aaa;
-  font-size: 1.5em;
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.mobile-menu-back {
-  display: block;
-  width: 100%;
-  margin: 24px 0 0 0;
-  background: none;
-  color: #aaa;
-  border: none;
-  font-size: 1.1em;
-  cursor: pointer;
-  text-align: left;
-  padding: 10px 4px;
-}
-.mobile-menu-back:active,
-.mobile-menu-back:focus { color: #d1d1d1; }
-.mobile-submenu-list {
-  list-style: none;
-  padding-left: 8px;
-  margin: 0;
-}
-.mobile-submenu-list li .mobile-menu-item {
-  color: #aaa;
-  background: none;
-  border: none;
-  font-size: 1em;
-  padding: 6px 4px;
-}
-.mobile-submenu-list li .mobile-menu-item:active,
-.mobile-submenu-list li .mobile-menu-item:focus { color: #fff; }
-.mobile-menu-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 0.5;
-}
-.mobile-menu-plus {
-  margin-left: 0 !important;
-  padding-left: 0;
-  padding-right: 0;
+/* --- Optionally, добавить плавное появление для header (если надо) --- */
+@media (max-width: 900px) {
+  .main-header {
+    /* Можно добавить: */
+    /* transition: top 0.25s; */
+  }
 }

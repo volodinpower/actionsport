@@ -1,115 +1,205 @@
-/* --- Mobile menu --- */
+/* ----------- Мобильное меню ----------- */
 .mobile-menu-modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: #000;
-  color: #eee;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #16181a;
+  color: #ececec;
   z-index: 1000;
   overflow-y: auto;
-  padding: 1rem;
+  padding: 18px 0 22px 0;
+  box-shadow: 0 10px 32px 0 rgba(30,30,40,0.15);
+  backdrop-filter: blur(1px);
+  overscroll-behavior: contain;
+  transition: background 0.23s;
+  min-width: 0;
 }
 
 .mobile-menu-close {
   background: none;
   border: none;
-  font-size: 2rem;
-  color: #eee;
+  font-size: 2.2rem;
+  color: #ececec;
   cursor: pointer;
-  margin-bottom: 1rem;
+  margin: 0 18px 10px auto;
+  display: block;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.82;
+  transition: color 0.17s, opacity 0.17s;
+}
+.mobile-menu-close:hover,
+.mobile-menu-close:focus {
+  color: #fff;
+  opacity: 1;
 }
 
 .mobile-menu-list {
   list-style: none;
-  padding-left: 0;
+  padding: 0 12px;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15em;
+  min-width: 0;
 }
 
-.mobile-menu-li {
-  margin-bottom: 1rem;
-}
-
+/* --- Меню: один столбик, плюсик справа, расстояние! --- */
 .mobile-menu-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: space-between;  /* важно! */
+  width: 100%;
+  min-height: 44px;
+  gap: 0;
 }
 
 .mobile-menu-item {
   background: none;
   border: none;
-  color: #eee;
-  font-size: 1.25rem;
+  color: #fff !important;
+  font-size: 1.19rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0.25rem 0;
+  padding: 13px 0 1px 8px; /* справа — 0 */
   text-align: left;
-  flex-grow: 1;
+  border-radius: 0.6em;
+  transition: background 0.15s, color 0.13s, box-shadow 0.18s;
+  outline: none;
+  box-shadow: none;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 auto; /* чтобы занимал всё пространство до плюсика */
+}
+.mobile-menu-item:active,
+.mobile-menu-item:focus,
+.mobile-menu-item:hover {
+  background: #22242b;
+  color: #fff !important;
+  box-shadow: 0 1px 12px 0 rgba(30,30,40,0.08);
+}
+
+.nav-menu-sale, .mobile-menu-item.sale {
+  color: #ef4444 !important;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 .mobile-menu-plus {
   background: none;
   border: none;
-  color: #eee;
-  font-size: 1.5rem;
+  color: #bfc1c6;
+  font-size: 1.7rem;
   cursor: pointer;
   width: 2rem;
   height: 2rem;
+  margin-left: 12px;      /* комфортное расстояние между текстом и плюсиком */
   line-height: 1;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  flex: 0 0 auto;
+  transition: color 0.17s, opacity 0.15s;
+}
+.mobile-menu-plus:active,
+.mobile-menu-plus:focus,
+.mobile-menu-plus:hover {
+  color: #fff;
+  opacity: 1;
 }
 
-/* --- Desktop menu --- */
-.nav-menu-wrap {
-  list-style: none;
-  padding-left: 0;
+/* --- Подменю и бренды --- */
+.mobile-submenu-list-grid,
+.mobile-brands-submenu {
+  width: 100%;
+  background: #18191f;
+  border-radius: 0.55em;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 18px 0 rgba(16,17,22,0.13);
+  padding: 4px 2px 6px 2px;
+  min-width: 0;
+}
+.mobile-submenu-grid, .mobile-brands-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-height: 256px;
+  overflow-y: auto;
   margin: 0;
+  padding: 0 2px;
+  overscroll-behavior: contain;
+  min-width: 0;
 }
 
-.nav-menu-sale {
-  color: #d32d2f;
-  font-weight: 700;
-}
-
-.submenu-container {
-  position: absolute;
-  left: 0;
-  right: 0;
-  background-color: #000;
-  color: #999;
-  overflow: hidden;
-  z-index: 40;
-  pointer-events: auto;
-}
-
-.submenu-content {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  font-size: 0.875rem;
-}
-
-.submenu-column {
-  display: flex;
-  flex-direction: column;
-  margin-right: 0.5rem;
-}
-
-.submenu-item {
-  text-align: left;
-  color: #999;
+.mobile-submenu-item {
+  color: #bfc1c6 !important;
+  font-size: 1.07rem !important;
+  font-weight: 400 !important;
+  opacity: 0.95;
   background: none;
   border: none;
-  cursor: pointer;
-  height: 32px;
-  line-height: 1.25rem;
-  width: 10rem;
-  padding: 0;
-  font-size: 0.875rem;
-  transition: color 0.2s ease;
+  border-radius: 0.5em;
+  padding: 11px 8px;
+  margin: 0;
+  text-align: left;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.13s, color 0.13s, box-shadow 0.14s;
+  outline: none;
+  display: block;
+  min-width: 0;
+}
+.mobile-submenu-item:active,
+.mobile-submenu-item:focus,
+.mobile-submenu-item:hover {
+  color: #fff !important;
+  background: #23272d;
+  box-shadow: 0 1px 8px 0 rgba(30,30,40,0.09);
+  opacity: 1;
 }
 
-.submenu-item:hover {
-  color: #fff;
+.mobile-menu-item-seeall {
+  grid-column: 1 / 3;
+  font-weight: 600;
+  color: #06b6d4 !important;
+  background: none;
+  text-align: center;
+  margin-top: 4px;
+  padding: 0.9rem 0 0.9rem 0;
+  border-radius: 0.5em;
+  font-size: 1.13rem;
+  transition: background 0.14s, color 0.14s;
+}
+.mobile-menu-item-seeall:hover,
+.mobile-menu-item-seeall:focus,
+.mobile-menu-item-seeall:active {
+  background: #23272d;
+  color: #22d3ee !important;
+}
+
+.mobile-submenu-grid::-webkit-scrollbar,
+.mobile-brands-grid::-webkit-scrollbar {
+  width: 0.35em;
+  background: #191b22;
+  border-radius: 0.5em;
+}
+.mobile-submenu-grid::-webkit-scrollbar-thumb,
+.mobile-brands-grid::-webkit-scrollbar-thumb {
+  background: #24262d;
+  border-radius: 0.5em;
+}
+.mobile-submenu-grid, .mobile-brands-grid {
+  scrollbar-width: thin;
+  scrollbar-color: #24262d #191b22;
+}
+
+@media (max-width: 480px) {
+  .mobile-menu-modal { padding: 12px 0 16px 0; }
+  .mobile-menu-item { font-size: 1.08rem; padding: 11px 0 1px 4px; }
+  .mobile-submenu-item { font-size: 0.99rem !important; padding: 9px 4px; }
+  .mobile-submenu-list-grid, .mobile-brands-submenu { margin-bottom: 5px; }
 }
