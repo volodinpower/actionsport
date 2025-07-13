@@ -379,3 +379,18 @@
     padding: 7px 3vw 9px 3vw;
   }
 }
+.search-results-header {
+  font-size: 1.17em;
+  font-weight: 600;
+  color: #23272e;
+  margin-bottom: 14px;
+  padding-left: 4px;
+  letter-spacing: 0.01em;
+}
+@media (max-width: 700px) {
+  .search-results-header {
+    font-size: 1em;
+    margin-bottom: 8px;
+    padding-left: 2px;
+  }
+}

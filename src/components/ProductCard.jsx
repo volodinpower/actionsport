@@ -14,7 +14,7 @@ export default function ProductCard({ product, onClick, compact = false }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Получаем массив изображений
+  // Массив изображений
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url
@@ -25,13 +25,10 @@ export default function ProductCard({ product, onClick, compact = false }) {
     urls = product.image_url.map((url) => url && String(url).trim()).filter(Boolean);
   }
 
-  // Для мобильного свайпера — показываем сначала _main, потом _prev
   const mobileSwipeUrls = [
     ...urls.filter((url) => url.toLowerCase().includes("_main")),
     ...urls.filter((url) => url.toLowerCase().includes("_prev")),
   ];
-
-  // Основное и превью изображение для десктопа
   const mainImg = urls.find((url) => url.toLowerCase().includes("_main")) || urls[0];
   const prevImg = urls.find((url) => url.toLowerCase().includes("_prev")) || mainImg;
 
@@ -65,7 +62,6 @@ export default function ProductCard({ product, onClick, compact = false }) {
       onMouseLeave={() => !isMobile && setIsHovered(false)}
     >
       <div className="image-text-wrapper">
-        {/* Картинка или no-image (одинаковая высота!) */}
         <div className={isMobile ? "swiper-container" : "image-container"}>
           {isMobile ? (
             mobileSwipeUrls.length > 0 ? (
@@ -97,12 +93,11 @@ export default function ProductCard({ product, onClick, compact = false }) {
             />
           )}
         </div>
-
-        {/* Контент карточки — всегда виден */}
         <div className="product-content">
           <h2 className="product-card-title">{product.sitename}</h2>
           <div className="desc-group">
-            <div className="desc-row">{`color: ${product.color || "—"}`}</div>
+            {/* Строчка цвета — теперь всегда одна строка! */}
+            <div className="desc-row color-row">{`color: ${product.color || "—"}`}</div>
             <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
           </div>
           <div className="price-block">

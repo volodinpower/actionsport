@@ -7,7 +7,7 @@ export default function SearchBar({
   onSearch,
   autoFocus = false,
   onClose,
-  fullWidth = true,  // будем растягивать на всю ширину
+  fullWidth = true,
 }) {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -49,7 +49,7 @@ export default function SearchBar({
     if (trimmed) {
       onSearch(trimmed, [
         { label: "Main", query: "", exclude: "" },
-        { label: `Search: ${trimmed}`, query: trimmed, exclude: "" }
+        { label: `Search: ${trimmed}`, query: trimmed, exclude: "" },
       ]);
       setSearchResults([]);
       if (onClose) onClose();
@@ -80,8 +80,10 @@ export default function SearchBar({
     navigate(`/product/${item.id}`);
   };
 
-  const brands = searchResults.filter(r => r.is_brand);
-  const products = searchResults.filter(r => !r.is_brand);
+  const brands = searchResults.filter((r) => r.is_brand);
+  const products = searchResults.filter((r) => !r.is_brand);
+
+  const hasResults = products.length > 0 || brands.length > 0;
 
   return (
     <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
@@ -114,7 +116,7 @@ export default function SearchBar({
                 className="search-clear-btn"
                 onClick={handleClear}
               >
-                Clear
+                clear
               </button>
             )}
           </div>
@@ -131,12 +133,12 @@ export default function SearchBar({
         </div>
 
         {(searchText || loading) && (
-          <div className="search-results-list">
+          <div className={`search-results-list${hasResults ? " expanded" : ""}`}>
             {loading ? (
               <div className="search-loading">Search...</div>
             ) : (
               <>
-                {/* Бренды */}
+                {/* Brands */}
                 {brands.length > 0 && (
                   <div className="search-brands-block">
                     {brands.map((brand) => (
@@ -151,7 +153,12 @@ export default function SearchBar({
                   </div>
                 )}
 
-                {/* Компактные карточки товаров */}
+                {/* Results header */}
+                <div className="search-results-header" style={{ padding: "10px 0", fontWeight: "600" }}>
+                  Search result{products.length !== 1 ? "s" : ""}: {products.length} item{products.length !== 1 ? "s" : ""}
+                </div>
+
+                {/* Product cards - normal style */}
                 <div className="search-products-grid">
                   {products.length > 0 ? (
                     products.map((item) => (
@@ -159,7 +166,6 @@ export default function SearchBar({
                         key={item.id}
                         product={item}
                         onClick={() => handleProductSelect(item)}
-                        compact={true}  // Важный проп для компактного стиля
                       />
                     ))
                   ) : (
