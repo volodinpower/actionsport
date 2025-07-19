@@ -28,7 +28,7 @@ body {
   font-weight: bold;
 }
 .swiper-pagination-bullet {
-  background: #fff !important;
+  background: #fff;
   opacity: 0.4;
 }
 .swiper-pagination-bullet-active {

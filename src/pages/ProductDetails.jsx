@@ -151,21 +151,34 @@ export default function ProductDetails() {
     return discount > 0 && discountPrice > 0 ? (
       <div>
         <div>
-          <span style={{ textDecoration: "line-through", color: "#888", fontSize: "1.25rem", marginRight: "0.5rem" }}>
+          <span
+            style={{
+              textDecoration: "line-through",
+              color: "#888",
+              fontSize: "1.25rem",
+              marginRight: "0.5rem",
+            }}
+          >
             {price.toLocaleString()} AMD
           </span>
-          <span style={{ color: "red", fontWeight: "600", fontSize: "1.25rem" }}>
+          <span
+            style={{ color: "red", fontWeight: "600", fontSize: "1.25rem" }}
+          >
             -{discount}%
           </span>
         </div>
         <div>
-          <span style={{ color: "green", fontWeight: "700", fontSize: "1.5rem" }}>
+          <span
+            style={{ color: "green", fontWeight: "700", fontSize: "1.5rem" }}
+          >
             {discountPrice.toLocaleString()} AMD
           </span>
         </div>
       </div>
     ) : (
-      <span style={{ fontWeight: "700", fontSize: "1.5rem" }}>{price.toLocaleString()} AMD</span>
+      <span style={{ fontWeight: "700", fontSize: "1.5rem" }}>
+        {price.toLocaleString()} AMD
+      </span>
     );
   }
 
@@ -176,7 +189,9 @@ export default function ProductDetails() {
         <b>color:</b> {product.color}
       </div>
     ) : (
-      <div style={{ marginBottom: 4, color: "#666", fontSize: 14, gap: 10 }}>
+      <div
+        style={{ marginBottom: 4, color: "#666", fontSize: 14, gap: 10 }}
+      >
         <b>color:</b> {product.color}
         <div
           style={{
@@ -272,7 +287,8 @@ export default function ProductDetails() {
     if (touchStartX === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(deltaX) > 45) {
-      if (deltaX > 0) setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length);
+      if (deltaX > 0)
+        setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length);
       else setMainIndex((mainIndex + 1) % rawImages.length);
     }
     touchStartX = null;
@@ -280,7 +296,6 @@ export default function ProductDetails() {
 
   // --- Картинки/галерея ---
   function renderImages() {
-    // Мобильная версия
     if (isMobile) {
       return (
         <div className="main-image-mobile-wrapper">
@@ -293,7 +308,6 @@ export default function ProductDetails() {
               onTouchEnd={handleTouchEnd}
               draggable={false}
               style={{ userSelect: "none" }}
-              // НЕ открываем модалку на мобиле!
             />
             <div className="swiper-pagination-bullets">
               {rawImages.map((_, idx) => (
@@ -324,14 +338,22 @@ export default function ProductDetails() {
             draggable={false}
             style={{ userSelect: "none" }}
           />
-          <div style={{ display: "flex", marginTop: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              marginTop: 12,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
             {rawImages.map((imgUrl, idx) => (
               <img
                 key={idx}
                 src={imgUrl}
                 alt={`Фото ${idx + 1}`}
-                className={"thumbnail-square" + (idx === mainIndex ? " selected" : "")}
-                style={{}}
+                className={
+                  "thumbnail-square" + (idx === mainIndex ? " selected" : "")
+                }
                 onClick={() => setMainIndex(idx)}
                 draggable={false}
               />
@@ -362,7 +384,9 @@ export default function ProductDetails() {
               className="modal-prev"
               onClick={(e) => {
                 e.stopPropagation();
-                setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length);
+                setModalIndex(
+                  (modalIndex - 1 + rawImages.length) % rawImages.length
+                );
               }}
             >
               ‹
@@ -406,7 +430,14 @@ export default function ProductDetails() {
     ) : null;
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#f5f5f5",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Header
         onSearch={handleHeaderSearch}
         onMenuCategoryClick={handleMenuCategoryClick}
@@ -447,8 +478,19 @@ export default function ProductDetails() {
             {renderImages()}
           </div>
 
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", marginTop: isMobile ? 16 : 0 }}>
-            <h2 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}>{displayName}</h2>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              marginTop: isMobile ? 16 : 0,
+            }}
+          >
+            <h2
+              style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}
+            >
+              {displayName}
+            </h2>
             {colorBlock}
             {sizeBlock}
             <div style={{ marginTop: 32, marginBottom: 8 }}>{renderPrice()}</div>
