@@ -483,7 +483,6 @@ export default function ProductDetails() {
               flex: 1,
               display: "flex",
               flexDirection: "column",
-              marginTop: isMobile ? 16 : 0,
             }}
           >
             <h2
