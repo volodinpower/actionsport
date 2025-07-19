@@ -94,8 +94,7 @@ export default function Home() {
     async function updateFilterOptions() {
       // --- BRANDS (при выбранном бренде) ---
       if (isBrandPage) {
-        setBrandsInFilter([]); // Скрываем селектор бренда
-        // подкатегории только по товарам бренда
+        setBrandsInFilter([]);
         const products = await fetchProducts(
           searchQuery, 500, 0, "", brandFilter
         );
@@ -128,7 +127,6 @@ export default function Home() {
       }
       // --- SALE ---
       else if (isSale) {
-        // 1. Подкатегории по текущей выборке
         const saleProducts = await fetchProducts(
           searchQuery,
           500,
@@ -148,7 +146,6 @@ export default function Home() {
         const subcategories = Array.from(setSubs);
         setSubmenuList(subcategories);
 
-        // 2. Все фильтры (brand, size, gender) ДОЛЖНЫ учитывать ВСЕ фильтры (subcategory тоже)
         const brands = await fetchFilteredBrands({
           categoryKey: "sale",
           subcategoryKey,
@@ -211,7 +208,6 @@ export default function Home() {
         });
         setGendersInFilter(genders);
 
-        // подкатегории из categories
         const cat = categories.find(c => c.category_key === categoryKey);
         if (cat && cat.subcategories) {
           setSubmenuList(
@@ -264,7 +260,6 @@ export default function Home() {
       if (isHome) {
         return fetchPopularProducts(homeLimit, 0).then(groupProducts);
       }
-      // --- brands режим: фильтрация только по бренду и подкатегории
       if (isBrandPage) {
         return fetchProducts(
           searchQuery,
@@ -279,7 +274,6 @@ export default function Home() {
           sizeFilter
         ).then(groupProducts);
       }
-      // --- sale ---
       if (isSale) {
         return fetchProducts(
           searchQuery,
@@ -294,7 +288,6 @@ export default function Home() {
           sizeFilter
         ).then(groupProducts);
       }
-      // --- обычный режим
       return fetchProducts(
         searchQuery,
         PAGE_LIMIT,
@@ -391,7 +384,6 @@ export default function Home() {
       });
     }
     else if (catKey === "brands") {
-      // теперь это не используется, /brands выводится отдельной страницей
       navigate("/brands");
     } else {
       updateUrlFilters({
@@ -475,9 +467,16 @@ export default function Home() {
       updateUrlFilters({ category: "brands", brand: "" });
   };
 
-  // --- Кнопка наверх ---
+  // --- ScrollTopButton логика ---
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [pageLoads, setPageLoads] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 900);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 900);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (data && data.pages && data.pages.length > 1) {
@@ -487,16 +486,25 @@ export default function Home() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 400 && pageLoads > 0) {
-        setShowScrollTop(true);
+      if (isMobile) {
+        if (products.length > 10 && window.scrollY > 150) {
+          setShowScrollTop(true);
+        } else {
+          setShowScrollTop(false);
+        }
       } else {
-        setShowScrollTop(false);
+        if (window.scrollY > 400 && pageLoads > 0) {
+          setShowScrollTop(true);
+        } else {
+          setShowScrollTop(false);
+        }
       }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [pageLoads]);
+  }, [pageLoads, products.length, isMobile]);
 
+  // --- подгрузка ---
   useEffect(() => {
     if (isHome) return;
     if (!hasNextPage || isFetchingNextPage) return;
