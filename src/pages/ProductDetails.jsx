@@ -1,22 +1,21 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchProductById, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
+import "./ProductDetails.css";
 
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
   return `${base}${path.startsWith("/") ? path : "/" + path}`;
 }
-
 function makeImageUrl(url) {
   if (!url) return "/no-image.jpg";
   if (url.startsWith("http")) return url;
   if (url.startsWith("/")) return apiUrl(url);
   return url;
 }
-
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
   useEffect(() => {
@@ -26,9 +25,8 @@ function useIsMobile() {
   }, []);
   return isMobile;
 }
-
 function sortColorVariants(a, b) {
-  return (a.color || "").localeCompare(b.color || "", undefined, { sensitivity: "base" });
+  return (a?.color || "").localeCompare(b?.color || "", undefined, { sensitivity: "base" });
 }
 
 export default function ProductDetails() {
@@ -44,6 +42,8 @@ export default function ProductDetails() {
   const [modalIndex, setModalIndex] = useState(0);
   const [colorVariants, setColorVariants] = useState([]);
   const [selectedColorId, setSelectedColorId] = useState(null);
+
+  const touchStartX = useRef(null);
 
   useEffect(() => {
     fetchProductById(id)
@@ -71,23 +71,24 @@ export default function ProductDetails() {
   }, [product]);
 
   useEffect(() => {
+    if (!product) return;
     if (location.state && location.state.color) {
-      const found = product?.all_colors?.find(
+      const found = product.all_colors?.find(
         (c) =>
           c.color === location.state.color || String(c.id) === String(location.state.color)
       );
       if (found) {
         setSelectedColorId(found.id);
-      } else if (product?.id) {
+      } else if (product.id) {
         setSelectedColorId(product.id);
       }
-    } else if (product?.id) {
+    } else if (product.id) {
       setSelectedColorId(product.id);
     }
   }, [product, location.state]);
 
   let rawImages = [];
-  if (typeof product?.image_url === "string" && product.image_url.trim()) {
+  if (product && typeof product.image_url === "string" && product.image_url.trim()) {
     const urls = product.image_url
       .split(",")
       .map((u) => u.trim())
@@ -100,7 +101,7 @@ export default function ProductDetails() {
     if (rawImages.length === 0) rawImages = urls;
     rawImages = rawImages.map(makeImageUrl);
   }
-  if (rawImages.length === 0) rawImages = ["/no-image.jpg"];
+  if (!rawImages || rawImages.length === 0) rawImages = ["/no-image.jpg"];
 
   useEffect(() => {
     setMainIndex(0);
@@ -135,57 +136,49 @@ export default function ProductDetails() {
   };
 
   function renderPrice() {
-    const price = Number(product.price);
-    const discount = Number(product.discount);
-    let discountPrice = Number(product.discount_price);
+    if (!product) return null;
+    const price = Number(product.price || 0);
+    const discount = Number(product.discount || 0);
+    let discountPrice = Number(product.discount_price || 0);
     if (discount > 0 && (!discountPrice || discountPrice === 0)) {
       discountPrice = Math.round(price * (1 - discount / 100));
     }
     return discount > 0 && discountPrice > 0 ? (
       <div>
         <div>
-          <span style={{ textDecoration: "line-through", color: "#888", fontSize: "1.25rem", marginRight: "0.5rem" }}>
-            {price.toLocaleString()} AMD
-          </span>
-          <span style={{ color: "red", fontWeight: "600", fontSize: "1.25rem" }}>
-            -{discount}%
-          </span>
+          <span className="price-old">{price.toLocaleString()} AMD</span>
+          <span className="price-discount">-{discount}%</span>
         </div>
         <div>
-          <span style={{ color: "green", fontWeight: "700", fontSize: "1.5rem" }}>
-            {discountPrice.toLocaleString()} AMD
-          </span>
+          <span className="price-current">{discountPrice.toLocaleString()} AMD</span>
         </div>
       </div>
     ) : (
-      <span style={{ fontWeight: "700", fontSize: "1.5rem" }}>{price.toLocaleString()} AMD</span>
+      <span className="price-current-no-discount">{price.toLocaleString()} AMD</span>
     );
   }
 
   if (error)
-    return (
-      <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>
-    );
+    return <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>;
   if (!product) return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
 
+  // Цветовые варианты
   const colorBlock =
     colorVariants.length <= 1 ? (
       <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
-        <b>color:</b> {product.color}
+        <b>color:</b> {product?.color}
       </div>
     ) : (
-      <div style={{ marginBottom: 4, color: "#666", fontSize: 14, gap: 10 }}>
-        <b>color:</b> {product.color}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginTop: 10,
-            marginBottom: 10,
-            maxWidth: 6 * 70,
-          }}
-        >
+      <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
+        <b>color:</b> {product?.color}
+        <div style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          marginTop: 10,
+          marginBottom: 10,
+          maxWidth: 6 * 70,
+        }}>
           {colorVariants.map((item) => {
             const mainImg = item.image_url
               ?.split(",")
@@ -194,29 +187,24 @@ export default function ProductDetails() {
             const imgSrc = mainImg ? apiUrl(mainImg) : "/no-image.jpg";
             const isCurrent = String(item.id) === String(selectedColorId);
             return (
-              <div
-                key={item.id}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  width: 75,
-                }}
-              >
+              <div key={item.id} style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                width: 75,
+              }}>
                 <a
                   href={isCurrent ? undefined : `/product/${item.id}`}
                   tabIndex={isCurrent ? -1 : 0}
                   style={{
                     pointerEvents: isCurrent ? "none" : "auto",
                     borderRadius: 0,
-                    border: isCurrent ? "3px solid red" : "2px solid #eee",
-                    boxShadow: isCurrent
-                      ? "0 0 0 4px rgba(255, 0, 0, 0.4)"
-                      : "0 1px 8px #0002",
+                    border: isCurrent ? "2.5px solid #222" : "2px solid #ddd",
                     background: isCurrent ? "#ffe7e7" : "#fafbfc",
                     outline: "none",
                     width: 65,
                     height: 65,
+                    boxShadow: "none",
                   }}
                   title={item.color || ""}
                   onClick={(e) => {
@@ -241,7 +229,8 @@ export default function ProductDetails() {
                       height: 60,
                       objectFit: "cover",
                       opacity: isCurrent ? 1 : 0.82,
-                      borderRadius: 0, // убрали скругление
+                      borderRadius: 0,
+                      boxShadow: "none",
                     }}
                     draggable={false}
                   />
@@ -253,6 +242,7 @@ export default function ProductDetails() {
       </div>
     );
 
+  // Размеры
   const sizeBlock = (
     <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
       <b>size:</b>{" "}
@@ -262,8 +252,168 @@ export default function ProductDetails() {
     </div>
   );
 
+  // --- Свайп на мобиле (назначаем на wrapper) ---
+  function handleTouchStart(e) {
+    if (!isMobile) return;
+    touchStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchEnd(e) {
+    if (!isMobile || touchStartX.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(deltaX) > 45) {
+      if (deltaX > 0) setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length);
+      else setMainIndex((mainIndex + 1) % rawImages.length);
+    }
+    touchStartX.current = null;
+  }
+
+  // --- Галерея изображений ---
+  function renderImages() {
+    if (isMobile) {
+      return (
+        <div className="main-image-mobile-wrapper">
+          <div
+            className="main-image-mobile"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <img
+              src={rawImages[mainIndex]}
+              alt={displayName}
+              className="main-image-square"
+              draggable={false}
+              style={{
+                userSelect: "none",
+                objectFit: "cover",
+                aspectRatio: "1 / 1",
+                background: "#fff",
+              }}
+            />
+            <div className="swiper-pagination-bullets">
+              {rawImages.map((_, idx) => (
+                <span
+                  key={idx}
+                  className={
+                    "swiper-pagination-bullet" +
+                    (idx === mainIndex ? " swiper-pagination-bullet-active" : "")
+                  }
+                  onClick={() => setMainIndex(idx)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // --- Десктоп: изображение + миниатюры + модалка ---
+    return (
+      <>
+        <img
+          src={rawImages[mainIndex]}
+          alt={displayName}
+          className="main-image-square desktop"
+          onClick={() => setShowModal(true)}
+          draggable={false}
+          style={{
+            userSelect: "none",
+            objectFit: "cover",
+            aspectRatio: "1 / 1",
+            background: "#fff",
+            cursor: "pointer",
+          }}
+        />
+        <div style={{
+          display: "flex",
+          gap: 8,
+          marginTop: 8,
+          flexWrap: "wrap",
+          justifyContent: "center"
+        }}>
+          {rawImages.map((imgUrl, idx) => (
+            <img
+              key={idx}
+              src={imgUrl}
+              alt={`Фото ${idx + 1}`}
+              className={"thumbnail-square" + (idx === mainIndex ? " selected" : "")}
+              onClick={() => setMainIndex(idx)}
+              draggable={false}
+            />
+          ))}
+        </div>
+      </>
+    );
+  }
+
+  // --- Модалка только на десктопе! ---
+  const modal =
+    !isMobile && showModal && rawImages.length > 0 ? (
+      <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <button
+          className="modal-close"
+          style={{ top: 48, right: 24 }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowModal(false);
+          }}
+        >
+          ×
+        </button>
+        {rawImages.length > 1 && (
+          <>
+            <button
+              className="modal-prev"
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length);
+              }}
+            >
+              ‹
+            </button>
+            <button
+              className="modal-next"
+              onClick={(e) => {
+                e.stopPropagation();
+                setModalIndex((modalIndex + 1) % rawImages.length);
+              }}
+            >
+              ›
+            </button>
+          </>
+        )}
+        <img
+          src={rawImages[modalIndex]}
+          alt={`${displayName} фото ${modalIndex + 1}`}
+          className="modal-image"
+          onClick={(e) => e.stopPropagation()}
+        />
+        {rawImages.length > 1 && (
+          <div className="modal-thumbnails">
+            {rawImages.map((imgUrl, idx) => (
+              <img
+                key={idx}
+                src={imgUrl}
+                alt={`миниатюра ${idx + 1}`}
+                className={
+                  "modal-thumbnail" + (idx === modalIndex ? " selected" : "")
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setModalIndex(idx);
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    ) : null;
+
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", display: "flex", flexDirection: "column" }}>
+    <div style={{
+      minHeight: "100vh",
+      backgroundColor: "#f5f5f5",
+      display: "flex",
+      flexDirection: "column"
+    }}>
       <Header
         onSearch={handleHeaderSearch}
         onMenuCategoryClick={handleMenuCategoryClick}
@@ -280,7 +430,7 @@ export default function ProductDetails() {
         <div
           style={{
             backgroundColor: "white",
-            boxShadow: "0 1px 6px rgba(0,0,0,0.1)",
+            boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
             padding: 24,
             display: "flex",
             flexDirection: isMobile ? "column" : "row",
@@ -301,131 +451,19 @@ export default function ProductDetails() {
               justifyContent: "center",
             }}
           >
-            {isMobile ? (
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: 280,
-                }}
-              >
-                {rawImages.length > 1 && (
-                  <button
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      backgroundColor: "rgba(0,0,0,0.2)",
-                      color: "white",
-                      padding: "6px 10px",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 20,
-                      userSelect: "none",
-                    }}
-                    onClick={() =>
-                      setMainIndex((mainIndex - 1 + rawImages.length) % rawImages.length)
-                    }
-                  >
-                    ‹
-                  </button>
-                )}
-                <img
-                  src={rawImages[mainIndex]}
-                  alt={displayName}
-                  style={{
-                    width: "100%",
-                    maxHeight: 340,
-                    objectFit: "contain",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.2)",
-                    marginBottom: 12,
-                    cursor: "pointer",
-                    userSelect: "none",
-                    borderRadius: 0, // убрали скругления
-                  }}
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalIndex(mainIndex);
-                  }}
-                  draggable={false}
-                />
-                {rawImages.length > 1 && (
-                  <button
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      top: "50%",
-                      transform: "translateY(-50%)",
-                      backgroundColor: "rgba(0,0,0,0.2)",
-                      color: "white",
-                      padding: "6px 10px",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 20,
-                      userSelect: "none",
-                    }}
-                    onClick={() =>
-                      setMainIndex((mainIndex + 1) % rawImages.length)
-                    }
-                  >
-                    ›
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
-                <img
-                  src={rawImages[mainIndex]}
-                  alt={displayName}
-                  style={{
-                    width: "75%",
-                    objectFit: "contain",
-                    boxShadow: "0 1px 6px rgba(0,0,0,0.2)",
-                    marginBottom: 12,
-                    cursor: "pointer",
-                    borderRadius: 0, // убрали скругления
-                  }}
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalIndex(mainIndex);
-                  }}
-                />
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 12,
-                    marginTop: 8,
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                  }}
-                >
-                  {rawImages.map((imgUrl, idx) => (
-                    <img
-                      key={idx}
-                      src={imgUrl}
-                      alt={`Фото ${idx + 1}`}
-                      style={{
-                        width: 80,
-                        height: 80,
-                        objectFit: "cover",
-                        cursor: "pointer",
-                        borderRadius: 0, // убрали скругления
-                        border: idx === mainIndex ? "2px solid black" : "2px solid #ddd",
-                      }}
-                      onClick={() => setMainIndex(idx)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+            {renderImages()}
           </div>
-
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", marginTop: isMobile ? 16 : 0 }}>
-            <h2 style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}>{displayName}</h2>
+          <div style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            marginTop: isMobile ? 16 : 0
+          }}>
+            <h2 style={{
+              fontSize: "2rem",
+              fontWeight: "700",
+              marginBottom: 24
+            }}>{displayName}</h2>
             {colorBlock}
             {sizeBlock}
             <div style={{ marginTop: 32, marginBottom: 8 }}>{renderPrice()}</div>
@@ -446,118 +484,7 @@ export default function ProductDetails() {
           </div>
         </div>
       </div>
-
-      {showModal && rawImages.length > 0 && (
-        <div
-          style={{
-            position: "fixed",
-            zIndex: 50,
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <button
-            style={{
-              position: "absolute",
-              top: 16,
-              right: 24,
-              color: "white",
-              fontSize: 32,
-              fontWeight: "700",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-            }}
-            onClick={() => setShowModal(false)}
-          >
-            ×
-          </button>
-          {rawImages.length > 1 && (
-            <button
-              style={{
-                position: "absolute",
-                left: 24,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "white",
-                fontSize: 32,
-                fontWeight: "700",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
-              onClick={() =>
-                setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length)
-              }
-            >
-              ‹
-            </button>
-          )}
-          <img
-            src={rawImages[modalIndex]}
-            alt={`${displayName} фото ${modalIndex + 1}`}
-            style={{
-              maxHeight: "80vh",
-              maxWidth: "80vw",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.3)",
-              borderRadius: 0, // убрали скругления
-            }}
-          />
-          {rawImages.length > 1 && (
-            <button
-              style={{
-                position: "absolute",
-                right: 24,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "white",
-                fontSize: 32,
-                fontWeight: "700",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-              }}
-              onClick={() =>
-                setModalIndex((modalIndex + 1) % rawImages.length)
-              }
-            >
-              ›
-            </button>
-          )}
-          {!isMobile && rawImages.length > 1 && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 32,
-                left: "50%",
-                transform: "translateX(-50%)",
-                display: "flex",
-                gap: 8,
-              }}
-            >
-              {rawImages.map((imgUrl, idx) => (
-                <img
-                  key={idx}
-                  src={imgUrl}
-                  alt={`миниатюра ${idx + 1}`}
-                  style={{
-                    width: 48,
-                    height: 48,
-                    border: idx === modalIndex ? "2px solid white" : "2px solid transparent",
-                    cursor: "pointer",
-                    borderRadius: 0, // убрали скругления
-                  }}
-                  onClick={() => setModalIndex(idx)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
+      {modal}
       <Footer />
     </div>
   );

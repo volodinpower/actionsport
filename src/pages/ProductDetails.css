@@ -1,273 +1,79 @@
-/* --- Обёртка всего компонента ProductDetails --- */
-.product-details-wrapper {
-  min-height: 100vh;
-  background-color: #f5f5f5;
-  display: flex;
-  flex-direction: column;
-}
-
-/* --- Контейнер с контентом страницы --- */
-.product-details-content {
+.main-image-mobile-wrapper {
   width: 100%;
-  margin: auto;
-  padding-top: 8px;
-  max-width: 1200px;
+  max-width: 420px;
+  margin: 0 auto;
 }
 
-/* --- Основной блок с изображениями и информацией --- */
-.product-main {
-  background: white;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.1);
-  padding: 24px;
-  display: flex;
-  flex-direction: row;
-  gap: 32px;
-  margin-top: 8px;
-}
-
-/* --- Адаптив: колонки меняются на столбец на мобильных --- */
-@media (max-width: 900px) {
-  .product-main {
-    flex-direction: column;
-  }
-}
-
-/* --- Блок с изображениями товара --- */
-.product-images {
-  flex-shrink: 0;
-  flex: 1;
-  min-width: 300px;
+.main-image-mobile {
+  width: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
-/* --- Swiper контейнер для мобильной галереи --- */
-.swiper {
+.main-image-square,
+.main-image-square.desktop {
   width: 100%;
-  max-height: 340px;
-  margin-bottom: 12px;
-  user-select: none;
-}
-
-/* --- Главное изображение товара (в слайде и десктоп) --- */
-.main-image {
-  width: 100%;
-  max-height: 340px;
-  object-fit: contain;
+  aspect-ratio: 1/1;
+  max-width: 420px;
+  object-fit: cover;
+  border-radius: 0 !important;
+  background: #fff;
+  margin-bottom: 8px;
+  /* Тени убраны */
+  box-shadow: none !important;
   cursor: pointer;
-  border-radius: 0 !important; /* Без скругления */
-  user-select: none;
 }
 
-/* --- Главное изображение для десктопа (меньше ширина) --- */
-.main-image.desktop {
-  width: 85%;
-  border-radius: 0 !important; /* Без скругления */
-}
-
-/* --- Контейнер с миниатюрами (эскизами) изображений --- */
-.thumbnails-container {
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* --- Каждое миниатюрное изображение --- */
-.thumbnail-image {
+.thumbnail-square {
   width: 80px;
   height: 80px;
+  aspect-ratio: 1/1;
   object-fit: cover;
   cursor: pointer;
-  border-radius: 0 !important; /* Без скругления */
-  transition: border-color 0.2s ease;
+  border-radius: 0 !important;
+  border: 2px solid #ddd;
+  margin: 0 4px 4px 0;
+  transition: border-color 0.18s;
+  background: #fff;
+  box-shadow: none !important;
+}
+.thumbnail-square.selected {
+  border-color: #222;
 }
 
-.thumbnail-image.selected {
-  border-color: black;
-}
-
-/* --- Точки пагинации Swiper --- */
 .swiper-pagination-bullets {
-  bottom: 8px !important;
-}
-
-.swiper-pagination-bullet {
-  background: #ccc !important;
-  opacity: 0.7;
-  width: 10px;
-  height: 10px;
-  margin: 0 4px !important;
-  border-radius: 50%;
-  transition: background-color 0.3s, opacity 0.3s;
-}
-
-.swiper-pagination-bullet-active {
-  background: #e53935 !important;
-  opacity: 1;
-}
-
-/* --- Блок с информацией о товаре (справа) --- */
-.product-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  margin-top: 0;
-}
-
-/* --- Отступ сверху у инфоблока на мобильных --- */
-@media (max-width: 900px) {
-  .product-info {
-    margin-top: 8px;
-  }
-}
-
-/* --- Заголовок товара --- */
-.product-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 24px;
-  /* Ограничиваем высоту 2 строками, чтобы всегда занимал одинаковое место */
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
-  min-height: 2.8em; /* примерно высота 2 строк */
-}
-
-/* --- Блок с цветом товара (текст) --- */
-.color-block {
-  margin-bottom: 4px;
-  color: #666;
-  font-size: 14px;
-}
-
-/* --- Для строки "color: название_цвета" в одну строку --- */
-.color-text-line {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-/* --- Контейнер для цветовых вариантов --- */
-.color-variants-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  max-width: 420px; /* примерно для 6 элементов по 70px */
-}
-
-/* --- Каждый отдельный цветовой вариант --- */
-.color-variant {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 75px;
-}
-
-/* --- Ссылка вокруг цветового варианта --- */
-.color-variant a {
-  pointer-events: auto;
-  border-radius: 0 !important; /* Без скругления */
-  border: 2px solid #eee;
-  box-shadow: 0 1px 8px #0002;
-  background: #fafbfc;
-  width: 65px;
-  height: 65px;
   display: flex;
   justify-content: center;
   align-items: center;
-  outline: none;
-  transition: all 0.2s ease;
+  margin-top: 6px;
+  gap: 6px;
+}
+.swiper-pagination-bullet {
+  width: 9px;
+  height: 9px;
+  background: #bbb;
+  border-radius: 50%;
+  opacity: 0.7;
   cursor: pointer;
+  transition: background 0.15s;
+  border: none;
 }
-
-/* --- Выделенный (текущий) цветовой вариант --- */
-.color-variant a.color-current {
-  border-color: black;
-}
-
-/* --- Изображение внутри цветового варианта --- */
-.color-variant-image {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  opacity: 0.82;
-  border-radius: 0 !important; /* Без скругления */
-}
-
-/* --- Полностью непрозрачное изображение у выделенного цвета --- */
-.color-variant a.color-current .color-variant-image {
+.swiper-pagination-bullet-active {
+  background: #f33;
   opacity: 1;
 }
 
-/* --- Блок с размером товара --- */
-.size-block {
-  margin-bottom: 4px;
-  color: #666;
-  font-size: 14px;
+@media (max-width: 900px) {
+  .main-image-mobile-wrapper,
+  .main-image-mobile,
+  .main-image-square {
+    max-width: 100vw;
+  }
 }
 
-/* --- Секция с ценой и скидкой --- */
-.price-old-discount {
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.price-old {
-  text-decoration: line-through;
-  color: #888;
-  font-size: 1.25rem;
-  margin-right: 0.5rem;
-}
-
-.price-discount {
-  color: red;
-  font-weight: 600;
-  font-size: 1.25rem;
-}
-
-.price-current {
-  color: green;
-  font-weight: 700;
-  font-size: 1.5rem;
-}
-
-.price-current-no-discount {
-  font-weight: bold;
-  color: #000; /* обычный текст, без зелёного */
-}
-
-/* --- Кнопка "назад" --- */
-.back-button {
-  margin-top: 32px;
-  padding: 10px 20px;
-  background-color: black;
-  color: white;
-  max-width: 160px;
-  border: none;
-  cursor: pointer;
-}
-
-/* --- Сообщения об ошибке и загрузке --- */
-.error-message,
-.loading-message {
-  padding: 32px;
-  text-align: center;
-  color: red;
-}
-
-/* --- Модальное окно --- */
+/* --- Модалка стили (оставь если нужно) --- */
 .modal-overlay {
   position: fixed;
   z-index: 50;
@@ -277,7 +83,6 @@
   align-items: center;
   justify-content: center;
 }
-
 .modal-close {
   position: absolute;
   top: 16px;
@@ -290,10 +95,7 @@
   cursor: pointer;
   z-index: 60;
 }
-
-/* --- Кнопки переключения изображений в модальном окне --- */
-.modal-prev,
-.modal-next {
+.modal-prev, .modal-next {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -305,24 +107,14 @@
   cursor: pointer;
   z-index: 60;
 }
-
-.modal-prev {
-  left: 24px;
-}
-
-.modal-next {
-  right: 24px;
-}
-
-/* --- Основное изображение в модальном окне --- */
+.modal-prev { left: 24px; }
+.modal-next { right: 24px; }
 .modal-image {
   max-height: 80vh;
   max-width: 80vw;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.3);
-  border-radius: 0 !important; /* Без скругления */
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
-
-/* --- Контейнер миниатюр в модальном окне --- */
 .modal-thumbnails {
   position: absolute;
   bottom: 32px;
@@ -332,18 +124,15 @@
   gap: 8px;
   z-index: 60;
 }
-
-/* --- Каждая миниатюра в модальном окне --- */
 .modal-thumbnail {
   width: 48px;
   height: 48px;
-  border-radius: 0 !important; /* Без скругления */
+  border-radius: 0 !important;
   border: 2px solid transparent;
   cursor: pointer;
   transition: border-color 0.2s ease;
+  box-shadow: none !important;
 }
-
-/* --- Выделение выбранной миниатюры --- */
 .modal-thumbnail.selected {
   border-color: white !important;
 }
