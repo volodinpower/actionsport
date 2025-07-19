@@ -87,7 +87,7 @@ export default function SearchBar({
 
   return (
     <div className={`searchbar-modal-outer${fullWidth ? " searchbar-modal-outer-full" : ""}`}>
-      <div className="searchbar-modal-inner">
+      <div className={`searchbar-modal-inner${hasResults ? " full-height" : ""}`}>
         {/* Input + clear + close */}
         <div className="search-input-and-close-row">
           <div className="search-input-row">
@@ -158,8 +158,8 @@ export default function SearchBar({
                   Search result{products.length !== 1 ? "s" : ""}: {products.length} item{products.length !== 1 ? "s" : ""}
                 </div>
 
-                {/* Product cards - normal style */}
-                <div className="search-products-grid">
+                {/* Product cards - главная сетка, как на Home */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
                   {products.length > 0 ? (
                     products.map((item) => (
                       <ProductCard

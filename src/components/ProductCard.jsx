@@ -3,7 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "./ProductCard.css";
 
-export default function ProductCard({ product, onClick, compact = false }) {
+export default function ProductCard({ product, onClick }) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
@@ -14,7 +14,7 @@ export default function ProductCard({ product, onClick, compact = false }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Массив изображений
+  // Формируем массив ссылок на изображения
   let urls = [];
   if (typeof product.image_url === "string") {
     urls = product.image_url
@@ -55,7 +55,7 @@ export default function ProductCard({ product, onClick, compact = false }) {
 
   return (
     <div
-      className={`product-card${compact ? " product-card-compact" : ""}`}
+      className="product-card"
       onClick={onClick}
       title={product.sitename}
       onMouseEnter={() => !isMobile && setIsHovered(true)}
@@ -96,7 +96,6 @@ export default function ProductCard({ product, onClick, compact = false }) {
         <div className="product-content">
           <h2 className="product-card-title">{product.sitename}</h2>
           <div className="desc-group">
-            {/* Строчка цвета — теперь всегда одна строка! */}
             <div className="desc-row color-row">{`color: ${product.color || "—"}`}</div>
             <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>
           </div>
