@@ -461,7 +461,6 @@ export default function ProductDetails() {
             gap: 32,
             marginTop: 8,
             width: "100%",
-            maxWidth: 1200,
           }}
         >
           <div
