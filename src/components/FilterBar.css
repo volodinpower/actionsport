@@ -1,0 +1,24 @@
+/* ОГРАНИЧЕНИЕ ширины самого фильтра и выбранного value */
+.filter-bar {
+  max-width: 100vw;          /* не вылезает за экран */
+  gap: 12px;                 /* чуть больше отступы */
+}
+.react-select__control {
+  min-width: 120px;
+  max-width: 200px;          /* максимальная ширина одного селекта */
+  width: 100%;
+  overflow: hidden;
+}
+.react-select__value-container {
+  max-width: 170px;          /* ограничить ширину текста value */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.react-select__single-value {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}

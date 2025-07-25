@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import Select from "react-select";
+import "./FilterBar.css";
 
 // Для portal и высокого z-index для меню react-select
 const portalProps = {
