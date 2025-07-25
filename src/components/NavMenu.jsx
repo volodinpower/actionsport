@@ -6,7 +6,7 @@ import "./NavMenu.css"
 
 const MENU_ORDER = [
   "snowboard", "skateboard", "wake", "sup",
-  "shoes", "clothes", "accessories", "brands", "sale",
+  "shoes", "clothes", "accessories", "protection", "brands", "sale",
 ];
 
 const SALE_CATEGORY = {
