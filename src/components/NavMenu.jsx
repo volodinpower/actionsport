@@ -2,7 +2,46 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchPopularBrands } from "../api";
-import "./NavMenu.css"
+import "./NavMenu.css";
+
+// --- Кастомный порядок для подпунктов ---
+const SUBCATEGORY_ORDERS = {
+  snowboard: [
+    "boards", "boots", "bindings", "jackets", "pants", "snow suits", "goggles"
+  ],
+  skateboard: [
+    "decks", "trucks", "completes", "wheels", "bearings"
+  ],
+  wake: [
+    "wakeboards", "wakebindings", "wetsuit", "vests", "lycra", "boardshorts", "poncho"
+  ],
+  sup: [
+    "supboards", "paddles", "pump"
+  ],
+  shoes:[
+    "trainers", "sneakers"
+  ],
+  clothes: [
+    "tshirts", "hoodies", "shorts", "pants"
+  ],
+  accessories: [
+    "sunglasses", "bags", "waist bags"
+  ],
+  protection:[
+    "helmets","protection pack", "knee pads", "elbow pads", "wrist guards"
+  ]
+};
+function normalizeKey(key) {
+  return (key || "").trim().toLowerCase();
+}
+function orderSubcategories(subcategories, order) {
+  if (!order) return subcategories;
+  return subcategories.slice().sort((a, b) => {
+    const ia = order.indexOf(normalizeKey(a.subcategory_key));
+    const ib = order.indexOf(normalizeKey(b.subcategory_key));
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+}
 
 const MENU_ORDER = [
   "snowboard", "skateboard", "wake", "sup",
@@ -171,24 +210,29 @@ export default function NavMenu({
                       transition={{ duration: 0.25 }}
                     >
                       <div className="mobile-submenu-grid">
-                        {cat.subcategories.map((sub) => (
-                          <button
-                            key={sub.subcategory_key}
-                            className="mobile-menu-item mobile-submenu-item"
-                            onClick={() => {
-                              onMainCategorySelect?.(
-                                cat.category_key,
-                                cat.label,
-                                sub.subcategory_key
-                              );
-                              setMobileMenuOpen(false);
-                              setOpenSubmenus([]);
-                              setActiveMenu(null);
-                            }}
-                          >
-                            {sub.label}
-                          </button>
-                        ))}
+                        {(() => {
+                          let submenuItems = cat.subcategories;
+                          const order = SUBCATEGORY_ORDERS[normalizeKey(cat.category_key)];
+                          submenuItems = orderSubcategories(submenuItems, order);
+                          return submenuItems.map((sub) => (
+                            <button
+                              key={sub.subcategory_key}
+                              className="mobile-menu-item mobile-submenu-item"
+                              onClick={() => {
+                                onMainCategorySelect?.(
+                                  cat.category_key,
+                                  cat.label,
+                                  sub.subcategory_key
+                                );
+                                setMobileMenuOpen(false);
+                                setOpenSubmenus([]);
+                                setActiveMenu(null);
+                              }}
+                            >
+                              {sub.label}
+                            </button>
+                          ));
+                        })()}
                       </div>
                     </motion.div>
                   )}
@@ -362,9 +406,11 @@ export default function NavMenu({
               >
                 <div className="flex flex-row items-start text-sm px-[calc((100vw-1128px)/2)] pl-6">
                   {(() => {
-                    const submenuItems =
+                    const submenuItemsRaw =
                       categories.find((cat) => cat.category_key === activeMenu)?.subcategories ||
                       [];
+                    const order = SUBCATEGORY_ORDERS[normalizeKey(activeMenu)];
+                    const submenuItems = orderSubcategories(submenuItemsRaw, order);
                     const columns = [];
                     const MAX_ITEMS = 6;
                     for (let i = 0; i < submenuItems.length; i += MAX_ITEMS) {
