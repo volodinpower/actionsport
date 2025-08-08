@@ -78,7 +78,7 @@
 /* --- Модалка стили (оставь если нужно) --- */
 .modal-overlay {
   position: fixed;
-  z-index: 50;
+  z-index: 5000;
   inset: 0;
   background-color: rgba(0,0,0,0.8);
   display: flex;
@@ -87,7 +87,6 @@
 }
 .modal-close {
   position: absolute;
-  top: 56px; /* ниже, чтобы не под меню */
   right: 24px;
   color: white;
   font-size: 32px;
