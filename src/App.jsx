@@ -1,12 +1,20 @@
+// src/App.tsx или src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import Home from "./pages/Home";
-import Admin from "./pages/Admin";
 import ProductDetails from "./pages/ProductDetails";
+import BrandsPage from "./pages/Brands";
+
+// ⬇️ добавь этот импорт — путь проверь!
+import AdminGuard from "./pages/AdminGuard";
+
+// ⚠️ старые импорты убери, если не используешь:
+// import Admin from "./pages/Admin";
 import AdminPanel from "./components/AdminPanel";
 import ProtectedRoute from "./components/ProtectedRoute";
-import BrandsPage from "./pages/Brands";
+
 import "./index.css";
 
 const queryClient = new QueryClient();
