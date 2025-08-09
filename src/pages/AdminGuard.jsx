@@ -8,32 +8,36 @@ export default function AdminGuard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
+  // 1) Первый пинг: узнаём, есть ли валидная сессия по куке
   useEffect(() => {
-    const ctrl = new AbortController();
+    let cancelled = false;
     (async () => {
       try {
         setLoading(true);
         setErr("");
-        const u = await getMe(); // null если не залогинен, объект пользователя если залогинен
-        if (!ctrl.signal.aborted) setMe(u);
+        const u = await getMe(); // вернёт null, если не залогинен (401)
+        if (!cancelled) setMe(u);
       } catch (e) {
-        if (!ctrl.signal.aborted) setErr(e?.message || String(e));
+        if (!cancelled) setErr(e?.message || String(e));
       } finally {
-        if (!ctrl.signal.aborted) setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-    return () => ctrl.abort();
+    return () => { cancelled = true; };
   }, []);
 
+  // 2) Вход
   async function handleLogin(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email") || "");
     const password = String(form.get("password") || "");
+
     setErr("");
     setLoading(true);
     try {
-      await login(email, password); // 204 + Set-Cookie
+      await login(email, password); // /auth/jwt/login -> 204 + Set-Cookie
+      // сразу после логина тянем профиль — COOKIE по домену приедет автоматически
       const u = await getMe();
       setMe(u);
     } catch (e) {
@@ -43,18 +47,20 @@ export default function AdminGuard() {
     }
   }
 
+  // 3) Выход
   async function handleLogout() {
     setLoading(true);
     try {
-      await logout();
+      await logout(); // /auth/jwt/logout
       setMe(null);
-    } catch {}
-    setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (loading) return <div style={{ padding: 20 }}>Загрузка…</div>;
 
-  // форма входа, если не залогинен
+  // Не залогинен — форма входа
   if (!me) {
     return (
       <div style={{ maxWidth: 420, margin: "60px auto", padding: 20, border: "1px solid #ddd", borderRadius: 12 }}>
@@ -94,7 +100,7 @@ export default function AdminGuard() {
     );
   }
 
-  // залогинен, но не суперпользователь
+  // Залогинен, но нет прав суперпользователя
   if (!me.is_superuser) {
     return (
       <div style={{ maxWidth: 520, margin: "60px auto", padding: 20, border: "1px solid #ddd", borderRadius: 12 }}>
@@ -112,6 +118,6 @@ export default function AdminGuard() {
     );
   }
 
-  // всё ок — показываем реальную админку
+  // Всё ок — показываем админку
   return <RealAdmin />;
 }
