@@ -29,8 +29,7 @@ const PRODUCTS_LIMIT = 30;
 const IMAGE_CARD_SIZE = 72;
 
 function splitImages(urls) {
-  if (!urls || typeof urls !== "string")
-    return { main: null, prev: null, full: [] };
+  if (!urls || typeof urls !== "string") return { main: null, prev: null, full: [] };
 
   const arr = urls
     .split(",")
@@ -61,25 +60,25 @@ function getImageUrl(url) {
   return url;
 }
 
-const RealAdmin = () => {
+export default function RealAdmin() {
   const [products, setProducts] = useState([]);
-  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState(null);
   const [search, setSearch] = useState("");
   const [xlsxUploading, setXlsxUploading] = useState(false);
-  const [xlsxResult, setXlsxResult] = useState<any>(null);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [xlsxResult, setXlsxResult] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [imgUploading, setImgUploading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [onlyWithoutImages, setOnlyWithoutImages] = useState(false);
-  const [addingFullFiles, setAddingFullFiles] = useState<File[]>([]);
-  const [lastXlsxUpdate, setLastXlsxUpdate] = useState<Date | null>(() => {
+  const [addingFullFiles, setAddingFullFiles] = useState([]);
+  const [lastXlsxUpdate, setLastXlsxUpdate] = useState(() => {
     const saved = localStorage.getItem("lastXlsxUpdate");
     return saved ? new Date(saved) : null;
   });
 
-  const listRef = useRef<HTMLDivElement | null>(null);
-  const addFullInputRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef(null);
+  const addFullInputRef = useRef(null);
 
   // косметика body
   useEffect(() => {
@@ -150,7 +149,7 @@ const RealAdmin = () => {
   }, [hasMore, xlsxUploading, imgUploading]);
 
   // XLSX загрузка
-  const handleXlsxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleXlsxUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!/\.xlsx$/i.test(file.name)) {
@@ -167,7 +166,7 @@ const RealAdmin = () => {
       alert(
         `Загружено:\nобновлено — ${result.updated}, добавлено — ${result.created}, удалено — ${result.deleted}`
       );
-    } catch (err: any) {
+    } catch (err) {
       alert("Ошибка загрузки XLSX: " + (err?.message || err));
     } finally {
       setXlsxUploading(false);
@@ -176,7 +175,7 @@ const RealAdmin = () => {
   };
 
   // обновить данные редактируемого товара
-  const reloadEditingProduct = async (id: string) => {
+  const reloadEditingProduct = async (id) => {
     try {
       const updated = await fetchProductById(id);
       setEditingProduct(updated);
@@ -186,7 +185,7 @@ const RealAdmin = () => {
   };
 
   // сохранить/заменить картинку
-  const saveReplaceImage = async (type: "main" | "prev" | "full", file: File, idx: number | null = null) => {
+  const saveReplaceImage = async (type, file, idx = null) => {
     if (!editingProduct || !file) return;
     setImgUploading(true);
     let name = "";
@@ -199,7 +198,7 @@ const RealAdmin = () => {
       await syncImagesForGroup(editingProduct.id);
       setXlsxResult({}); // триггерим перезагрузку списков
       await reloadEditingProduct(editingProduct.id);
-    } catch (err: any) {
+    } catch (err) {
       alert("Ошибка сохранения: " + (err?.message || err));
     } finally {
       setImgUploading(false);
@@ -207,7 +206,7 @@ const RealAdmin = () => {
   };
 
   // удаление картинки
-  const handleDeleteImage = async (url: string) => {
+  const handleDeleteImage = async (url) => {
     if (!editingProduct) return;
     if (!window.confirm("Удалить картинку?")) return;
     setImgUploading(true);
@@ -216,7 +215,7 @@ const RealAdmin = () => {
       await syncImagesForGroup(editingProduct.id);
       setXlsxResult({});
       await reloadEditingProduct(editingProduct.id);
-    } catch (err: any) {
+    } catch (err) {
       alert("Ошибка удаления: " + (err?.message || err));
     } finally {
       setImgUploading(false);
@@ -241,7 +240,7 @@ const RealAdmin = () => {
         setXlsxResult({});
         setAddingFullFiles([]);
         await reloadEditingProduct(editingProduct.id);
-      } catch (err: any) {
+      } catch (err) {
         alert("Ошибка загрузки: " + (err?.message || err));
       } finally {
         setImgUploading(false);
@@ -251,13 +250,12 @@ const RealAdmin = () => {
     if (addingFullFiles.length > 0) uploadFullImages();
   }, [addingFullFiles, editingProduct]);
 
-  const handleFileChange = (type: "main" | "prev" | "full", idx: number, file?: File) => {
+  const handleFileChange = (type, idx, file) => {
     if (!file) return;
-    // небольшая задержка, чтобы input успел отпуститься
     setTimeout(() => saveReplaceImage(type, file, idx), 10);
   };
 
-  const handleAddFullFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddFullFile = (e) => {
     const files = e.target.files;
     if (!files || !files.length) return;
     setAddingFullFiles((prev) => [...prev, ...Array.from(files)]);
@@ -272,12 +270,12 @@ const RealAdmin = () => {
     setOffset(0);
   };
 
-  const openEditImages = (product: any) => {
+  const openEditImages = (product) => {
     setEditingProduct(product);
     setAddingFullFiles([]);
   };
 
-  const handleSyncRow = async (p: any) => {
+  const handleSyncRow = async (p) => {
     if (!confirm("Синхронизировать изображения по группе name+color для этого товара?")) return;
     try {
       await syncImagesForGroup(p.id);
@@ -285,7 +283,7 @@ const RealAdmin = () => {
       if (editingProduct?.id === p.id) {
         await reloadEditingProduct(p.id);
       }
-    } catch (e: any) {
+    } catch (e) {
       alert(e?.message || "Не удалось синхронизировать");
     }
   };
@@ -301,12 +299,7 @@ const RealAdmin = () => {
       {/* XLSX */}
       <section className="admin-section">
         <h3>Загрузить новый XLSX-файл</h3>
-        <input
-          type="file"
-          accept=".xlsx"
-          onChange={handleXlsxUpload}
-          disabled={xlsxUploading}
-        />
+        <input type="file" accept=".xlsx" onChange={handleXlsxUpload} disabled={xlsxUploading} />
         {xlsxUploading && <span>Загрузка...</span>}
 
         {xlsxResult && (
@@ -320,7 +313,7 @@ const RealAdmin = () => {
               <div style={{ marginBottom: 12 }}>
                 <b>Добавлено:</b>
                 <div className="admin-xlsx-list admin-xlsx-added">
-                  {xlsxResult.created_rows.map((row: any, idx: number) => (
+                  {xlsxResult.created_rows.map((row, idx) => (
                     <div key={idx}>
                       <b>{row.name}</b>{" "}
                       <span style={{ color: "#888" }}>
@@ -335,7 +328,7 @@ const RealAdmin = () => {
               <div>
                 <b>Удалено:</b>
                 <div className="admin-xlsx-list admin-xlsx-deleted">
-                  {xlsxResult.deleted_rows.map((row: any, idx: number) => (
+                  {xlsxResult.deleted_rows.map((row, idx) => (
                     <div key={idx}>
                       <b>{row.name}</b>{" "}
                       <span style={{ color: "#888" }}>
@@ -357,16 +350,10 @@ const RealAdmin = () => {
 
       {/* Режимы */}
       <div className="admin-btn-group">
-        <button
-          className={`admin-btn${!onlyWithoutImages ? " active" : ""}`}
-          onClick={handleSetNormalMode}
-        >
+        <button className={`admin-btn${!onlyWithoutImages ? " active" : ""}`} onClick={handleSetNormalMode}>
           Обычный режим
         </button>
-        <button
-          className={`admin-btn${onlyWithoutImages ? " active" : ""}`}
-          onClick={handleSetNoImagesMode}
-        >
+        <button className={`admin-btn${onlyWithoutImages ? " active" : ""}`} onClick={handleSetNoImagesMode}>
           Только без картинок
         </button>
       </div>
@@ -396,7 +383,7 @@ const RealAdmin = () => {
             <div>Действия</div>
           </div>
 
-          {products.map((p: any) => {
+          {products.map((p) => {
             const { main, prev, full } = splitImages(p.image_url);
             return (
               <div className="admin-table-row" key={p.id}>
@@ -414,11 +401,9 @@ const RealAdmin = () => {
                       try {
                         await setProductReserved(p.id, checked);
                         setProducts((list) =>
-                          list.map((prod) =>
-                            prod.id === p.id ? { ...prod, reserved: checked } : prod
-                          )
+                          list.map((prod) => (prod.id === p.id ? { ...prod, reserved: checked } : prod))
                         );
-                      } catch (err: any) {
+                      } catch (err) {
                         alert("Ошибка при обновлении резерва: " + (err?.message || err));
                       }
                     }}
@@ -428,25 +413,15 @@ const RealAdmin = () => {
                 </div>
 
                 <div>{p.color}</div>
-                <div>
-                  {Array.isArray(p.sizes) && p.sizes.length > 0
-                    ? p.sizes.join(", ")
-                    : p.size || "—"}
-                </div>
+                <div>{Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes.join(", ") : p.size || "—"}</div>
 
                 <div className="admin-imgs">
-                  {main && (
-                    <img src={getImageUrl(main)} alt="main" className="admin-img" />
-                  )}
-                  {prev && (
-                    <img src={getImageUrl(prev)} alt="prev" className="admin-img" />
-                  )}
+                  {main && <img src={getImageUrl(main)} alt="main" className="admin-img" />}
+                  {prev && <img src={getImageUrl(prev)} alt="prev" className="admin-img" />}
                   {full.map((url, idx) => (
                     <img key={url} src={getImageUrl(url)} alt={`full${idx + 1}`} className="admin-img" />
                   ))}
-                  {!main && !prev && full.length === 0 && (
-                    <span style={{ color: "#aaa" }}>Нет</span>
-                  )}
+                  {!main && !prev && full.length === 0 && <span style={{ color: "#aaa" }}>Нет</span>}
                 </div>
 
                 <div style={{ display: "grid", gap: 6 }}>
@@ -483,7 +458,7 @@ const RealAdmin = () => {
                     await syncImagesForGroup(editingProduct.id);
                     await reloadEditingProduct(editingProduct.id);
                     setXlsxResult({});
-                  } catch (e: any) {
+                  } catch (e) {
                     alert(e?.message || "Не удалось синхронизировать");
                   }
                 }}
@@ -494,7 +469,7 @@ const RealAdmin = () => {
 
             <div style={{ display: "flex", gap: 18, marginBottom: 32 }}>
               {["main", "prev"].map((type) => {
-                const url = splitImages(editingProduct.image_url)[type as "main" | "prev"];
+                const url = splitImages(editingProduct.image_url)[type];
                 return (
                   <div key={type} className="admin-img-label">
                     <span style={{ fontWeight: 500, marginBottom: 5 }}>
@@ -523,17 +498,12 @@ const RealAdmin = () => {
                           top: 0,
                           cursor: "pointer",
                         }}
-                        onChange={(e) =>
-                          handleFileChange(type as "main" | "prev", 0, e.target.files?.[0])
-                        }
+                        onChange={(e) => handleFileChange(type, 0, e.target.files?.[0])}
                         title=""
                       />
                     </label>
                     {url && (
-                      <button
-                        style={{ marginTop: 5, color: "#d00" }}
-                        onClick={() => handleDeleteImage(url)}
-                      >
+                      <button style={{ marginTop: 5, color: "#d00" }} onClick={() => handleDeleteImage(url)}>
                         Удалить
                       </button>
                     )}
@@ -555,13 +525,7 @@ const RealAdmin = () => {
                 const { full } = splitImages(editingProduct.image_url);
                 const blocks = full.map((url, idx) => (
                   <div key={url} className="admin-img-label">
-                    <span
-                      style={{
-                        fontWeight: 500,
-                        fontSize: 14,
-                        marginBottom: 2,
-                      }}
-                    >
+                    <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>
                       {`full${String(idx + 1).padStart(2, "0")}`}
                     </span>
                     <label className="admin-modal-label">
@@ -578,9 +542,7 @@ const RealAdmin = () => {
                           top: 0,
                           cursor: "pointer",
                         }}
-                        onChange={(e) =>
-                          handleFileChange("full", idx, e.target.files?.[0])
-                        }
+                        onChange={(e) => handleFileChange("full", idx, e.target.files?.[0])}
                         title=""
                       />
                     </label>
@@ -596,20 +558,10 @@ const RealAdmin = () => {
                 if (full.length < 12) {
                   blocks.push(
                     <div key="add" className="admin-img-label">
-                      <span
-                        style={{
-                          fontWeight: 500,
-                          fontSize: 14,
-                          marginBottom: 2,
-                          color: "#888",
-                        }}
-                      >
+                      <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2, color: "#888" }}>
                         {`+ Добавить full${String(full.length + 1).padStart(2, "0")}`}
                       </span>
-                      <label
-                        className="admin-modal-label"
-                        style={{ border: "1px dashed #888", color: "#aaa" }}
-                      >
+                      <label className="admin-modal-label" style={{ border: "1px dashed #888", color: "#aaa" }}>
                         +
                         <input
                           ref={addFullInputRef}
@@ -636,11 +588,7 @@ const RealAdmin = () => {
               })()}
             </div>
 
-            <button
-              className="admin-modal-close"
-              onClick={() => setEditingProduct(null)}
-              aria-label="Close modal"
-            >
+            <button className="admin-modal-close" onClick={() => setEditingProduct(null)} aria-label="Close modal">
               ✕
             </button>
           </div>
@@ -648,6 +596,4 @@ const RealAdmin = () => {
       )}
     </div>
   );
-};
-
-export default RealAdmin;
+}
