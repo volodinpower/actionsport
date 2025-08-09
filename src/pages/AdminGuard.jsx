@@ -1,22 +1,54 @@
 // src/pages/AdminGuard.jsx
 import React, { useEffect, useState } from "react";
-import RealAdmin from "./RealAdmin";          // проверь путь, если файл в другом месте
-import { login, logout, getMe } from "../api"; // из твоего api.js
+import RealAdmin from "./RealAdmin";             // проверь путь, если файл в другом месте
+import { login, logout, getMe } from "../api";   // функции из твоего api.js
 
 export default function AdminGuard() {
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [lastPing, setLastPing] = useState({ ok: false, status: 0, url: "", when: null });
 
-  // 1) Первый пинг: узнаём, есть ли валидная сессия по куке
+  // --- Мини-панель диагностики (показывается только в dev) ---
+  const Debug = () => {
+    if (!import.meta.env.DEV) return null;
+    return (
+      <div style={{
+        fontSize: 12, color: "#555", padding: "10px 12px",
+        border: "1px dashed #bbb", borderRadius: 10, margin: "0 0 16px 0"
+      }}>
+        <div><b>API:</b> {import.meta.env.VITE_API_URL || "(не задан)"}</div>
+        <div><b>Последний /auth/me:</b> {lastPing.status} {lastPing.ok ? "OK" : "Unauthorized"} ({lastPing.when || "-"})</div>
+        <div>
+          Открой DevTools → Network и проверь, что запросы идут на <code>api.actionsport.pro</code>,<br />
+          а в ответе логина есть <code>Set-Cookie</code> с <code>Domain=.actionsport.pro; SameSite=None; Secure; HttpOnly</code>.
+        </div>
+      </div>
+    );
+  };
+
+  // 1) Первый пинг: пробуем восстановить сессию из куки
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
         setErr("");
-        const u = await getMe(); // вернёт null, если не залогинен (401)
-        if (!cancelled) setMe(u);
+        const u = await getMe(); // вернёт null при 401
+        if (!cancelled) {
+          setMe(u);
+          setLastPing({
+            ok: !!u,
+            status: u ? 200 : 401,
+            url: import.meta.env.VITE_API_URL,
+            when: new Date().toLocaleTimeString(),
+          });
+        }
+        if (import.meta.env.DEV) {
+          // лёгкий лог в консоль
+          // eslint-disable-next-line no-console
+          console.log("[AdminGuard] VITE_API_URL =", import.meta.env.VITE_API_URL, "getMe() ->", u);
+        }
       } catch (e) {
         if (!cancelled) setErr(e?.message || String(e));
       } finally {
@@ -37,9 +69,21 @@ export default function AdminGuard() {
     setLoading(true);
     try {
       await login(email, password); // /auth/jwt/login -> 204 + Set-Cookie
-      // сразу после логина тянем профиль — COOKIE по домену приедет автоматически
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log("[AdminGuard] login() done, trying getMe()…");
+      }
       const u = await getMe();
       setMe(u);
+      setLastPing({
+        ok: !!u,
+        status: u ? 200 : 401,
+        url: import.meta.env.VITE_API_URL,
+        when: new Date().toLocaleTimeString(),
+      });
+      if (!u) {
+        throw new Error("Не удалось получить профиль после входа");
+      }
     } catch (e) {
       setErr(e?.message || "Ошибка входа");
     } finally {
@@ -53,17 +97,26 @@ export default function AdminGuard() {
     try {
       await logout(); // /auth/jwt/logout
       setMe(null);
+      setLastPing({
+        ok: false,
+        status: 401,
+        url: import.meta.env.VITE_API_URL,
+        when: new Date().toLocaleTimeString(),
+      });
     } finally {
       setLoading(false);
     }
   }
 
-  if (loading) return <div style={{ padding: 20 }}>Загрузка…</div>;
+  if (loading) {
+    return <div style={{ padding: 24, textAlign: "center" }}>Загрузка…</div>;
+  }
 
-  // Не залогинен — форма входа
+  // --- Не залогинен — форма входа ---
   if (!me) {
     return (
-      <div style={{ maxWidth: 420, margin: "60px auto", padding: 20, border: "1px solid #ddd", borderRadius: 12 }}>
+      <div style={{ maxWidth: 460, margin: "60px auto", padding: 20, border: "1px solid #e5e5e5", borderRadius: 14 }}>
+        <Debug />
         <h2 style={{ marginBottom: 12 }}>Вход в админку</h2>
         <form onSubmit={handleLogin} autoComplete="on">
           <div style={{ marginBottom: 10 }}>
@@ -74,7 +127,7 @@ export default function AdminGuard() {
               required
               autoComplete="username"
               autoFocus
-              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px" }}
+              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 10, padding: "10px 12px" }}
             />
           </div>
           <div style={{ marginBottom: 10 }}>
@@ -84,14 +137,14 @@ export default function AdminGuard() {
               type="password"
               required
               autoComplete="current-password"
-              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px" }}
+              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 10, padding: "10px 12px" }}
             />
           </div>
           {err && <div style={{ color: "crimson", marginBottom: 10 }}>{err}</div>}
           <button
             type="submit"
             disabled={loading}
-            style={{ background: "#111", color: "#fff", padding: "10px 14px", borderRadius: 8 }}
+            style={{ background: "#111", color: "#fff", padding: "10px 14px", borderRadius: 10, cursor: "pointer" }}
           >
             {loading ? "Входим…" : "Войти"}
           </button>
@@ -100,17 +153,18 @@ export default function AdminGuard() {
     );
   }
 
-  // Залогинен, но нет прав суперпользователя
+  // --- Залогинен, но не суперюзер ---
   if (!me.is_superuser) {
     return (
-      <div style={{ maxWidth: 520, margin: "60px auto", padding: 20, border: "1px solid #ddd", borderRadius: 12 }}>
+      <div style={{ maxWidth: 540, margin: "60px auto", padding: 20, border: "1px solid #e5e5e5", borderRadius: 14 }}>
+        <Debug />
         <div style={{ marginBottom: 12 }}>
           Привет, <b>{me.email}</b>. Доступ к админке есть только у суперпользователей.
         </div>
         <button
           onClick={handleLogout}
           disabled={loading}
-          style={{ background: "#111", color: "#fff", padding: "10px 14px", borderRadius: 8 }}
+          style={{ background: "#111", color: "#fff", padding: "10px 14px", borderRadius: 10, cursor: "pointer" }}
         >
           Выйти
         </button>
@@ -118,6 +172,11 @@ export default function AdminGuard() {
     );
   }
 
-  // Всё ок — показываем админку
-  return <RealAdmin />;
+  // --- Всё ок — показываем админку ---
+  return (
+    <div>
+      <Debug />
+      <RealAdmin onLogout={handleLogout} />
+    </div>
+  );
 }

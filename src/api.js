@@ -1,6 +1,5 @@
 // src/api.js
 
-// Базовый URL бэка: положи в .env => VITE_API_URL=https://boardshop-backend.fly.dev
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
   return `${base}${path.startsWith("/") ? path : "/" + path}`;
@@ -19,6 +18,7 @@ export async function login(email, password) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
     credentials: "include", // важно для куки
+    cache: "no-store",
   });
   if (res.status !== 204) {
     let msg = "Login failed";
