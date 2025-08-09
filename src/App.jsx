@@ -1,4 +1,4 @@
-// src/App.tsx или src/App.jsx
+// src/App.jsx (или .tsx)
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -7,31 +7,28 @@ import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
 import BrandsPage from "./pages/Brands";
 
-// ⬇️ добавь этот импорт — путь проверь!
 import AdminGuard from "./pages/AdminGuard";
-
-// ⚠️ старые импорты убери, если не используешь:
-// import Admin from "./pages/Admin";
-import AdminPanel from "./components/AdminPanel";
-import ProtectedRoute from "./components/ProtectedRoute";
+import AdminPanel from "./admin/AdminPanel"; // <-- проверь путь!
 
 import "./index.css";
 
 const queryClient = new QueryClient();
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          {/* Страница логина/гард */}
           <Route path="/admin" element={<AdminGuard />} />
+          {/* Панель: та же защита, но с children */}
           <Route
             path="/admin/panel"
             element={
-              <ProtectedRoute>
+              <AdminGuard>
                 <AdminPanel />
-              </ProtectedRoute>
+              </AdminGuard>
             }
           />
           <Route path="/product/:id" element={<ProductDetails />} />
@@ -41,5 +38,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;

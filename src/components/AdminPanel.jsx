@@ -1,39 +1,32 @@
-import React, { useState, useEffect } from "react";
+// src/admin/AdminPanel.jsx
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RealAdmin from "../pages/RealAdmin";
 import BannerAdmin from "./BannerAdmin";
+import { logout } from "../api"; // cookie-based logout
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("products");
   const navigate = useNavigate();
 
-  // Проверка токена при входе
+  // косметика для body (как у тебя)
   useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
-      navigate("/admin");
-    }
-    // Фикс для body, чтобы не было сдвига
     document.body.style.overflow = "auto";
     document.body.style.paddingRight = "0px";
     document.body.classList.remove("overflow-hidden");
-  }, [navigate]);
-
-  // Авто-logout при уходе со страницы/обновлении/закрытии вкладки
-  useEffect(() => {
-    const handleLogout = () => {
-      localStorage.removeItem("admin_token");
-    };
-    window.addEventListener("beforeunload", handleLogout);
     return () => {
-      localStorage.removeItem("admin_token");
-      window.removeEventListener("beforeunload", handleLogout);
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      document.body.classList.remove("overflow-hidden");
     };
   }, []);
 
-  const handleLogoutClick = () => {
-    localStorage.removeItem("admin_token");
-    navigate("/"); // возвращаем на главную
+  const handleLogoutClick = async () => {
+    try {
+      await logout(); // серверная очистка cookie-сессии
+    } finally {
+      navigate("/admin", { replace: true });
+    }
   };
 
   return (
@@ -45,10 +38,10 @@ export default function AdminPanel() {
         padding: 20,
         overflow: "hidden",
         background: "#fafbfc",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
       }}
     >
-      <nav style={{ marginBottom: 20, display: "flex", gap: 20 }}>
+      <nav style={{ marginBottom: 20, display: "flex", gap: 20, alignItems: "center" }}>
         <button
           onClick={() => setActiveTab("products")}
           style={{
@@ -57,7 +50,7 @@ export default function AdminPanel() {
             borderBottom: activeTab === "products" ? "3px solid #111" : "none",
             fontWeight: activeTab === "products" ? "bold" : "normal",
             background: "none",
-            border: "none"
+            border: "none",
           }}
         >
           Товары и картинки
@@ -70,11 +63,12 @@ export default function AdminPanel() {
             borderBottom: activeTab === "banners" ? "3px solid #111" : "none",
             fontWeight: activeTab === "banners" ? "bold" : "normal",
             background: "none",
-            border: "none"
+            border: "none",
           }}
         >
           Баннеры
         </button>
+
         <button
           onClick={handleLogoutClick}
           style={{
@@ -85,7 +79,7 @@ export default function AdminPanel() {
             border: "1px solid #ccc",
             borderRadius: 6,
             fontWeight: "bold",
-            color: "#d00"
+            color: "#d00",
           }}
         >
           Выйти
