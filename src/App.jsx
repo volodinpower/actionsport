@@ -8,7 +8,7 @@ import ProductDetails from "./pages/ProductDetails";
 import BrandsPage from "./pages/Brands";
 
 import AdminGuard from "./pages/AdminGuard";
-import AdminPanel from "./admin/AdminPanel"; // <-- проверь путь!
+import AdminPanel from "./components/AdminPanel"; // <-- проверь путь!
 
 import "./index.css";
 
