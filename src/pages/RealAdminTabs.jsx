@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import RealAdmin from "./RealAdmin";               // проверь путь
-import BannerAdmin from "../components/BannerAdmin"; // проверь путь
+import RealAdmin from "./RealAdmin";
+import BannerAdmin from "../components/BannerAdmin";
 import { logout, getMe } from "../api";
 
 export default function RealAdminTabs() {
@@ -24,25 +24,15 @@ export default function RealAdminTabs() {
     }
   }
 
-  useEffect(() => {
-    document.body.style.overflow = "auto";
-    document.body.style.paddingRight = "0px";
-    document.body.classList.remove("overflow-hidden");
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, []);
-
   return (
     <div
       style={{
-        width: "100vw",
+        width: "100%",          // <-- было 100vw
+        maxWidth: "1280px",     // необязательно, но приятно для вёрстки
+        margin: "0 auto",       // центрируем контент
         minHeight: "100vh",
-        margin: 0,
         padding: 20,
-        overflow: "hidden",
+        overflowY: "auto",      // <-- вместо overflow: hidden
         background: "#fafbfc",
         boxSizing: "border-box",
       }}
