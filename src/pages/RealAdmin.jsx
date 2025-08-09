@@ -70,7 +70,10 @@ export default function RealAdmin() {
   const [imgUploading, setImgUploading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+
   const [onlyWithoutImages, setOnlyWithoutImages] = useState(false);
+  const [onlyReserve, setOnlyReserve] = useState(false); // NEW: фильтр «только в резерве»
+
   const [addingFullFiles, setAddingFullFiles] = useState([]);
   const [lastXlsxUpdate, setLastXlsxUpdate] = useState(() => {
     const saved = localStorage.getItem("lastXlsxUpdate");
@@ -80,16 +83,10 @@ export default function RealAdmin() {
   const listRef = useRef(null);
   const addFullInputRef = useRef(null);
 
-  // косметика body
+  // косметика body (ничего не трогаем — избегаем «прыжков»)
   useEffect(() => {
-    document.body.style.paddingRight = "";
-    document.body.style.overflow = "";
-    document.body.style.marginRight = "";
     document.body.classList.remove("overflow-hidden", "pr-[15px]");
     return () => {
-      document.body.style.paddingRight = "";
-      document.body.style.overflow = "";
-      document.body.style.marginRight = "";
       document.body.classList.remove("overflow-hidden", "pr-[15px]");
     };
   }, []);
@@ -104,9 +101,9 @@ export default function RealAdmin() {
   // сброс пагинации при изменениях фильтров
   useEffect(() => {
     setOffset(0);
-  }, [search, xlsxResult, onlyWithoutImages]);
+  }, [search, xlsxResult, onlyWithoutImages, onlyReserve]); // добавили onlyReserve
 
-  // загрузка списка
+  // загрузка списка (бэкенд-фильтр: только only_without_images; резерв фильтруем локально)
   useEffect(() => {
     let cancelled = false;
     fetchProductsRaw(search, PRODUCTS_LIMIT, offset, onlyWithoutImages)
@@ -150,7 +147,7 @@ export default function RealAdmin() {
 
   // XLSX загрузка
   const handleXlsxUpload = async (e) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
     if (!/\.xlsx$/i.test(file.name)) {
       alert("Выберите файл формата .xlsx");
@@ -196,7 +193,7 @@ export default function RealAdmin() {
     try {
       await uploadProductImage(editingProduct.id, file, name);
       await syncImagesForGroup(editingProduct.id);
-      setXlsxResult({}); // триггерим перезагрузку списков
+      setXlsxResult({}); // триггер перезагрузки списков
       await reloadEditingProduct(editingProduct.id);
     } catch (err) {
       alert("Ошибка сохранения: " + (err?.message || err));
@@ -269,6 +266,10 @@ export default function RealAdmin() {
     setOnlyWithoutImages(true);
     setOffset(0);
   };
+  const handleToggleReserve = () => {
+    setOnlyReserve((v) => !v);
+    // offset уже сбрасывается эффектом
+  };
 
   const openEditImages = (product) => {
     setEditingProduct(product);
@@ -287,6 +288,9 @@ export default function RealAdmin() {
       alert(e?.message || "Не удалось синхронизировать");
     }
   };
+
+  // Отфильтрованный список для отображения
+  const displayProducts = onlyReserve ? products.filter((p) => !!p.reserved) : products;
 
   return (
     <div className="admin-root">
@@ -356,11 +360,14 @@ export default function RealAdmin() {
         <button className={`admin-btn${onlyWithoutImages ? " active" : ""}`} onClick={handleSetNoImagesMode}>
           Только без картинок
         </button>
+        <button className={`admin-btn${onlyReserve ? " active" : ""}`} onClick={handleToggleReserve}>
+          Только в резерве
+        </button>
       </div>
 
       {/* Таблица товаров */}
       <section className="admin-section">
-        <h3>Товары (на странице: {products.length})</h3>
+        <h3>Товары (на странице: {displayProducts.length})</h3>
         <input
           type="text"
           placeholder="Поиск по товарам..."
@@ -383,7 +390,7 @@ export default function RealAdmin() {
             <div>Действия</div>
           </div>
 
-          {products.map((p) => {
+          {displayProducts.map((p) => {
             const { main, prev, full } = splitImages(p.image_url);
             return (
               <div className="admin-table-row" key={p.id}>
@@ -498,7 +505,9 @@ export default function RealAdmin() {
                           top: 0,
                           cursor: "pointer",
                         }}
-                        onChange={(e) => handleFileChange(type, 0, e.target.files?.[0])}
+                        onChange={(e) =>
+                          handleFileChange(type, 0, e.target.files && e.target.files[0])
+                        }
                         title=""
                       />
                     </label>
@@ -542,7 +551,9 @@ export default function RealAdmin() {
                           top: 0,
                           cursor: "pointer",
                         }}
-                        onChange={(e) => handleFileChange("full", idx, e.target.files?.[0])}
+                        onChange={(e) =>
+                          handleFileChange("full", idx, e.target.files && e.target.files[0])
+                        }
                         title=""
                       />
                     </label>
