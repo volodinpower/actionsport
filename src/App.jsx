@@ -9,6 +9,7 @@ import BrandsPage from "./pages/Brands";
 
 import AdminGuard from "./pages/AdminGuard";
 import AdminPanel from "./components/AdminPanel"; // <-- проверь путь!
+import RealAdminTabs from "./pages/RealAdminTabs";
 
 import "./index.css";
 
@@ -21,13 +22,19 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           {/* Страница логина/гард */}
-          <Route path="/admin" element={<AdminGuard />} />
+          <Route
+            path="/admin"
+            element={
+              <AdminGuard>
+                <RealAdminTabs />
+              </AdminGuard>
+            } />
           {/* Панель: та же защита, но с children */}
           <Route
             path="/admin/panel"
             element={
               <AdminGuard>
-                <AdminPanel />
+                <RealAdminTabs />
               </AdminGuard>
             }
           />
