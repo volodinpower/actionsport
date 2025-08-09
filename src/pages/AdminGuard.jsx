@@ -1,55 +1,42 @@
-// src/pages/AdminGuard.tsx
+// src/pages/AdminGuard.jsx
 import React, { useEffect, useState } from "react";
-import RealAdmin from "./RealAdmin";
-import { login, logout, getMe } from "../api";
-
-// Определи тип пользователя под ответ /auth/me
-export interface User {
-  id: string;
-  email: string;
-  is_active: boolean;
-  is_superuser: boolean;
-  is_verified: boolean;
-}
+import RealAdmin from "./RealAdmin";          // проверь путь, если файл в другом месте
+import { login, logout, getMe } from "../api"; // из твоего api.js
 
 export default function AdminGuard() {
-  const [me, setMe] = useState<User | null>(null);
+  const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string>("");
+  const [err, setErr] = useState("");
 
-  // Первый пинг, узнаём, залогинен ли пользователь
   useEffect(() => {
-    let mounted = true;
+    const ctrl = new AbortController();
     (async () => {
       try {
         setLoading(true);
         setErr("");
-        const u = await getMe() as unknown as User | null; // getMe из JS — приводим тип
-        if (!mounted) return;
-        setMe(u);
-      } catch (e: any) {
-        if (!mounted) return;
-        setErr(e?.message || "Не удалось получить профиль");
+        const u = await getMe(); // null если не залогинен, объект пользователя если залогинен
+        if (!ctrl.signal.aborted) setMe(u);
+      } catch (e) {
+        if (!ctrl.signal.aborted) setErr(e?.message || String(e));
       } finally {
-        if (mounted) setLoading(false);
+        if (!ctrl.signal.aborted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => ctrl.abort();
   }, []);
 
-  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
+  async function handleLogin(e) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const email = String(form.get("email") || "");
     const password = String(form.get("password") || "");
-
     setErr("");
     setLoading(true);
     try {
-      await login(email, password);      // 204 + Set-Cookie
-      const u = await getMe() as unknown as User; // повторно тянем профиль
+      await login(email, password); // 204 + Set-Cookie
+      const u = await getMe();
       setMe(u);
-    } catch (e: any) {
+    } catch (e) {
       setErr(e?.message || "Ошибка входа");
     } finally {
       setLoading(false);
@@ -61,21 +48,18 @@ export default function AdminGuard() {
     try {
       await logout();
       setMe(null);
-    } finally {
-      setLoading(false);
-    }
+    } catch {}
+    setLoading(false);
   }
 
-  if (loading) {
-    return <div style={{ padding: 20 }}>Загрузка…</div>;
-  }
+  if (loading) return <div style={{ padding: 20 }}>Загрузка…</div>;
 
-  // Не залогинен — показываем форму входа (cookie-based)
+  // форма входа, если не залогинен
   if (!me) {
     return (
       <div style={{ maxWidth: 420, margin: "60px auto", padding: 20, border: "1px solid #ddd", borderRadius: 12 }}>
         <h2 style={{ marginBottom: 12 }}>Вход в админку</h2>
-        <form onSubmit={handleLogin} className="space-y-3">
+        <form onSubmit={handleLogin} autoComplete="on">
           <div style={{ marginBottom: 10 }}>
             <label style={{ display: "block", marginBottom: 6 }}>Email</label>
             <input
@@ -84,7 +68,6 @@ export default function AdminGuard() {
               required
               autoComplete="username"
               autoFocus
-              className="w-full border px-3 py-2 rounded"
               style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px" }}
             />
           </div>
@@ -95,7 +78,6 @@ export default function AdminGuard() {
               type="password"
               required
               autoComplete="current-password"
-              className="w-full border px-3 py-2 rounded"
               style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px" }}
             />
           </div>
@@ -103,7 +85,6 @@ export default function AdminGuard() {
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 rounded text-white"
             style={{ background: "#111", color: "#fff", padding: "10px 14px", borderRadius: 8 }}
           >
             {loading ? "Входим…" : "Войти"}
@@ -113,7 +94,7 @@ export default function AdminGuard() {
     );
   }
 
-  // Залогинен, но прав нет
+  // залогинен, но не суперпользователь
   if (!me.is_superuser) {
     return (
       <div style={{ maxWidth: 520, margin: "60px auto", padding: 20, border: "1px solid #ddd", borderRadius: 12 }}>
@@ -123,7 +104,6 @@ export default function AdminGuard() {
         <button
           onClick={handleLogout}
           disabled={loading}
-          className="px-3 py-2 rounded text-white"
           style={{ background: "#111", color: "#fff", padding: "10px 14px", borderRadius: 8 }}
         >
           Выйти
@@ -132,6 +112,6 @@ export default function AdminGuard() {
     );
   }
 
-  // Всё ок — рендерим твою настоящую админку
+  // всё ок — показываем реальную админку
   return <RealAdmin />;
 }
