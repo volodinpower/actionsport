@@ -4,35 +4,28 @@ import BannerAdmin from "../components/BannerAdmin";
 import { logout, getMe } from "../api";
 
 export default function RealAdminTabs() {
-  const [activeTab, setActiveTab] = useState("products"); // 'products' | 'banners'
+  const [activeTab, setActiveTab] = useState("products");
   const [me, setMe] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const u = await getMe();
-        if (!cancelled) setMe(u);
-      } catch {}
+      try { const u = await getMe(); if (!cancelled) setMe(u); } catch {}
     })();
     return () => { cancelled = true; };
   }, []);
 
   async function handleLogout() {
-    try { await logout(); } finally {
-      window.location.href = "/admin";
-    }
+    try { await logout(); } finally { window.location.href = "/admin"; }
   }
 
   return (
     <div
       style={{
-        width: "100%",          // <-- было 100vw
-        maxWidth: "1280px",     // необязательно, но приятно для вёрстки
-        margin: "0 auto",       // центрируем контент
+        width: "100%",        // <-- тянемся на всю ширину
         minHeight: "100vh",
         padding: 20,
-        overflowY: "auto",      // <-- вместо overflow: hidden
+        overflowY: "auto",
         background: "#fafbfc",
         boxSizing: "border-box",
       }}
