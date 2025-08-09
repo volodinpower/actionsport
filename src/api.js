@@ -1,24 +1,55 @@
 // src/api.js
 
-function apiUrl(path) {
-  const base = import.meta.env.VITE_API_URL || "";
-  return `${base}${path.startsWith("/") ? path : "/" + path}`;
+// === Base URL ===
+// Укажи в .env (и на Vercel): VITE_API_URL=https://api.actionsport.pro
+const BASE = import.meta.env.VITE_API_URL || "";
+if (import.meta.env.DEV && (!BASE || BASE.includes("fly.dev"))) {
+  // Мягкое предупреждение в dev-режиме
+  // eslint-disable-next-line no-console
+  console.warn("[api] VITE_API_URL пуст или указывает на fly.dev. Нужен https://api.actionsport.pro");
 }
 
+// Собираем абсолютный URL
+function apiUrl(path) {
+  return `${BASE}${path.startsWith("/") ? path : "/" + path}`;
+}
+
+// Проверка статуса
 function ok(res) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res;
 }
 
+// Безопасный json()
+async function json(res) {
+  try {
+    return await res.json();
+  } catch {
+    throw new Error("Bad JSON response");
+  }
+}
+
+// fetch с таймаутом (по умолчанию 15с)
+async function fetchWithTimeout(url, options = {}, ms = 15000) {
+  const c = new AbortController();
+  const id = setTimeout(() => c.abort(), ms);
+  try {
+    const res = await fetch(url, { ...options, signal: c.signal });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 // ========= AUTH (cookie-based) =========
 export async function login(email, password) {
   const body = new URLSearchParams({ username: email, password });
-  const res = await fetch(apiUrl("/auth/jwt/login"), {
+  const res = await fetchWithTimeout(apiUrl("/auth/jwt/login"), {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body,
     credentials: "include", // важно для куки
-    cache: "no-store",
+    cache: "no-store",       // страхуемся от кэша в Safari
   });
   if (res.status !== 204) {
     let msg = "Login failed";
@@ -31,16 +62,16 @@ export async function login(email, password) {
 }
 
 export async function logout() {
-  await fetch(apiUrl("/auth/jwt/logout"), {
+  await fetchWithTimeout(apiUrl("/auth/jwt/logout"), {
     method: "POST",
     credentials: "include",
   });
 }
 
 export async function getMe() {
-  const res = await fetch(apiUrl("/auth/me"), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl("/auth/me"), { credentials: "include" });
   if (!res.ok) return null;
-  return await res.json();
+  return await json(res);
 }
 
 // ========= PRODUCTS =========
@@ -68,9 +99,9 @@ export async function fetchProducts(
   if (gender) params.append("gender", gender);
   if (size) params.append("size", size);
 
-  const res = await fetch(apiUrl(`/products?${params}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/products?${params}`), { credentials: "include" });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchProductsRaw(search = "", limit = 30, offset = 0, onlyWithoutImages = false) {
@@ -80,31 +111,31 @@ export async function fetchProductsRaw(search = "", limit = 30, offset = 0, only
   params.append("offset", offset);
   if (onlyWithoutImages) params.append("only_without_images", "true");
 
-  const res = await fetch(apiUrl(`/products/raw?${params}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/products/raw?${params}`), { credentials: "include" });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchProductsCount() {
-  const res = await fetch(apiUrl("/products/count"), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl("/products/count"), { credentials: "include" });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchProductById(id) {
-  const res = await fetch(apiUrl(`/api/product/${id}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/api/product/${id}`), { credentials: "include" });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchPopularProducts(limit = 20) {
-  const res = await fetch(apiUrl(`/popular-products?limit=${limit}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/popular-products?limit=${limit}`), { credentials: "include" });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function incrementProductView(id) {
-  await fetch(apiUrl(`/api/product/${id}/view`), {
+  await fetchWithTimeout(apiUrl(`/api/product/${id}/view`), {
     method: "POST",
     credentials: "include",
   });
@@ -119,9 +150,9 @@ export async function fetchFilteredBrands({ categoryKey, subcategoryKey, gender,
   if (size) params.append("size", size);
   if (search) params.append("search", search);
 
-  const res = await fetch(apiUrl(`/brands/filtered?${params}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/brands/filtered?${params}`), { credentials: "include" });
   if (!res.ok) return [];
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchFilteredGenders({ categoryKey, subcategoryKey, brand, size, search }) {
@@ -132,41 +163,41 @@ export async function fetchFilteredGenders({ categoryKey, subcategoryKey, brand,
   if (size) params.append("size", size);
   if (search) params.append("search", search);
 
-  const res = await fetch(apiUrl(`/genders/filtered?${params}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/genders/filtered?${params}`), { credentials: "include" });
   if (!res.ok) return [];
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchFilteredSizes({ categoryKey, subcategoryKey, brand, gender, search }) {
   const params = new URLSearchParams();
   if (categoryKey) params.append("category_key", categoryKey);
-  if (subcategoryKey) params.append("subcategory_key", subcategoryKey);
+  if (subcategoryKey) params.append("subcategory_key", subcategory_key = subcategoryKey);
   if (brand) params.append("brand", brand);
   if (gender) params.append("gender", gender);
   if (search) params.append("search", search);
 
-  const res = await fetch(apiUrl(`/sizes/filtered?${params}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/sizes/filtered?${params}`), { credentials: "include" });
   if (!res.ok) return [];
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchBrands() {
-  const res = await fetch(apiUrl("/brands"), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl("/brands"), { credentials: "include" });
   if (!res.ok) return [];
-  return await res.json();
+  return await json(res);
 }
 
 export async function fetchCategories() {
-  const res = await fetch(apiUrl("/categories"), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl("/categories"), { credentials: "include" });
   ok(res);
-  const data = await res.json();
+  const data = await json(res);
   return Array.isArray(data) ? data : [];
 }
 
 export async function fetchPopularBrands(limit = 18) {
-  const res = await fetch(apiUrl(`/brands/popular?limit=${limit}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/brands/popular?limit=${limit}`), { credentials: "include" });
   ok(res);
-  return await res.json(); // [{brand, count}]
+  return await json(res); // [{brand, count}]
 }
 
 // ========= ADMIN (superuser) =========
@@ -174,13 +205,13 @@ export async function uploadXlsx(file) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(apiUrl("/admin/upload_xlsx"), {
+  const res = await fetchWithTimeout(apiUrl("/admin/upload_xlsx"), {
     method: "POST",
     body: formData,
     credentials: "include",
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function uploadProductImage(id, file, name = "") {
@@ -188,13 +219,13 @@ export async function uploadProductImage(id, file, name = "") {
   formData.append("file", file);
   formData.append("name", name || "");
 
-  const res = await fetch(apiUrl(`/admin/product/${id}/upload_image`), {
+  const res = await fetchWithTimeout(apiUrl(`/admin/product/${id}/upload_image`), {
     method: "POST",
     body: formData,
     credentials: "include",
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function deleteProductImage(productId, imageUrl) {
@@ -208,51 +239,51 @@ export async function deleteProductImage(productId, imageUrl) {
   const formData = new FormData();
   formData.append("url", relativeUrl);
 
-  const res = await fetch(apiUrl(`/admin/product/${productId}/delete_image`), {
+  const res = await fetchWithTimeout(apiUrl(`/admin/product/${productId}/delete_image`), {
     method: "POST",
     body: formData,
     credentials: "include",
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function setProductImageUrl(id, imageUrl) {
-  const res = await fetch(apiUrl(`/admin/product/${id}/set_image_url`), {
+  const res = await fetchWithTimeout(apiUrl(`/admin/product/${id}/set_image_url`), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify({ image_url: imageUrl }),
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function setProductReserved(id, reserved) {
-  const res = await fetch(apiUrl(`/admin/product/${id}/set_reserved`), {
+  const res = await fetchWithTimeout(apiUrl(`/admin/product/${id}/set_reserved`), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify({ reserved }),
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function syncImagesForGroup(productId) {
-  const res = await fetch(apiUrl(`/admin/product/${productId}/update_images_group`), {
+  const res = await fetchWithTimeout(apiUrl(`/admin/product/${productId}/update_images_group`), {
     method: "POST",
     credentials: "include",
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 // ========= BANNERS =========
 export async function fetchBanners() {
-  const res = await fetch(apiUrl("/banners"), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl("/banners"), { credentials: "include" });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function uploadBanner(imageFile, link = "", alt = "") {
@@ -261,43 +292,43 @@ export async function uploadBanner(imageFile, link = "", alt = "") {
   formData.append("link", link);
   formData.append("alt", alt);
 
-  const res = await fetch(apiUrl("/admin/banner/upload"), {
+  const res = await fetchWithTimeout(apiUrl("/admin/banner/upload"), {
     method: "POST",
     body: formData,
     credentials: "include",
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
 export async function deleteBanner(bannerId) {
   const formData = new FormData();
   formData.append("banner_id", bannerId);
 
-  const res = await fetch(apiUrl("/admin/banner/delete"), {
+  const res = await fetchWithTimeout(apiUrl("/admin/banner/delete"), {
     method: "POST",
     body: formData,
     credentials: "include",
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
-// Если у тебя есть ручка обновления баннеров (в коде бэка её не видно):
+// (опционально — если такая ручка есть на бэке)
 export async function updateBanner(bannerId, fields) {
-  const res = await fetch(apiUrl(`/admin/update_banner/${bannerId}`), {
+  const res = await fetchWithTimeout(apiUrl(`/admin/update_banner/${bannerId}`), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(fields),
   });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
 
-// ========= (опционально, если такая ручка есть на бэке) =========
+// ========= Доп. ручки (если есть на бэке) =========
 export async function fetchRandomProducts(limit = 20) {
-  const res = await fetch(apiUrl(`/random-products?limit=${limit}`), { credentials: "include" });
+  const res = await fetchWithTimeout(apiUrl(`/random-products?limit=${limit}`), { credentials: "include" });
   ok(res);
-  return await res.json();
+  return await json(res);
 }
