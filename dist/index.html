@@ -2,17 +2,45 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet" />
     <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
     />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="light dark" />
+
     <title>Actionsport.pro</title>
-    <script type="module" crossorigin src="/assets/index-Ds4lHCHV.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BbwFv6R1.css">
+
+    <!-- Favicon / PWA basics -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Fonts: preconnect + swap to avoid FOIT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- DNS prefetch to likely hosts (frontend + www) -->
+    <link rel="dns-prefetch" href="https://actionsport.pro" />
+    <link rel="dns-prefetch" href="https://www.actionsport.pro" />
+
+    <!-- ВАЖНО: динамический preconnect к API на основе VITE_API_URL -->
+    <script type="module" crossorigin src="/assets/index-CTnhLrQs.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-imgW5Igy.css">
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Основной бандл -->
   </body>
 </html>
