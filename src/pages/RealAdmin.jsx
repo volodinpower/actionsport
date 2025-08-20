@@ -510,7 +510,10 @@ export default function RealAdmin() {
                       />
                     </label>
                     {url && (
-                      <button style={{ type: "button", marginTop: 5, color: "#d00" }} onClick={() => handleDeleteImage(url)}>
+                      <button 
+                      type='button'
+                      style={{ marginTop: 5, color: "#d00" }} 
+                      onClick={() => handleDeleteImage(url)}>
                         Удалить
                       </button>
                     )}
@@ -556,7 +559,8 @@ export default function RealAdmin() {
                       />
                     </label>
                     <button
-                      style={{ type: "button", marginTop: 3, color: "#d00", fontSize: 13 }}
+                      type='button'
+                      style={{ marginTop: 3, color: "#d00", fontSize: 13 }}
                       onClick={() => handleDeleteImage(url)}
                     >
                       Удалить
