@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import RealAdmin from "../pages/RealAdmin";
 import BannerAdmin from "./BannerAdmin";
 import { logout } from "../api"; // cookie-based logout
+import { color } from "framer-motion";
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState("products");
@@ -39,6 +40,7 @@ export default function AdminPanel() {
         overflow: "hidden",
         background: "#fafbfc",
         boxSizing: "border-box",
+        fontColor: "#111",
       }}
     >
       <nav style={{ marginBottom: 20, display: "flex", gap: 20, alignItems: "center" }}>
