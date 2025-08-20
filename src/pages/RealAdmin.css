@@ -192,7 +192,6 @@
   width: 18px;
   height: 18px;
   border: 1px solid #ccc;
-  border-radius: 4px;
   background: #fff;        /* белый фон по умолчанию */
   cursor: pointer;
   display: inline-block;
