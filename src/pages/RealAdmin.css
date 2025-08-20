@@ -141,7 +141,6 @@
   }
 }
 .admin-root input[type="text"],
-.admin-root input[type="file"],
 .admin-root input[type="checkbox"],
 .admin-root select,
 .admin-root textarea {
@@ -155,4 +154,7 @@
 
 .admin-root input::placeholder {
   color: #888;
+}
+.admin-root input[type="file"]{
+
 }
