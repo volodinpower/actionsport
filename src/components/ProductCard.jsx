@@ -60,7 +60,6 @@ export default function ProductCard({ product, onClick }) {
       title={product.sitename}
       onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => !isMobile && setIsHovered(false)}
-      style={{ color: "#111" }} 
     >
       <div className="image-text-wrapper">
         <div className={isMobile ? "swiper-container" : "image-container"}>
@@ -95,9 +94,7 @@ export default function ProductCard({ product, onClick }) {
           )}
         </div>
         <div className="product-content">
-          <h2 className="product-card-title" style={{ color: "#111" }}>
-            {product.sitename}
-          </h2>
+          <h2 className="product-card-title">{product.sitename}</h2>
           <div className="desc-group">
             <div className="desc-row color-row">{`color: ${product.color || "—"}`}</div>
             <div className="desc-row">{`size: ${sizes.length > 0 ? sizes.join(", ") : "—"}`}</div>

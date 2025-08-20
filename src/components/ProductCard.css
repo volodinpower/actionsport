@@ -75,7 +75,6 @@
   word-break: break-word;
   min-height: 30px;
   max-height: 32px;
-  color: #111 !important; /* ✅ Заголовок всегда чёрный */
 }
 
 .desc-group {
@@ -97,7 +96,7 @@
   margin-bottom: 0;
 }
 
-/* PRICE BLOCK */
+/* PRICE BLOCK - теперь только margin-top: auto! */
 .price-block {
   margin-top: auto;
   display: flex;
@@ -109,6 +108,7 @@
   min-height: 0;
   height: auto;
   box-sizing: border-box;
+  /* Убрал все фиксированные height/min-height! */
 }
 
 .price-block span,

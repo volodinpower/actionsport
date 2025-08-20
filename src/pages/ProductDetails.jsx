@@ -141,29 +141,46 @@ export default function ProductDetails() {
     }
   };
 
-function renderPrice() {
-  const price = Number(product.price);
-  const discount = Number(product.discount);
-  let discountPrice = Number(product.discount_price);
-
-  if (discount > 0 && (!discountPrice || discountPrice === 0)) {
-    discountPrice = Math.round(price * (1 - discount / 100));
-  }
-
-  return discount > 0 && discountPrice > 0 ? (
-    <div className="details-price-wrapper">
-      <div className="details-price-line">
-        <span className="details-old-price">{price.toLocaleString()} AMD</span>
-        <span className="details-discount-badge">-{discount}%</span>
-      </div>
+  function renderPrice() {
+    const price = Number(product.price);
+    const discount = Number(product.discount);
+    let discountPrice = Number(product.discount_price);
+    if (discount > 0 && (!discountPrice || discountPrice === 0)) {
+      discountPrice = Math.round(price * (1 - discount / 100));
+    }
+    return discount > 0 && discountPrice > 0 ? (
       <div>
-        <span className="details-new-price">{discountPrice.toLocaleString()} AMD</span>
+        <div>
+          <span
+            style={{
+              textDecoration: "line-through",
+              color: "#888",
+              fontSize: "1.25rem",
+              marginRight: "0.5rem",
+            }}
+          >
+            {price.toLocaleString()} AMD
+          </span>
+          <span
+            style={{ color: "red", fontWeight: "600", fontSize: "1.25rem" }}
+          >
+            -{discount}%
+          </span>
+        </div>
+        <div>
+          <span
+            style={{ color: "green", fontWeight: "700", fontSize: "1.5rem" }}
+          >
+            {discountPrice.toLocaleString()} AMD
+          </span>
+        </div>
       </div>
-    </div>
-  ) : (
-    <span className="details-price-regular">{price.toLocaleString()} AMD</span>
-  );
-}
+    ) : (
+      <span style={{ fontWeight: "700", fontSize: "1.5rem" }}>
+        {price.toLocaleString()} AMD
+      </span>
+    );
+  }
 
   // Цветовые варианты
   const colorBlock =
@@ -459,6 +476,7 @@ function renderPrice() {
           >
             {renderImages()}
           </div>
+
           <div
             style={{
               flex: 1,
@@ -466,7 +484,11 @@ function renderPrice() {
               flexDirection: "column",
             }}
           >
-            <h2 className="product-details-title">{displayName}</h2>
+            <h2
+              style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}
+            >
+              {displayName}
+            </h2>
             {colorBlock}
             {sizeBlock}
             <div style={{ marginTop: 32, marginBottom: 8 }}>{renderPrice()}</div>
