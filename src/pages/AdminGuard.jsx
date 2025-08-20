@@ -68,7 +68,7 @@ export default function AdminGuard({ children }) {
               required
               autoComplete="username"
               autoFocus
-              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px" }}
+              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px", backgroundColor: "#fff" }}
             />
           </div>
           <div style={{ marginBottom: 10 }}>
