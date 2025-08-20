@@ -183,3 +183,36 @@
 .admin-root input[type="file"]::-webkit-file-upload-button:hover {
   background: #000;
 }
+/* Чекбоксы в таблице товаров */
+.admin-root input[type="checkbox"] {
+  appearance: none;        /* убираем дефолтный браузерный стиль */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  width: 18px;
+  height: 18px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;        /* белый фон по умолчанию */
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+}
+
+/* Состояние :checked */
+.admin-root input[type="checkbox"]:checked {
+  background: #111;        /* чёрная заливка */
+  border-color: #111;
+}
+
+/* Галочка */
+.admin-root input[type="checkbox"]:checked::after {
+  content: "✔";
+  color: #fff;
+  font-size: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+}
