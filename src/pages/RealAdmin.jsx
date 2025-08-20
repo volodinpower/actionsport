@@ -533,41 +533,44 @@ export default function RealAdmin() {
             >
               {(() => {
                 const { full } = splitImages(editingProduct.image_url);
-                const blocks = full.map((url, idx) => (
-                  <div key={url} className="admin-img-label">
-                    <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>
-                      {`full${String(idx + 1).padStart(2, "0")}`}
-                    </span>
-                    <label className="admin-modal-label">
-                      <img src={getImageUrl(url)} alt={`full${idx + 1}`} className="admin-img" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        style={{
-                          opacity: 0,
-                          width: "100%",
-                          height: "100%",
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          cursor: "pointer",
-                        }}
-                        onChange={(e) =>
-                          handleFileChange("full", idx, e.target.files && e.target.files[0])
-                        }
-                        title=""
-                      />
-                    </label>
-                    <button
-                      type='button'
-                      style={{ marginTop: 3, color: "#d00", fontSize: 13 }}
-                      onClick={() => handleDeleteImage(url)}
-                    >
-                      Удалить
-                    </button>
-                  </div>
-                ));
-
+              const blocks = full.map((url, idx) => (
+                <div
+                  key={url}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+                  className="admin-img-label"
+                >
+                  <span style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>
+                    {`full${String(idx + 1).padStart(2, "0")}`}
+                  </span>
+                  <label className="admin-modal-label">
+                    <img src={getImageUrl(url)} alt={`full${idx + 1}`} className="admin-img" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{
+                        opacity: 0,
+                        width: "100%",
+                        height: "100%",
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        cursor: "pointer",
+                      }}
+                      onChange={(e) =>
+                        handleFileChange("full", idx, e.target.files && e.target.files[0])
+                      }
+                      title=""
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    style={{ marginTop: 3, color: "#d00", fontSize: 13 }}
+                    onClick={() => handleDeleteImage(url)}
+                  >
+                    Удалить
+                  </button>
+                </div>
+              ));
                 if (full.length < 12) {
                   blocks.push(
                     <div key="add" className="admin-img-label">
