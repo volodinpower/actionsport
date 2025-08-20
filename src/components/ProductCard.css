@@ -13,6 +13,7 @@
   transition: box-shadow 0.2s;
   padding: 4px 4px 6px 4px;
   min-width: 0;
+  color: #111; /* ✅ базовый цвет текста */
 }
 
 .product-card:hover {
@@ -75,6 +76,7 @@
   word-break: break-word;
   min-height: 30px;
   max-height: 32px;
+  color: #111; /* ✅ фикс: явный цвет для заголовка */
 }
 
 .desc-group {
@@ -85,7 +87,7 @@
 
 .desc-row {
   font-size: 10px !important;
-  color: #888;
+  color: #555; /* ✅ чуть темнее для читаемости */
   line-height: 1.05;
   margin-bottom: 1px;
   white-space: normal;
@@ -108,7 +110,6 @@
   min-height: 0;
   height: auto;
   box-sizing: border-box;
-  /* Убрал все фиксированные height/min-height! */
 }
 
 .price-block span,
@@ -139,7 +140,7 @@
 }
 
 .cur-price {
-  color: #333;
+  color: #111; /* ✅ сделал чёрным вместо #333 */
   font-weight: 600;
 }
 
@@ -225,4 +226,9 @@
   .searchbar-modal-inner {
     padding: 7px 3vw 9px 3vw;
   }
+}
+/* 🔧 Фикс: всегда чёрный текст */
+.product-card,
+.product-card * {
+  color: #111 !important;
 }

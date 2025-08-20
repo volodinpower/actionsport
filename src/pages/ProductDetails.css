@@ -1,3 +1,54 @@
+/* --- Контейнер деталей товара --- */
+.product-details {
+  color: #111; /* всегда тёмный текст */
+  font-family: sans-serif;
+  padding: 0;
+  margin: 0;
+}
+
+/* Заголовки */
+.product-details h1,
+.product-details h2,
+.product-details h3 {
+  color: #111;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  line-height: 1.2;
+}
+
+/* Описание */
+.product-details p,
+.product-details .desc {
+  color: #333;
+  line-height: 1.4;
+  margin: 0 0 12px 0;
+}
+
+/* --- Цены --- */
+.product-details .price-block {
+  margin-top: 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.product-details .old-price {
+  color: #888;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.product-details .new-price {
+  color: #13971a;
+  font-weight: 700;
+}
+
+.product-details .sale-badge {
+  color: #d32d2f;
+  font-weight: bold;
+}
+
+/* --- Основное изображение (мобилка + десктоп) --- */
 .main-image-mobile-wrapper {
   width: 100%;
   max-width: 420px;
@@ -21,10 +72,11 @@
   border-radius: 0 !important;
   background: #fff;
   margin-bottom: 8px;
-  box-shadow: none !important; /* убираем тени */
+  box-shadow: none !important;
   cursor: pointer;
 }
 
+/* --- Миниатюры --- */
 .thumbnail-square {
   width: 80px;
   height: 80px;
@@ -36,12 +88,13 @@
   margin: 0 4px 4px 0;
   transition: border-color 0.18s;
   background: #fff;
-  box-shadow: none !important; /* убираем тени */
+  box-shadow: none !important;
 }
 .thumbnail-square.selected {
   border-color: #222;
 }
 
+/* --- Пагинация свайпера --- */
 .swiper-pagination-bullets {
   display: flex;
   justify-content: center;
@@ -75,7 +128,7 @@
   }
 }
 
-/* --- Модалка стили (оставь если нужно) --- */
+/* --- Модалка стили --- */
 .modal-overlay {
   position: fixed;
   z-index: 5000;
@@ -85,6 +138,7 @@
   align-items: center;
   justify-content: center;
 }
+
 .modal-close {
   position: absolute;
   right: 24px;
@@ -96,6 +150,7 @@
   cursor: pointer;
   z-index: 60;
 }
+
 .modal-prev, .modal-next {
   position: absolute;
   top: 50%;
@@ -110,12 +165,14 @@
 }
 .modal-prev { left: 24px; }
 .modal-next { right: 24px; }
+
 .modal-image {
   max-height: 80vh;
   max-width: 80vw;
   box-shadow: none !important;
   border-radius: 0 !important;
 }
+
 .modal-thumbnails {
   position: absolute;
   bottom: 32px;
@@ -125,6 +182,7 @@
   gap: 8px;
   z-index: 60;
 }
+
 .modal-thumbnail {
   width: 48px;
   height: 48px;
