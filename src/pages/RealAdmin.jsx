@@ -376,7 +376,7 @@ export default function RealAdmin() {
             setSearch(e.target.value);
             setOffset(0);
           }}
-          style={{ width: 300, marginBottom: 12 }}
+          style={{ width: 300, marginBottom: 12, color: "#ffffffff" }}
         />
 
         <div ref={listRef} className="admin-table-list">
