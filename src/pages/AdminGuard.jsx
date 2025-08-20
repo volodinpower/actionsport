@@ -78,7 +78,7 @@ export default function AdminGuard({ children }) {
               type="password"
               required
               autoComplete="current-password"
-              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px" }}
+              style={{ width: "100%", border: "1px solid #ccc", borderRadius: 8, padding: "8px 12px", backgroundColor: "#fff" }}
             />
           </div>
           {err && <div style={{ color: "crimson", marginBottom: 10 }}>{err}</div>}
