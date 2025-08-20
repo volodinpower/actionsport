@@ -7,8 +7,6 @@ body {
   margin: 0;
   padding: 0;
   background-color: #f5f5f5;
-  color: #111;
-
 }
 
 /* Стили слайдера */
@@ -138,13 +136,4 @@ body {
     font-size: 15px !important;
     font-weight: 400 !important;
   }
-}
-/* ==== ФИКС AUTOFILL ==== */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #fff inset !important; /* белый фон */
-  -webkit-text-fill-color: #111 !important; /* черный текст */
-  transition: background-color 9999s ease-in-out 0s; /* костыль против возврата серого */
 }
