@@ -151,32 +151,19 @@ export default function ProductDetails() {
     return discount > 0 && discountPrice > 0 ? (
       <div>
         <div>
-          <span
-            style={{
-              textDecoration: "line-through",
-              color: "#888",
-              fontSize: "1.25rem",
-              marginRight: "0.5rem",
-            }}
-          >
+          <span className="price-old">
             {price.toLocaleString()} AMD
           </span>
-          <span
-            style={{ color: "red", fontWeight: "600", fontSize: "1.25rem" }}
-          >
-            -{discount}%
-          </span>
+          <span className="price-discount">-{discount}%</span>
         </div>
         <div>
-          <span
-            style={{ color: "green", fontWeight: "700", fontSize: "1.5rem" }}
-          >
+          <span className="price-new">
             {discountPrice.toLocaleString()} AMD
           </span>
         </div>
       </div>
     ) : (
-      <span style={{ fontWeight: "700", fontSize: "1.5rem" }}>
+      <span className="price-new">
         {price.toLocaleString()} AMD
       </span>
     );
@@ -185,24 +172,13 @@ export default function ProductDetails() {
   // Цветовые варианты
   const colorBlock =
     colorVariants.length <= 1 ? (
-      <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
+      <div className="product-color">
         <b>color:</b> {product.color}
       </div>
     ) : (
-      <div
-        style={{ marginBottom: 4, color: "#666", fontSize: 14, gap: 10 }}
-      >
+      <div className="product-color">
         <b>color:</b> {product.color}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginTop: 10,
-            marginBottom: 10,
-            maxWidth: 6 * 70,
-          }}
-        >
+        <div className="color-variants">
           {colorVariants.map((item) => {
             const mainImg = item.image_url
               ?.split(",")
@@ -211,27 +187,11 @@ export default function ProductDetails() {
             const imgSrc = mainImg ? apiUrl(mainImg) : "/no-image.jpg";
             const isCurrent = String(item.id) === String(selectedColorId);
             return (
-              <div
-                key={item.id}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  width: 75,
-                }}
-              >
+              <div key={item.id} className="color-variant">
                 <a
                   href={isCurrent ? undefined : `/product/${item.id}`}
                   tabIndex={isCurrent ? -1 : 0}
-                  style={{
-                    pointerEvents: isCurrent ? "none" : "auto",
-                    borderRadius: 0,
-                    border: isCurrent ? "3px solid #222" : "2px solid #ddd",
-                    background: isCurrent ? "#eee" : "#fafbfc",
-                    outline: "none",
-                    width: 65,
-                    height: 65,
-                  }}
+                  className={isCurrent ? "color-link active" : "color-link"}
                   title={item.color || ""}
                   onClick={(e) => {
                     e.preventDefault();
@@ -250,14 +210,7 @@ export default function ProductDetails() {
                   <img
                     src={imgSrc}
                     alt={item.color || displayName}
-                    style={{
-                      width: 60,
-                      height: 60,
-                      objectFit: "cover",
-                      opacity: isCurrent ? 1 : 0.82,
-                      borderRadius: 0,
-                      background: "#fff",
-                    }}
+                    className="color-image"
                     draggable={false}
                   />
                 </a>
@@ -270,7 +223,7 @@ export default function ProductDetails() {
 
   // Размеры
   const sizeBlock = (
-    <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
+    <div className="product-size">
       <b>size:</b>{" "}
       {Array.isArray(product.sizes) && product.sizes.length > 0
         ? product.sizes.join(", ")
@@ -307,7 +260,6 @@ export default function ProductDetails() {
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
               draggable={false}
-              style={{ userSelect: "none" }}
             />
             <div className="swiper-pagination-bullets">
               {rawImages.map((_, idx) => (
@@ -336,16 +288,8 @@ export default function ProductDetails() {
             className="main-image-square desktop"
             onClick={() => setShowModal(true)}
             draggable={false}
-            style={{ userSelect: "none" }}
           />
-          <div
-            style={{
-              display: "flex",
-              marginTop: 12,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
-          >
+          <div className="thumbnail-wrapper">
             {rawImages.map((imgUrl, idx) => (
               <img
                 key={idx}
@@ -364,42 +308,24 @@ export default function ProductDetails() {
     );
   }
 
-  // --- Модалка только на десктопе! ---
+  // --- Модалка ---
   const modal =
     !isMobile && showModal && rawImages.length > 0 ? (
       <div className="modal-overlay" onClick={() => setShowModal(false)}>
-        <button
-          className="modal-close"
-          style={{ top: 56 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowModal(false);
-          }}
-        >
-          ×
-        </button>
+        <button className="modal-close" onClick={(e) => {
+          e.stopPropagation();
+          setShowModal(false);
+        }}>×</button>
         {rawImages.length > 1 && (
           <>
-            <button
-              className="modal-prev"
-              onClick={(e) => {
-                e.stopPropagation();
-                setModalIndex(
-                  (modalIndex - 1 + rawImages.length) % rawImages.length
-                );
-              }}
-            >
-              ‹
-            </button>
-            <button
-              className="modal-next"
-              onClick={(e) => {
-                e.stopPropagation();
-                setModalIndex((modalIndex + 1) % rawImages.length);
-              }}
-            >
-              ›
-            </button>
+            <button className="modal-prev" onClick={(e) => {
+              e.stopPropagation();
+              setModalIndex((modalIndex - 1 + rawImages.length) % rawImages.length);
+            }}>‹</button>
+            <button className="modal-next" onClick={(e) => {
+              e.stopPropagation();
+              setModalIndex((modalIndex + 1) % rawImages.length);
+            }}>›</button>
           </>
         )}
         <img
@@ -430,82 +356,30 @@ export default function ProductDetails() {
     ) : null;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="product-page">
       <Header
         onSearch={handleHeaderSearch}
         onMenuCategoryClick={handleMenuCategoryClick}
         breadcrumbs={breadcrumbs}
         isHome={false}
       />
-      <div style={{ width: "100%", margin: "auto", paddingTop: 8 }}>
+      <div className="product-content">
         <Breadcrumbs
           items={breadcrumbs}
           onBreadcrumbClick={(idx) => {
             if (idx === 0) handleGoBack();
           }}
         />
-        <div
-          style={{
-            backgroundColor: "white",
-            boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
-            padding: 24,
-            display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            gap: 32,
-            marginTop: 8,
-            width: "100%",
-          }}
-        >
-          <div
-            style={{
-              flexShrink: 0,
-              flex: 1,
-              minWidth: 300,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-start",
-            }}
-          >
+        <div className="product-details-card">
+          <div className="product-images">
             {renderImages()}
           </div>
-
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <h2
-              style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}
-            >
-              {displayName}
-            </h2>
+          <div className="product-info">
+            <h2 className="product-title">{displayName}</h2>
             {colorBlock}
             {sizeBlock}
-            <div style={{ marginTop: 32, marginBottom: 8 }}>{renderPrice()}</div>
-            <button
-              style={{
-                marginTop: 32,
-                padding: "10px 20px",
-                backgroundColor: "black",
-                color: "white",
-                maxWidth: 160,
-                border: "none",
-                cursor: "pointer",
-              }}
-              onClick={handleGoBack}
-            >
-              Back
-            </button>
+            <div className="product-price">{renderPrice()}</div>
+            <button className="btn-back" onClick={handleGoBack}>Back</button>
           </div>
         </div>
       </div>
