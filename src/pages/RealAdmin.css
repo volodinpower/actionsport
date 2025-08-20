@@ -141,3 +141,18 @@
     font-size: 13px;
   }
 }
+.admin-root input[type="text"],
+.admin-root input[type="file"],
+.admin-root input[type="checkbox"],
+.admin-root select,
+.admin-root textarea {
+  background: #fff;   /* белый фон */
+  color: #111;        /* тёмный текст */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.admin-root input::placeholder {
+  color: #888;
+}
