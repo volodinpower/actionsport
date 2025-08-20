@@ -368,17 +368,16 @@ export default function RealAdmin() {
       {/* Таблица товаров */}
       <section className="admin-section">
         <h3>Товары (на странице: {displayProducts.length})</h3>
-        <input
-          type="text"
-          placeholder="Поиск по товарам..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setOffset(0);
-          }}
-          style={{ width: 300, marginBottom: 12, color: "#ffffffff" }}
-        />
-
+      <input
+        type="text"
+        className="admin-search-input"
+        placeholder="Поиск по товарам..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setOffset(0);
+        }}
+      />
         <div ref={listRef} className="admin-table-list">
           <div className="admin-table-header">
             <div>Наименование</div>
