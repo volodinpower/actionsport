@@ -152,12 +152,32 @@
   width: 600px;
 }
 
-.admin-root input::placeholder {
-  color: #888;
+/* Стили для кнопки у input[type=file] */
+.admin-root input[type="file"]::file-selector-button {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 16px;
+  background: #111;   /* чёрная */
+  color: #fff;        /* белый текст */
+  cursor: pointer;
+  transition: background 0.2s;
 }
-.admin-root input[type="file"]{
+
+.admin-root input[type="file"]::file-selector-button:hover {
+  background: #000;   /* чуть темнее при ховере */
+}
+
+/* Для совместимости со старыми браузерами */
+.admin-root input[type="file"]::-webkit-file-upload-button {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 16px;
   background: #111;
-  color:  #fff;
-  padding: 6px 10px;
-  width: 600px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-root input[type="file"]::-webkit-file-upload-button:hover {
+  background: #000;
 }
