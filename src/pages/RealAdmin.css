@@ -156,5 +156,8 @@
   color: #888;
 }
 .admin-root input[type="file"]{
-
+  background: #111;
+  color:  #fff;
+  padding: 6px 10px;
+  width: 600px;
 }
