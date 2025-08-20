@@ -26,7 +26,6 @@ function withVersion(url, ver) {
 
 export default function Banner() {
   const [banners, setBanners] = useState([]);
-  const [ok, setOk] = useState([]);       // по индексу: true, если картинка загрузилась
   const [fail, setFail] = useState([]);   // по индексу: true, если ошибка
   const [loadingList, setLoadingList] = useState(true);
 
@@ -39,14 +38,12 @@ export default function Banner() {
         const arr = Array.isArray(data) ? data : [];
         if (!c) {
           setBanners(arr);
-          setOk(arr.map(() => false));
           setFail(arr.map(() => false));
         }
       } catch (e) {
         if (!c) {
           console.error("Failed to fetch /banners:", e);
           setBanners([]);
-          setOk([]);
           setFail([]);
         }
       } finally {
@@ -75,15 +72,13 @@ export default function Banner() {
     );
   }
 
-  const anyLoaded = ok.some(Boolean);
-
   return (
     <div className="banner-aspect overflow-hidden">
       <Swiper
         key={slides.length}
         modules={[Navigation, Pagination, Autoplay]}
         loop={true}
-        autoplay={anyLoaded ? { delay: 5000, disableOnInteraction: false } : false}
+        autoplay={{ delay: 5000, disableOnInteraction: false }}
         pagination={{ clickable: true }}
         navigation={true}
         className="h-full"
@@ -96,18 +91,11 @@ export default function Banner() {
               <a href={b.link || "#"} target={b.link ? "_blank" : "_self"} rel="noopener noreferrer">
                 <div className="w-full h-full" style={{ background: "#f3f3f3" }}>
                   <img
-                    src={errored ? ("/no-image.jpg") : b.finalUrl}
+                    src={errored ? "/no-image.jpg" : b.finalUrl}
                     alt={b.alt || b.title || `Banner ${idx + 1}`}
                     draggable={false}
                     loading={idx === 0 ? "eager" : "lazy"}
                     decoding="async"
-                    onLoad={() => {
-                      setOk((prev) => {
-                        const n = [...prev];
-                        n[idx] = true;
-                        return n;
-                      });
-                    }}
                     onError={(e) => {
                       console.error("Image failed:", b.finalUrl);
                       // Пробуем локальный фолбек, если и он не существует — уйдём на data URI
@@ -118,7 +106,6 @@ export default function Banner() {
                         n[idx] = true;
                         return n;
                       });
-                      // На всякий случай вешаем второй обработчик
                       e.currentTarget.addEventListener("error", () => {
                         e.currentTarget.src = DATA_FALLBACK;
                       }, { once: true });
