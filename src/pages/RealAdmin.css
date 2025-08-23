@@ -215,3 +215,29 @@
   left: 50%;
   transform: translate(-50%, -60%);
 }
+/* Контейнер для превью с загрузкой */
+.admin-modal-label {
+  position: relative;               /* ограничиваем область инпута */
+  display: inline-block;
+  width: 72px;                      /* под твой IMAGE_CARD_SIZE */
+  height: 72px;
+}
+
+/* Невидимый file-input НЕ должен выходить за рамки превью */
+.admin-modal-label input[type="file"] {
+  position: absolute;
+  inset: 0;                         /* top:0; right:0; bottom:0; left:0 */
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Кнопка удаления поверх инпута загрузки */
+.btn-delete {
+  position: relative;
+  z-index: 2;                       /* выше, чем overlay-инпут */
+}
+
+/* На всякий случай убираем принятие кликов картинкой */
+.admin-img {
+  pointer-events: none;             /* чтобы клики ловила только рамка/инпут */
+}
