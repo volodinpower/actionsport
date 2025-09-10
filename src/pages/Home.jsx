@@ -89,143 +89,139 @@ export default function Home() {
   const [gendersInFilter, setGendersInFilter] = useState([]);
   const [submenuList, setSubmenuList] = useState([]);
 
-  // --- Фильтры: логика для sale, brands, остальных
+  // --- отдельный эффект: наполняем submenuList после загрузки категорий ---
   useEffect(() => {
-    async function updateFilterOptions() {
-      // --- BRANDS (при выбранном бренде) ---
-      if (isBrandPage) {
-        setBrandsInFilter([]);
-        const products = await fetchProducts(
-          searchQuery, 500, 0, "", brandFilter
-        );
-        const setSubs = new Set();
-        products.forEach(p => {
-          if (p.subcategory_key) setSubs.add(p.subcategory_key);
-        });
-        const subcategories = Array.from(setSubs);
-        setSubmenuList(subcategories);
-
-        const sizes = await fetchFilteredSizes({
-          categoryKey: "",
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        });
-        setSizesInFilter(sizes);
-
-        const genders = await fetchFilteredGenders({
-          categoryKey: "",
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        });
-        setGendersInFilter(genders);
-      }
-      // --- SALE ---
-      else if (isSale) {
-        const saleProducts = await fetchProducts(
-          searchQuery,
-          500,
-          0,
-          "",
-          brandFilter,
-          "asc",
-          "sale",
-          subcategoryKey,
-          genderFilter,
-          sizeFilter
-        );
-        const setSubs = new Set();
-        saleProducts.forEach(p => {
-          if (p.subcategory_key) setSubs.add(p.subcategory_key);
-        });
-        const subcategories = Array.from(setSubs);
-        setSubmenuList(subcategories);
-
-        const brands = await fetchFilteredBrands({
-          categoryKey: "sale",
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        });
-        setBrandsInFilter(brands);
-
-        const sizes = await fetchFilteredSizes({
-          categoryKey: "sale",
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        });
-        setSizesInFilter(sizes);
-
-        const genders = await fetchFilteredGenders({
-          categoryKey: "sale",
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        });
-        setGendersInFilter(genders);
-      }
-      // --- ОСТАЛЬНЫЕ ---
-      else {
-        const currentFilters = {
-          categoryKey,
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        };
-
-        const brands = await fetchFilteredBrands(currentFilters);
-        setBrandsInFilter(brands);
-
-        const sizes = await fetchFilteredSizes(currentFilters);
-        setSizesInFilter(sizes);
-
-        const genders = await fetchFilteredGenders(currentFilters);
-        setGendersInFilter(genders);
-
-        const cat = categories.find(c => c.category_key === categoryKey);
-        if (cat && cat.subcategories) {
-          setSubmenuList(
-            cat.subcategories.map(sub =>
-              typeof sub === "string"
-                ? { value: sub, label: sub }
-                : {
-                    value: sub.subcategory_key,
-                    label: sub.label || sub.subcategory_key,
-                  }
-            )
-          );
-        } else {
-          setSubmenuList([]);
-        }
-      }
+    if (!categories || categories.length === 0) return;
+    if (!categoryKey) {
+      setSubmenuList([]);
+      return;
     }
-    updateFilterOptions();
-  }, [
-    isBrandPage,
-    isSale,
-    categoryKey,
-    subcategoryKey,
-    genderFilter,
-    sizeFilter,
-    searchQuery,
-    brandFilter,
-    categories,
-  ]);
+    const cat = categories.find(c => c.category_key === categoryKey);
+    if (cat && cat.subcategories) {
+      const subs = cat.subcategories.map(sub =>
+        typeof sub === "string"
+          ? { value: sub, label: sub }
+          : { value: sub.subcategory_key, label: sub.label || sub.subcategory_key }
+      );
+      setSubmenuList(subs);
+    } else {
+      setSubmenuList([]);
+    }
+  }, [categories, categoryKey]);
 
+  // --- Фильтры: универсальная логика
+// --- Фильтры: универсальная логика (только фронт)
+useEffect(() => {
+  async function updateFilterOptions() {
+    if (!categories || categories.length === 0) return;
+
+    const currentFilters = {
+      categoryKey: isSale ? "sale" : categoryKey,
+      subcategoryKey,
+      brand: brandFilter,
+      gender: genderFilter,
+      size: sizeFilter,
+      search: searchQuery,
+    };
+
+    // --- получаем продукты для текущей выборки (ограничение 500)
+    let allProducts = [];
+    if (isBrandPage) {
+      allProducts = await fetchProducts(
+        searchQuery,
+        500,
+        0,
+        "",
+        brandFilter,
+        sort || "asc",
+        "",
+        subcategoryKey,
+        genderFilter,
+        sizeFilter
+      );
+    } else if (isSale) {
+      allProducts = await fetchProducts(
+        searchQuery,
+        500,
+        0,
+        "",
+        brandFilter,
+        sort || "asc",
+        "sale",
+        subcategoryKey,
+        genderFilter,
+        sizeFilter
+      );
+    } else {
+      allProducts = await fetchProducts(
+        searchQuery,
+        500,
+        0,
+        "",
+        brandFilter,
+        sort || "asc",
+        categoryKey,
+        subcategoryKey,
+        genderFilter,
+        sizeFilter
+      );
+    }
+
+    // --- бренды (как раньше)
+    const brandSet = new Set();
+    allProducts.forEach(p => {
+      if (p.brand) brandSet.add(p.brand);
+    });
+    setBrandsInFilter([...brandSet].sort());
+
+    // --- размеры (новая логика)
+    const sizeSet = new Set();
+    allProducts.forEach(p => {
+      if (Array.isArray(p.sizes)) {
+        p.sizes.forEach(s => sizeSet.add(s));
+      } else if (p.size) {
+        sizeSet.add(p.size);
+      }
+    });
+    setSizesInFilter([...sizeSet].filter(Boolean).sort());
+
+    // --- gender (как раньше)
+    const genderSet = new Set();
+    allProducts.forEach(p => {
+      if (p.gender) genderSet.add(p.gender);
+    });
+    setGendersInFilter([...genderSet]);
+
+    // --- submenuList для brands/sale особый случай
+    if (isBrandPage) {
+      const setSubs = new Set();
+      allProducts.forEach(p => {
+        if (p.subcategory_key) setSubs.add(p.subcategory_key);
+      });
+      setSubmenuList([...setSubs].map(sub => ({ value: sub, label: sub })));
+    } else if (isSale) {
+      const setSubs = new Set();
+      allProducts.forEach(p => {
+        if (p.subcategory_key) setSubs.add(p.subcategory_key);
+      });
+      setSubmenuList([...setSubs].map(sub => ({ value: sub, label: sub })));
+    }
+  }
+
+  updateFilterOptions();
+}, [
+  isSale,
+  isBrandPage,
+  categoryKey,
+  subcategoryKey,
+  brandFilter,
+  genderFilter,
+  sizeFilter,
+  searchQuery,
+  categories,
+  sort,
+]);
+  
   // --- infinite query ---
   const {
     data,
@@ -321,7 +317,7 @@ export default function Home() {
     const fix = val => {
       if (val == null) return Infinity;
       if (typeof val === "number") return val;
-      const str = String(val).replace(/\s| /g, "").replace(",", ".").replace(/[^0-9.]/g, "");
+      const str = String(val).replace(/\s| /g, "").replace(",", ".").replace(/[^0-9.]/g, "");
       const n = Number(str);
       return isNaN(n) ? Infinity : n;
     };
