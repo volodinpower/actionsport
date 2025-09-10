@@ -178,41 +178,34 @@ export default function Home() {
       }
       // --- ОСТАЛЬНЫЕ ---
       else {
-        const brands = await fetchFilteredBrands({
+        const currentFilters = {
           categoryKey,
           subcategoryKey,
           brand: brandFilter,
           gender: genderFilter,
           size: sizeFilter,
           search: searchQuery,
-        });
+        };
+
+        const brands = await fetchFilteredBrands(currentFilters);
         setBrandsInFilter(brands);
 
-        const sizes = await fetchFilteredSizes({
-          categoryKey,
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        });
+        const sizes = await fetchFilteredSizes(currentFilters);
         setSizesInFilter(sizes);
 
-        const genders = await fetchFilteredGenders({
-          categoryKey,
-          subcategoryKey,
-          brand: brandFilter,
-          gender: genderFilter,
-          size: sizeFilter,
-          search: searchQuery,
-        });
+        const genders = await fetchFilteredGenders(currentFilters);
         setGendersInFilter(genders);
 
         const cat = categories.find(c => c.category_key === categoryKey);
         if (cat && cat.subcategories) {
           setSubmenuList(
             cat.subcategories.map(sub =>
-              typeof sub === "string" ? sub : sub.subcategory_key || sub.label
+              typeof sub === "string"
+                ? { value: sub, label: sub }
+                : {
+                    value: sub.subcategory_key,
+                    label: sub.label || sub.subcategory_key,
+                  }
             )
           );
         } else {

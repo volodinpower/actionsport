@@ -40,10 +40,11 @@ export default function FilterBar({
   }, [forceOpenCategory, setForceOpenCategory]);
 
   const categoryOptions = submenuList.length > 0
-    ? submenuList.map(sub => ({ value: sub, label: sub }))
+    ? submenuList
     : [{ value: "", label: "All categories" }];
 
-  const selectedCategory = categoryOptions.find(opt => opt.value === categoryFilter) || null;
+  const selectedCategory =
+    categoryOptions.find(opt => opt.value === categoryFilter) || null;
 
   const shouldShowGender =
     showGender &&
