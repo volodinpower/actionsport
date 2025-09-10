@@ -1,8 +1,7 @@
-import { useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import "./FilterBar.css";
 
-// Для portal и высокого z-index для меню react-select
 const portalProps = {
   menuPortalTarget: typeof window !== "undefined" ? document.body : null,
   styles: {
@@ -39,6 +38,7 @@ export default function FilterBar({
     }
   }, [forceOpenCategory, setForceOpenCategory]);
 
+  // теперь submenuList = [{value, label}, ...]
   const categoryOptions = submenuList.length > 0
     ? submenuList
     : [{ value: "", label: "All categories" }];
