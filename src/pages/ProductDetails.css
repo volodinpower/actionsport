@@ -1,6 +1,5 @@
 .main-image-mobile-wrapper {
-  width: 100%;
-  max-width: 420px;
+  width: min(100%, 520px);
   margin: 0 auto;
 }
 
@@ -15,13 +14,13 @@
 .main-image-square,
 .main-image-square.desktop {
   width: 100%;
+  max-width: clamp(320px, 50vw, 520px);
   aspect-ratio: 1/1;
-  max-width: 420px;
   object-fit: cover;
   border-radius: 0 !important;
   background: #fff;
   margin-bottom: 8px;
-  box-shadow: none !important; /* убираем тени */
+  box-shadow: none !important;
   cursor: pointer;
 }
 
@@ -36,10 +35,73 @@
   margin: 0 4px 4px 0;
   transition: border-color 0.18s;
   background: #fff;
-  box-shadow: none !important; /* убираем тени */
+  box-shadow: none !important;
 }
 .thumbnail-square.selected {
   border-color: #222;
+}
+
+.thumbnail-square.vertical {
+  width: 70px;
+  height: 70px;
+  margin: 0;
+}
+
+.desktop-gallery {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 16px;
+  flex-wrap: nowrap;
+  flex: 1 1 auto;
+}
+
+.main-image-desktop-wrapper {
+  flex: 0 0 clamp(320px, 50vw, 520px);
+  width: clamp(320px, 50vw, 520px);
+  display: flex;
+  justify-content: center;
+}
+
+.thumbnail-column {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.thumbnail-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow: auto;
+  scrollbar-width: none;
+}
+.thumbnail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.thumbnail-arrow {
+  width: 100%;
+  height: 32px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+  color: #222;
+}
+.thumbnail-arrow:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.15);
+}
+.thumbnail-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .swiper-pagination-bullets {
@@ -70,12 +132,21 @@
 @media (max-width: 900px) {
   .main-image-mobile-wrapper,
   .main-image-mobile,
-  .main-image-square {
+  .main-image-square,
+  .main-image-square.desktop {
+    width: 100%;
     max-width: 100vw;
+    min-width: 0;
+  }
+  .main-image-desktop-wrapper {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+  .desktop-gallery {
+    flex-direction: column;
   }
 }
 
-/* --- Модалка стили (оставь если нужно) --- */
 .modal-overlay {
   position: fixed;
   z-index: 5000;

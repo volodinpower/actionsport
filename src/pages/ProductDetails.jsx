@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchProductById, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -45,6 +45,11 @@ export default function ProductDetails() {
   const [modalIndex, setModalIndex] = useState(0);
   const [colorVariants, setColorVariants] = useState([]);
   const [selectedColorId, setSelectedColorId] = useState(null);
+
+  const thumbnailListRef = useRef(null);
+  const thumbScrollTimer = useRef(null);
+  const mainImageRef = useRef(null);
+  const [mainImageHeight, setMainImageHeight] = useState(0);
 
   useEffect(() => {
     fetchProductById(id)
@@ -107,6 +112,39 @@ export default function ProductDetails() {
   useEffect(() => {
     setMainIndex(0);
   }, [id, product?.image_url]);
+
+  useEffect(() => {
+    return () => {
+      if (thumbScrollTimer.current) {
+        clearInterval(thumbScrollTimer.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (mainImageRef.current) {
+        setMainImageHeight(mainImageRef.current.clientHeight);
+      }
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
+  useEffect(() => {
+    const img = mainImageRef.current;
+    if (!img) return;
+    const handleLoad = () => setMainImageHeight(img.clientHeight);
+    if (img.complete) {
+      handleLoad();
+      return;
+    }
+    img.addEventListener("load", handleLoad);
+    return () => {
+      img.removeEventListener("load", handleLoad);
+    };
+  }, [mainIndex, rawImages]);
 
   if (error)
     return <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>;
@@ -182,7 +220,6 @@ export default function ProductDetails() {
     );
   }
 
-  // Цветовые варианты
   const colorBlock =
     colorVariants.length <= 1 ? (
       <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
@@ -235,16 +272,15 @@ export default function ProductDetails() {
                   title={item.color || ""}
                   onClick={(e) => {
                     e.preventDefault();
-                    if (!isCurrent) {
-                      setSelectedColorId(item.id);
-                      navigate(`/product/${item.id}`, {
-                        replace: true,
-                        state: {
-                          from: location.state?.from || "/",
-                          color: item.color,
-                        },
-                      });
-                    }
+                    if (isCurrent) return;
+                    setSelectedColorId(item.id);
+                    navigate(`/product/${item.id}`, {
+                      replace: true,
+                      state: {
+                        from: location.state?.from || "/",
+                        color: item.color,
+                      },
+                    });
                   }}
                 >
                   <img
@@ -268,7 +304,6 @@ export default function ProductDetails() {
       </div>
     );
 
-  // Размеры
   const sizeBlock = (
     <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
       <b>size:</b>{" "}
@@ -278,7 +313,6 @@ export default function ProductDetails() {
     </div>
   );
 
-  // --- Свайп на мобиле (touch) ---
   let touchStartX = null;
   function handleTouchStart(e) {
     touchStartX = e.touches[0].clientX;
@@ -294,7 +328,30 @@ export default function ProductDetails() {
     touchStartX = null;
   }
 
-  // --- Картинки/галерея ---
+  const scrollThumbnails = (direction, distance = 40) => {
+    const list = thumbnailListRef.current;
+    if (!list) return;
+    list.scrollBy({
+      top: direction * distance,
+      behavior: "smooth",
+    });
+  };
+
+  const stopThumbAutoScroll = () => {
+    if (thumbScrollTimer.current) {
+      clearInterval(thumbScrollTimer.current);
+      thumbScrollTimer.current = null;
+    }
+  };
+
+  const startThumbAutoScroll = (direction) => {
+    stopThumbAutoScroll();
+    scrollThumbnails(direction);
+    thumbScrollTimer.current = setInterval(() => {
+      scrollThumbnails(direction);
+    }, 140);
+  };
+
   function renderImages() {
     if (isMobile) {
       return (
@@ -326,25 +383,28 @@ export default function ProductDetails() {
       );
     }
 
-    // Десктоп
+    const hasMultipleThumbs = rawImages.length > 1;
     return (
-      <div className="main-image-mobile-wrapper">
-        <div className="main-image-mobile">
-          <img
-            src={rawImages[mainIndex]}
-            alt={displayName}
-            className="main-image-square desktop"
-            onClick={() => setShowModal(true)}
-            draggable={false}
-            style={{ userSelect: "none" }}
-          />
+      <div className="desktop-gallery">
+        <div
+          className="thumbnail-column"
+          style={{ height: mainImageHeight || undefined }}
+        >
+          <button
+            type="button"
+            className="thumbnail-arrow"
+            onMouseEnter={() => hasMultipleThumbs && startThumbAutoScroll(-1)}
+            onMouseLeave={stopThumbAutoScroll}
+            onClick={() => hasMultipleThumbs && scrollThumbnails(-1, 80)}
+            disabled={!hasMultipleThumbs}
+            aria-label="Предыдущие изображения"
+          >
+            ▲
+          </button>
           <div
-            style={{
-              display: "flex",
-              marginTop: 12,
-              flexWrap: "wrap",
-              justifyContent: "center",
-            }}
+            className="thumbnail-scroll"
+            ref={thumbnailListRef}
+            style={{ height: mainImageHeight || undefined }}
           >
             {rawImages.map((imgUrl, idx) => (
               <img
@@ -352,19 +412,41 @@ export default function ProductDetails() {
                 src={imgUrl}
                 alt={`Фото ${idx + 1}`}
                 className={
-                  "thumbnail-square" + (idx === mainIndex ? " selected" : "")
+                  "thumbnail-square vertical" + (idx === mainIndex ? " selected" : "")
                 }
                 onClick={() => setMainIndex(idx)}
+                onMouseEnter={() => setMainIndex(idx)}
                 draggable={false}
               />
             ))}
           </div>
+          <button
+            type="button"
+            className="thumbnail-arrow"
+            onMouseEnter={() => hasMultipleThumbs && startThumbAutoScroll(1)}
+            onMouseLeave={stopThumbAutoScroll}
+            onClick={() => hasMultipleThumbs && scrollThumbnails(1, 80)}
+            disabled={!hasMultipleThumbs}
+            aria-label="Следующие изображения"
+          >
+            ▼
+          </button>
+        </div>
+        <div className="main-image-desktop-wrapper">
+          <img
+            src={rawImages[mainIndex]}
+            alt={displayName}
+            className="main-image-square desktop"
+            ref={mainImageRef}
+            onClick={() => setShowModal(true)}
+            draggable={false}
+            style={{ userSelect: "none" }}
+          />
         </div>
       </div>
     );
   }
 
-  // --- Модалка только на десктопе! ---
   const modal =
     !isMobile && showModal && rawImages.length > 0 ? (
       <div className="modal-overlay" onClick={() => setShowModal(false)}>
@@ -458,19 +540,20 @@ export default function ProductDetails() {
             padding: 24,
             display: "flex",
             flexDirection: isMobile ? "column" : "row",
-            gap: 32,
+            gap: isMobile ? 0 : 16,
             marginTop: 8,
             width: "100%",
+            alignItems: isMobile ? "stretch" : "flex-start",
           }}
         >
           <div
             style={{
               flexShrink: 0,
-              flex: 1,
-              minWidth: 300,
+              flex: isMobile ? "1 1 100%" : "0 0 auto",
+              width: isMobile ? "100%" : "auto",
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
+              alignItems: isMobile ? "stretch" : "flex-start",
               justifyContent: "flex-start",
             }}
           >
@@ -482,10 +565,17 @@ export default function ProductDetails() {
               flex: 1,
               display: "flex",
               flexDirection: "column",
+              width: "100%",
+              textAlign: "left",
             }}
           >
             <h2
-              style={{ fontSize: "2rem", fontWeight: "700", marginBottom: 24 }}
+              style={{
+                fontSize: "2rem",
+                fontWeight: "700",
+                marginBottom: 24,
+                textAlign: "left",
+              }}
             >
               {displayName}
             </h2>
