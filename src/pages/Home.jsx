@@ -109,74 +109,80 @@ export default function Home() {
     }
   }, [categories, categoryKey]);
 
-  // --- Фильтры: универсальная логика
 // --- Фильтры: универсальная логика (только фронт)
 useEffect(() => {
   async function updateFilterOptions() {
     if (!categories || categories.length === 0) return;
 
-    const currentFilters = {
-      categoryKey: isSale ? "sale" : categoryKey,
-      subcategoryKey,
-      brand: brandFilter,
-      gender: genderFilter,
-      size: sizeFilter,
-      search: searchQuery,
-    };
-
-    // --- получаем продукты для текущей выборки (ограничение 500)
-    let allProducts = [];
-    if (isBrandPage) {
-      allProducts = await fetchProducts(
+    const fetchWithOverrides = async (overrideBrand, overrideSize) => {
+      const brandValue = overrideBrand !== undefined ? overrideBrand : brandFilter;
+      const sizeValue = overrideSize !== undefined ? overrideSize : sizeFilter;
+      if (isBrandPage) {
+        return fetchProducts(
+          searchQuery,
+          500,
+          0,
+          "",
+          brandValue,
+          sort || "asc",
+          "",
+          subcategoryKey,
+          genderFilter,
+          sizeValue
+        );
+      }
+      if (isSale) {
+        return fetchProducts(
+          searchQuery,
+          500,
+          0,
+          "",
+          brandValue,
+          sort || "asc",
+          "sale",
+          subcategoryKey,
+          genderFilter,
+          sizeValue
+        );
+      }
+      return fetchProducts(
         searchQuery,
         500,
         0,
         "",
-        brandFilter,
-        sort || "asc",
-        "",
-        subcategoryKey,
-        genderFilter,
-        sizeFilter
-      );
-    } else if (isSale) {
-      allProducts = await fetchProducts(
-        searchQuery,
-        500,
-        0,
-        "",
-        brandFilter,
-        sort || "asc",
-        "sale",
-        subcategoryKey,
-        genderFilter,
-        sizeFilter
-      );
-    } else {
-      allProducts = await fetchProducts(
-        searchQuery,
-        500,
-        0,
-        "",
-        brandFilter,
+        brandValue,
         sort || "asc",
         categoryKey,
         subcategoryKey,
         genderFilter,
-        sizeFilter
+        sizeValue
       );
-    }
+    };
+
+    const basePromise = fetchWithOverrides();
+    const productsForSizesPromise = sizeFilter ? fetchWithOverrides(undefined, "") : basePromise;
+    const productsForBrandsPromise = brandFilter ? fetchWithOverrides("", undefined) : basePromise;
+
+    const [baseProductsRaw, productsForSizesRaw, productsForBrandsRaw] = await Promise.all([
+      basePromise,
+      productsForSizesPromise,
+      productsForBrandsPromise,
+    ]);
+
+    const allProducts = groupProducts(baseProductsRaw);
+    const productsForSizes = groupProducts(productsForSizesRaw);
+    const productsForBrands = groupProducts(productsForBrandsRaw);
 
     // --- бренды (как раньше)
     const brandSet = new Set();
-    allProducts.forEach(p => {
+    productsForBrands.forEach(p => {
       if (p.brand) brandSet.add(p.brand);
     });
     setBrandsInFilter([...brandSet].sort());
 
     // --- размеры (новая логика)
     const sizeSet = new Set();
-    allProducts.forEach(p => {
+    productsForSizes.forEach(p => {
       if (Array.isArray(p.sizes)) {
         p.sizes.forEach(s => sizeSet.add(s));
       } else if (p.size) {

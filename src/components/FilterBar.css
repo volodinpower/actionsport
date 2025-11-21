@@ -3,17 +3,39 @@
   max-width: 100vw;          /* не вылезает за экран */
   gap: 12px;                 /* чуть больше отступы */
 }
-.react-select__value-container {
-  max-width: 170px;          /* ограничить ширину текста value */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .react-select__control {
   min-width: 130px;
   max-width: 170px;
   width: 170px;
+  cursor: pointer;
+  min-height: 38px;
+  height: 38px;
+}
+
+.react-select__value-container {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 10px;
+}
+
+.react-select__indicators {
+  height: 38px;
+  align-items: center;
+}
+.react-select__dummy-input,
+.css-1s80ejz-dummyInput-DummyInput {
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+.react-select__dummy-input {
+  pointer-events: none;
 }
 
 .react-select__single-value {
@@ -21,4 +43,35 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.filter-option-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 6px;
+  font-size: 12px;
+  color: #2f855a;
+}
+.filter-option-icon.removable {
+  color: #c53030;
+}
+.filter-value-summary {
+  font-size: 14px;
+  max-width: 150px;
+  line-height: 1.2;
+  color: #2d3748;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: inherit;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.filter-value-summary.placeholder {
+  color: #a0aec0;
 }
