@@ -598,7 +598,9 @@ export default function ProductDetails() {
           >
             <h2
               style={{
-                fontSize: "2rem",
+                fontSize: isMobile
+                  ? "clamp(1.4rem, 5vw, 2.1rem)"
+                  : "clamp(1.6rem, calc(1.1rem + 1vw), 2.5rem)",
                 fontWeight: "700",
                 marginBottom: 24,
                 textAlign: "left",
