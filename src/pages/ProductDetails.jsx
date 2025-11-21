@@ -1,17 +1,17 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, FreeMode, Thumbs } from "swiper/modules";
+import { Pagination } from "swiper/modules";
 import { fetchProductById, incrementProductView } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import "./ProductDetails.css";
 import "swiper/css";
-import "swiper/css/navigation";
 import "swiper/css/pagination";
-import "swiper/css/free-mode";
-import "swiper/css/thumbs";
+
+const THUMB_SCROLL_STEP = 78;
+const THUMB_HOVER_STEP = 8;
 
 function apiUrl(path) {
   const base = import.meta.env.VITE_API_URL || "";
@@ -52,9 +52,11 @@ export default function ProductDetails() {
   const [modalIndex, setModalIndex] = useState(0);
   const [colorVariants, setColorVariants] = useState([]);
   const [selectedColorId, setSelectedColorId] = useState(null);
-
-  const mainSwiperRef = useRef(null);
-  const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const thumbnailScrollRef = useRef(null);
+  const hoverScrollFrameRef = useRef(null);
+  const hoverDirectionRef = useRef(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
 
   useEffect(() => {
     fetchProductById(id)
@@ -119,14 +121,55 @@ export default function ProductDetails() {
   }, [id, product?.image_url]);
 
   useEffect(() => {
-    const swiper = mainSwiperRef.current;
-    if (swiper && !swiper.destroyed && swiper.activeIndex !== mainIndex) {
-      swiper.slideTo(mainIndex, 0);
+    return () => {
+      if (hoverScrollFrameRef.current) {
+        cancelAnimationFrame(hoverScrollFrameRef.current);
+        hoverScrollFrameRef.current = null;
+      }
+      hoverDirectionRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) return;
+    const container = thumbnailScrollRef.current;
+    if (!container) return;
+    const updateScrollState = () => {
+      const tolerance = 2;
+      setCanScrollUp(container.scrollTop > tolerance);
+      setCanScrollDown(
+        container.scrollTop + container.clientHeight <
+          container.scrollHeight - tolerance
+      );
+    };
+    updateScrollState();
+    container.addEventListener("scroll", updateScrollState);
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      container.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [isMobile, rawImages.length]);
+
+  useEffect(() => {
+    if (isMobile) return;
+    const container = thumbnailScrollRef.current;
+    if (!container) return;
+    const target = container.querySelector(`[data-thumb-index="${mainIndex}"]`);
+    if (!target) return;
+    const elementTop = target.offsetTop;
+    const elementBottom = elementTop + target.offsetHeight;
+    const viewTop = container.scrollTop;
+    const viewBottom = viewTop + container.clientHeight;
+    if (elementTop < viewTop) {
+      container.scrollTo({ top: elementTop, behavior: "smooth" });
+    } else if (elementBottom > viewBottom) {
+      container.scrollTo({
+        top: elementBottom - container.clientHeight,
+        behavior: "smooth",
+      });
     }
-    if (thumbsSwiper && !thumbsSwiper.destroyed && thumbsSwiper.activeIndex !== mainIndex) {
-      thumbsSwiper.slideTo(mainIndex, 0);
-    }
-  }, [mainIndex, thumbsSwiper]);
+  }, [mainIndex, isMobile, rawImages.length]);
 
   if (error)
     return <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>;
@@ -158,6 +201,54 @@ export default function ProductDetails() {
       navigate(-1);
     } else {
       navigate("/", { replace: true });
+    }
+  };
+
+  const scrollThumbnails = (direction) => {
+    stopHoverScroll();
+    const container = thumbnailScrollRef.current;
+    if (!container) return;
+    const delta = direction === "up" ? -THUMB_SCROLL_STEP : THUMB_SCROLL_STEP;
+    container.scrollBy({ top: delta, behavior: "smooth" });
+  };
+
+  const stopHoverScroll = () => {
+    hoverDirectionRef.current = null;
+    if (hoverScrollFrameRef.current) {
+      cancelAnimationFrame(hoverScrollFrameRef.current);
+      hoverScrollFrameRef.current = null;
+    }
+  };
+
+  const hoverScrollStep = () => {
+    const container = thumbnailScrollRef.current;
+    if (!container || !hoverDirectionRef.current) {
+      hoverScrollFrameRef.current = null;
+      return;
+    }
+    const delta =
+      hoverDirectionRef.current === "up" ? -THUMB_HOVER_STEP : THUMB_HOVER_STEP;
+    const prevTop = container.scrollTop;
+    const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
+    const nextTop = Math.max(0, Math.min(prevTop + delta, maxScroll));
+    container.scrollTop = nextTop;
+    if (
+      prevTop === nextTop ||
+      (hoverDirectionRef.current === "up" && nextTop === 0) ||
+      (hoverDirectionRef.current === "down" && nextTop === maxScroll)
+    ) {
+      stopHoverScroll();
+      return;
+    }
+    hoverScrollFrameRef.current = requestAnimationFrame(hoverScrollStep);
+  };
+
+  const startHoverScroll = (direction) => {
+    const container = thumbnailScrollRef.current;
+    if (!container) return;
+    hoverDirectionRef.current = direction;
+    if (!hoverScrollFrameRef.current) {
+      hoverScrollFrameRef.current = requestAnimationFrame(hoverScrollStep);
     }
   };
 
@@ -325,78 +416,60 @@ export default function ProductDetails() {
       );
     }
 
-    const safeThumbs = thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null;
     return (
       <div className="desktop-gallery">
-        <div
-          className="thumbnail-column"
-        >
+        <div className="thumbnail-column">
           <button
             type="button"
             className="thumbnail-arrow thumb-arrow-up"
             aria-label="Предыдущие изображения"
+            onClick={() => scrollThumbnails("up")}
+            onMouseEnter={() => canScrollUp && startHoverScroll("up")}
+            onMouseLeave={stopHoverScroll}
+            disabled={!canScrollUp}
           >
             ▲
           </button>
-          <Swiper
-            modules={[FreeMode, Thumbs]}
-            direction="vertical"
-            spaceBetween={8}
-            slidesPerView={Math.min(5, rawImages.length)}
-            onSwiper={setThumbsSwiper}
-            freeMode
-            watchSlidesProgress
-            initialSlide={mainIndex}
-            className="thumbnail-swiper"
-          >
+          <div className="thumbnail-scroll" ref={thumbnailScrollRef}>
             {rawImages.map((imgUrl, idx) => (
-              <SwiperSlide key={`thumb-${idx}`}>
-                <img
-                  src={imgUrl}
-                  alt={`Фото ${idx + 1}`}
-                  className={
-                    "thumbnail-square vertical" + (idx === mainIndex ? " selected" : "")
-                  }
-                  draggable={false}
-                />
-              </SwiperSlide>
+              <img
+                key={`thumb-${idx}`}
+                src={imgUrl}
+                alt={`Фото ${idx + 1}`}
+                data-thumb-index={idx}
+                className={
+                  "thumbnail-square vertical" + (idx === mainIndex ? " selected" : "")
+                }
+                draggable={false}
+                onMouseEnter={() => setMainIndex(idx)}
+                onClick={() => setMainIndex(idx)}
+              />
             ))}
-          </Swiper>
+          </div>
           <button
             type="button"
             className="thumbnail-arrow thumb-arrow-down"
             aria-label="Следующие изображения"
+            onClick={() => scrollThumbnails("down")}
+            onMouseEnter={() => canScrollDown && startHoverScroll("down")}
+            onMouseLeave={stopHoverScroll}
+            disabled={!canScrollDown}
           >
             ▼
           </button>
         </div>
-        <Swiper
-          modules={[Thumbs]}
-          onSwiper={(swiper) => {
-            mainSwiperRef.current = swiper;
-          }}
-          onSlideChange={(swiper) => {
-            setMainIndex(swiper.activeIndex);
-          }}
-          thumbs={{ swiper: safeThumbs }}
-          initialSlide={mainIndex}
-          className="main-image-carousel"
-        >
-          {rawImages.map((imgUrl, idx) => (
-            <SwiperSlide key={`main-${idx}`}>
-              <img
-                src={imgUrl}
-                alt={`${displayName} ${idx + 1}`}
-                className="main-image-square desktop"
-                draggable={false}
-                onClick={() => {
-                  setModalIndex(idx);
-                  setShowModal(true);
-                }}
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <div className="main-image-desktop-wrapper">
+          <img
+            src={rawImages[mainIndex]}
+            alt={`${displayName} ${mainIndex + 1}`}
+            className="main-image-square desktop"
+            draggable={false}
+            onClick={() => {
+              setModalIndex(mainIndex);
+              setShowModal(true);
+            }}
+          />
+        </div>
       </div>
     );
   }
