@@ -7,7 +7,7 @@ import {
   updateCollection,
   deleteCollection,
   fetchProductById,
-  fetchProducts,
+  searchProductsForAdmin,
 } from "../api";
 
 const EMPTY_FORM = {
@@ -164,14 +164,19 @@ export default function CollectionsAdmin() {
       return;
     }
     let cancelled = false;
-    setSearchLoading(true);
-    fetchProducts(searchTerm, 10, 0, "", "", "asc", "", "", "", "")
-      .then(res => {
-        if (!cancelled) setSearchResults(Array.isArray(res) ? res : []);
-      })
-      .catch(() => !cancelled && setSearchResults([]))
-      .finally(() => !cancelled && setSearchLoading(false));
-    return () => { cancelled = true; };
+    const handle = setTimeout(() => {
+      setSearchLoading(true);
+      searchProductsForAdmin(searchTerm.trim(), 15)
+        .then(res => {
+          if (!cancelled) setSearchResults(Array.isArray(res) ? res : []);
+        })
+        .catch(() => !cancelled && setSearchResults([]))
+        .finally(() => !cancelled && setSearchLoading(false));
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
   }, [searchTerm]);
 
   return (

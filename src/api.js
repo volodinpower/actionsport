@@ -134,6 +134,16 @@ export async function fetchPopularProducts(limit = 20) {
   return await json(res);
 }
 
+export async function searchProductsForAdmin(query, limit = 20) {
+  if (!query) return [];
+  const params = new URLSearchParams();
+  params.append("q", query);
+  params.append("limit", limit);
+  const res = await fetchWithTimeout(apiUrl(`/admin/products/search?${params}`), { credentials: "include" });
+  ok(res);
+  return await json(res);
+}
+
 export async function incrementProductView(id) {
   await fetchWithTimeout(apiUrl(`/api/product/${id}/view`), {
     method: "POST",
