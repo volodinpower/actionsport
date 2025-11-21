@@ -167,6 +167,7 @@
 .admin-root textarea {
   min-height: 80px;
   resize: vertical;
+  width: 100%;
 }
 
 /* Стили для кнопки у input[type=file] */
