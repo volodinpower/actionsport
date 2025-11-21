@@ -75,21 +75,6 @@ export default function RealAdmin() {
   const [imgUploading, setImgUploading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const emptyCollection = {
-    title: "",
-    description: "",
-    slug: "",
-    is_featured: false,
-    product_ids: [],
-  };
-  const [collections, setCollections] = useState([]);
-  const [selectedCollectionId, setSelectedCollectionId] = useState(null);
-  const [collectionForm, setCollectionForm] = useState(() => ({ ...emptyCollection }));
-  const [collectionSearch, setCollectionSearch] = useState("");
-  const [collectionProducts, setCollectionProducts] = useState([]);
-  const [collectionProductIdInput, setCollectionProductIdInput] = useState("");
-  const [isCollectionLoading, setIsCollectionLoading] = useState(false);
-
   const [onlyWithoutImages, setOnlyWithoutImages] = useState(false);
   const [onlyReserve, setOnlyReserve] = useState(false); // NEW: фильтр «только в резерве»
 
@@ -101,7 +86,6 @@ export default function RealAdmin() {
 
   const listRef = useRef(null);
   const addFullInputRef = useRef(null);
-  const collectionProductSearchRef = useRef(null);
 
   // косметика body (ничего не трогаем — избегаем «прыжков»)
   useEffect(() => {
