@@ -118,6 +118,16 @@ export default function ProductDetails() {
     setMainIndex(0);
   }, [id, product?.image_url]);
 
+  useEffect(() => {
+    const swiper = mainSwiperRef.current;
+    if (swiper && !swiper.destroyed && swiper.activeIndex !== mainIndex) {
+      swiper.slideTo(mainIndex, 0);
+    }
+    if (thumbsSwiper && !thumbsSwiper.destroyed && thumbsSwiper.activeIndex !== mainIndex) {
+      thumbsSwiper.slideTo(mainIndex, 0);
+    }
+  }, [mainIndex, thumbsSwiper]);
+
   if (error)
     return <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>;
   if (!product)
@@ -285,16 +295,6 @@ export default function ProductDetails() {
     </div>
   );
 
-  useEffect(() => {
-    const swiper = mainSwiperRef.current;
-    if (swiper && !swiper.destroyed && swiper.activeIndex !== mainIndex) {
-      swiper.slideTo(mainIndex, 0);
-    }
-    if (thumbsSwiper && !thumbsSwiper.destroyed && thumbsSwiper.activeIndex !== mainIndex) {
-      thumbsSwiper.slideTo(mainIndex, 0);
-    }
-  }, [mainIndex, thumbsSwiper]);
-
   function renderImages() {
     if (isMobile) {
       return (
@@ -339,15 +339,11 @@ export default function ProductDetails() {
             ▲
           </button>
           <Swiper
-            modules={[FreeMode, Navigation, Thumbs]}
+            modules={[FreeMode, Thumbs]}
             direction="vertical"
             spaceBetween={8}
             slidesPerView={Math.min(5, rawImages.length)}
             onSwiper={setThumbsSwiper}
-            navigation={{
-              prevEl: ".thumb-arrow-up",
-              nextEl: ".thumb-arrow-down",
-            }}
             freeMode
             watchSlidesProgress
             initialSlide={mainIndex}
@@ -375,8 +371,7 @@ export default function ProductDetails() {
           </button>
         </div>
         <Swiper
-          modules={[Navigation, Thumbs]}
-          navigation
+          modules={[Thumbs]}
           onSwiper={(swiper) => {
             mainSwiperRef.current = swiper;
           }}
