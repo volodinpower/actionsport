@@ -628,6 +628,7 @@ export default function ProductDetails() {
           </div>
         </div>
       </div>
+      {!isMobile && <div className="details-grey-section" />}
       {modal}
       <Footer />
     </div>

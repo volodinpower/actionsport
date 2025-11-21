@@ -122,6 +122,12 @@
   background: linear-gradient(0deg, rgba(255,255,255,0.95), rgba(255,255,255,0));
 }
 
+.details-grey-section {
+  width: 100%;
+  height: 60px;
+  background: #f0f0f0;
+}
+
 .swiper-pagination-bullets {
   display: flex;
   justify-content: center;

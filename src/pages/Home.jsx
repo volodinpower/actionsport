@@ -1,7 +1,6 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
 import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
 import Banner from "../components/Banner";
@@ -315,18 +314,6 @@ useEffect(() => {
     refetchOnWindowFocus: false,
   });
 
-  // --- анимация ---
-  const prevCountRef = useRef(PAGE_LIMIT);
-  useEffect(() => {
-    if (!data) return;
-    const flatLength = data.pages.flat().length;
-    if (flatLength > prevCountRef.current) {
-      prevCountRef.current = flatLength - PAGE_LIMIT;
-    }
-    if (isHome || (data.pages && data.pages.length === 1)) {
-      prevCountRef.current = PAGE_LIMIT;
-    }
-  }, [data, isHome, searchQuery, categoryKey, subcategoryKey, brandFilter, genderFilter, sizeFilter, sort]);
   const products = useMemo(() => (!data ? [] : data.pages.flat()), [data]);
 
   // --- сортировка ---
@@ -596,50 +583,18 @@ useEffect(() => {
       {/* Список товаров */}
       <div className="mx-auto px-2 pb-12">
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 py-2">
-          <AnimatePresence initial={false}>
-            {displayedProducts.map((product, idx) => {
-              const isAnimated = !isHome && idx >= prevCountRef.current;
-              if (isAnimated) {
-                return (
-                  <motion.div
-                    key={product.id || product.name + product.color}
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.18,
-                      delay: (idx - prevCountRef.current) * 0.03,
-                      type: "spring",
-                      stiffness: 120,
-                      damping: 20,
-                    }}
-                    exit={false}
-                  >
-                    <ProductCard
-                      product={product}
-                      onClick={() => handleCardClick(product.id)}
-                    />
-                  </motion.div>
-                );
-              } else {
-                return (
-                  <div key={product.id || product.name + product.color}>
-                    <ProductCard
-                      product={product}
-                      onClick={() => handleCardClick(product.id)}
-                    />
-                  </div>
-                );
-              }
-            })}
-          </AnimatePresence>
+          {displayedProducts.map((product) => (
+            <div key={product.id || product.name + product.color}>
+              <ProductCard
+                product={product}
+                onClick={() => handleCardClick(product.id)}
+              />
+            </div>
+          ))}
         </div>
         {isFetchingNextPage && (
           <div className="flex justify-center py-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-              className="w-8 h-8 border-4 border-neutral-300 border-t-neutral-900 rounded-full"
-            />
+            <div className="w-8 h-8 border-4 border-neutral-300 border-t-neutral-900 rounded-full animate-spin" />
           </div>
         )}
       </div>
