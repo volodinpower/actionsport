@@ -2,6 +2,9 @@
   width: 100%;
   margin: 0;
   overflow-x: hidden;
+  background: #fff;
+  color: #111;
+  color-scheme: light;
 }
 
 .admin-title {
@@ -141,17 +144,29 @@
   }
 }
 .admin-root input[type="text"],
-.admin-root input[type="checkbox"],
+.admin-root input[type="search"],
+.admin-root input[type="email"],
+.admin-root input[type="password"],
+.admin-root input[type="number"],
 .admin-root select,
 .admin-root textarea {
-  background: #fff;   /* белый фон */
-  color: #111;        /* тёмный текст */
+  background: #fff !important;
+  color: #111 !important;
   border: 1px solid #ccc;
   border-radius: 4px;
-  padding: 6px 10px;
-  width: 600px;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  padding: 8px 10px;
+  width: 100%;
+  max-width: 600px;
+  margin: 4px 0;
+  box-sizing: border-box;
+}
+.admin-root input::placeholder,
+.admin-root textarea::placeholder {
+  color: #777;
+}
+.admin-root textarea {
+  min-height: 80px;
+  resize: vertical;
 }
 
 /* Стили для кнопки у input[type=file] */
@@ -185,18 +200,18 @@
 }
 /* Чекбоксы в таблице товаров */
 .admin-root input[type="checkbox"] {
-  appearance: none;        /* убираем дефолтный браузерный стиль */
+  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-
   width: 18px;
   height: 18px;
   border: 1px solid #ccc;
-  background: #fff;        /* белый фон по умолчанию */
+  background: #fff;
   cursor: pointer;
   display: inline-block;
   vertical-align: middle;
   position: relative;
+  margin-right: 6px;
 }
 
 /* Состояние :checked */
