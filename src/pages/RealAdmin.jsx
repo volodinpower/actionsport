@@ -11,11 +11,6 @@ import {
   fetchProductById,
   setProductReserved,
   syncImagesForGroup,
-  fetchCollections,
-  fetchCollection,
-  createCollection,
-  updateCollection,
-  deleteCollection,
 } from "../api";
 
 function formatDate(date) {
@@ -148,22 +143,6 @@ export default function RealAdmin() {
     el.addEventListener("scroll", handleScroll);
     return () => el.removeEventListener("scroll", handleScroll);
   }, [hasMore, xlsxUploading, imgUploading]);
-
-  const loadCollectionsList = () => {
-    fetchCollections()
-      .then((data) => setCollections(Array.isArray(data) ? data : []))
-      .catch(() => setCollections([]));
-  };
-
-  useEffect(() => {
-    loadCollectionsList();
-  }, []);
-
-  useEffect(() => {
-    fetchCollections()
-      .then((data) => setCollections(Array.isArray(data) ? data : []))
-      .catch(() => setCollections([]));
-  }, [selectedCollectionId]);
 
   // XLSX загрузка
   const handleXlsxUpload = async (e) => {
@@ -300,127 +279,6 @@ export default function RealAdmin() {
     setAddingFullFiles([]);
   };
 
-  const resetCollectionForm = () => {
-    setCollectionForm({ ...emptyCollection });
-    setCollectionProducts([]);
-    setSelectedCollectionId(null);
-    setCollectionProductIdInput("");
-  };
-
-  const handleSelectCollection = async (collectionId) => {
-    if (!collectionId) {
-      resetCollectionForm();
-      return;
-    }
-    setIsCollectionLoading(true);
-    try {
-      const data = await fetchCollection(collectionId);
-      setSelectedCollectionId(collectionId);
-      setCollectionForm({
-        title: data.title || "",
-        description: data.description || "",
-        slug: data.slug || "",
-        is_featured: !!data.is_featured,
-        product_ids: (data.products || []).map((p) => p.id),
-      });
-      setCollectionProducts(Array.isArray(data.products) ? data.products : []);
-    } catch (err) {
-      alert("Не удалось загрузить подборку: " + (err?.message || err));
-      resetCollectionForm();
-    } finally {
-      setIsCollectionLoading(false);
-    }
-  };
-
-  const handleCollectionFieldChange = (field, value) => {
-    setCollectionForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleAddProductToCollection = (product) => {
-    if (!product) return;
-    setCollectionForm((prev) => {
-      if (prev.product_ids.includes(product.id)) return prev;
-      return { ...prev, product_ids: [...prev.product_ids, product.id] };
-    });
-    setCollectionProducts((prev) => {
-      if (prev.find((p) => p.id === product.id)) return prev;
-      return [...prev, product];
-    });
-  };
-
-  const handleRemoveProductFromCollection = (productId) => {
-    setCollectionForm((prev) => ({
-      ...prev,
-      product_ids: prev.product_ids.filter((id) => id !== productId),
-    }));
-    setCollectionProducts((prev) => prev.filter((p) => p.id !== productId));
-  };
-
-  const handleAddProductById = async () => {
-    const id = collectionProductIdInput.trim();
-    if (!id) return;
-    try {
-      const product = await fetchProductById(id);
-      handleAddProductToCollection(product);
-      setCollectionProductIdInput("");
-    } catch (err) {
-      alert("Товар не найден: " + (err?.message || err));
-    }
-  };
-
-  const handleSaveCollection = async () => {
-    if (!collectionForm.title.trim()) {
-      alert("Введите название подборки");
-      return;
-    }
-    setIsCollectionLoading(true);
-    try {
-      const payload = {
-        title: collectionForm.title.trim(),
-        description: collectionForm.description || "",
-        slug: collectionForm.slug || "",
-        is_featured: !!collectionForm.is_featured,
-        product_ids: collectionForm.product_ids,
-      };
-      let result;
-      if (selectedCollectionId) {
-        result = await updateCollection(selectedCollectionId, payload);
-      } else {
-        result = await createCollection(payload);
-        setSelectedCollectionId(result.id);
-      }
-      setCollectionProducts(result.products || []);
-      setCollectionForm({
-        title: result.title || "",
-        description: result.description || "",
-        slug: result.slug || "",
-        is_featured: !!result.is_featured,
-        product_ids: (result.products || []).map((p) => p.id),
-      });
-      loadCollectionsList();
-      alert("Подборка сохранена");
-    } catch (err) {
-      alert("Не удалось сохранить подборку: " + (err?.message || err));
-    } finally {
-      setIsCollectionLoading(false);
-    }
-  };
-
-  const handleDeleteCollection = async () => {
-    if (!selectedCollectionId) return;
-    if (!confirm("Удалить эту подборку?")) return;
-    setIsCollectionLoading(true);
-    try {
-      await deleteCollection(selectedCollectionId);
-      resetCollectionForm();
-      loadCollectionsList();
-    } catch (err) {
-      alert("Не удалось удалить подборку: " + (err?.message || err));
-    } finally {
-      setIsCollectionLoading(false);
-    }
-  };
-
   const handleSyncRow = async (p) => {
     if (!confirm("Синхронизировать изображения по группе name+color для этого товара?")) return;
     try {
@@ -436,17 +294,6 @@ export default function RealAdmin() {
 
   // Отфильтрованный список для отображения
   const displayProducts = onlyReserve ? products.filter((p) => !!p.reserved) : products;
-  const filteredProductsForCollection = collectionSearch
-    ? displayProducts.filter((p) => {
-        const term = collectionSearch.toLowerCase();
-        return (
-          p.name?.toLowerCase().includes(term) ||
-          p.sitename?.toLowerCase().includes(term) ||
-          p.id?.toLowerCase().includes(term)
-        );
-      })
-    : [];
-
   return (
     <div className="admin-root">
       <h2 className="admin-title">Админка: загрузка каталога и картинок товаров</h2>
@@ -455,149 +302,6 @@ export default function RealAdmin() {
         Всего товаров в базе: <b>{totalCount !== null ? totalCount : "..."}</b>
       </div>
 
-      <section className="admin-section">
-        <h3>Подборки товаров</h3>
-        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div style={{ minWidth: 280, flex: "0 0 280px" }}>
-            <button onClick={resetCollectionForm} style={{ marginBottom: 8 }}>
-              + Новая подборка
-            </button>
-            <div className="admin-table-list" style={{ maxHeight: 300 }}>
-              {collections.map((col) => (
-                <div
-                  key={col.id}
-                  className={`admin-table-row ${selectedCollectionId === col.id ? "active" : ""}`}
-                  style={{ gridTemplateColumns: "1fr auto" }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{col.title}</div>
-                    <div style={{ fontSize: 12, color: "#555" }}>
-                      товаров: {col.product_count}
-                      {col.is_featured && <span style={{ color: "#e53935", marginLeft: 6 }}>на главной</span>}
-                    </div>
-                  </div>
-                  <button onClick={() => handleSelectCollection(col.id)}>Редактировать</button>
-                </div>
-              ))}
-              {collections.length === 0 && <div style={{ padding: 8 }}>Пока нет подборок</div>}
-            </div>
-          </div>
-
-          <div style={{ flex: "1 1 400px", minWidth: 360 }}>
-            {isCollectionLoading && <div>Загрузка...</div>}
-            <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
-              <div style={{ flex: 1 }}>
-                <label>Название</label>
-                <input
-                  type="text"
-                  value={collectionForm.title}
-                  onChange={(e) => handleCollectionFieldChange("title", e.target.value)}
-                />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label>Slug</label>
-                <input
-                  type="text"
-                  value={collectionForm.slug}
-                  onChange={(e) => handleCollectionFieldChange("slug", e.target.value)}
-                />
-              </div>
-            </div>
-            <label>Описание</label>
-            <textarea
-              value={collectionForm.description}
-              onChange={(e) => handleCollectionFieldChange("description", e.target.value)}
-              rows={3}
-              style={{ width: "100%", marginBottom: 12 }}
-            />
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <input
-                type="checkbox"
-                checked={collectionForm.is_featured}
-                onChange={(e) => handleCollectionFieldChange("is_featured", e.target.checked)}
-              />
-              Показать на главной
-            </label>
-
-            <div style={{ marginTop: 16 }}>
-              <button onClick={handleSaveCollection} disabled={isCollectionLoading}>
-                {selectedCollectionId ? "Сохранить подборку" : "Создать подборку"}
-              </button>
-              {selectedCollectionId && (
-                <button
-                  onClick={handleDeleteCollection}
-                  style={{ marginLeft: 12 }}
-                  disabled={isCollectionLoading}
-                >
-                  Удалить
-                </button>
-              )}
-            </div>
-
-            <div style={{ marginTop: 20 }}>
-              <h4>Товары в подборке ({collectionProducts.length})</h4>
-              {collectionProducts.length === 0 && <div style={{ fontSize: 12, color: "#777" }}>Пока пусто</div>}
-              <ul style={{ maxHeight: 200, overflow: "auto", padding: 0, listStyle: "none" }}>
-                {collectionProducts.map((p) => (
-                  <li
-                    key={p.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      padding: "4px 0",
-                      borderBottom: "1px solid #eee",
-                    }}
-                  >
-                    <span>{p.sitename || p.name}</span>
-                    <button onClick={() => handleRemoveProductFromCollection(p.id)}>Удалить</button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div style={{ marginTop: 16 }}>
-              <h4>Добавить товары</h4>
-              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                <input
-                  type="text"
-                  placeholder="ID товара"
-                  value={collectionProductIdInput}
-                  onChange={(e) => setCollectionProductIdInput(e.target.value)}
-                />
-                <button onClick={handleAddProductById}>Добавить</button>
-              </div>
-              <input
-                type="text"
-                placeholder="Поиск по текущему списку товаров"
-                value={collectionSearch}
-                onChange={(e) => setCollectionSearch(e.target.value)}
-              />
-              {collectionSearch && (
-                <div style={{ maxHeight: 180, overflow: "auto", border: "1px solid #eee", marginTop: 8 }}>
-                  {filteredProductsForCollection.slice(0, 20).map((p) => (
-                    <div
-                      key={p.id}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        padding: "4px 6px",
-                        borderBottom: "1px solid #f0f0f0",
-                      }}
-                    >
-                      <span>{p.sitename || p.name}</span>
-                      <button onClick={() => handleAddProductToCollection(p)}>Добавить</button>
-                    </div>
-                  ))}
-                  {filteredProductsForCollection.length === 0 && (
-                    <div style={{ padding: 6, fontSize: 12 }}>Ничего не найдено</div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* XLSX */}
       <section className="admin-section">
