@@ -151,7 +151,7 @@ export default function CollectionsAdmin() {
 
   return (
     <div className="admin-root">
-    <section className="admin-section">
+    <section className="admin-section collections-admin">
       <h3>Подборки товаров</h3>
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
         <div style={{ minWidth: 280, flex: "0 0 280px" }}>
