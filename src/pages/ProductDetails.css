@@ -66,20 +66,21 @@
 .thumbnail-column {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   gap: 8px;
+  width: 96px;
+  flex: 0 0 96px;
 }
 
-.thumbnail-scroll {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.thumbnail-swiper {
   flex: 1;
-  overflow: auto;
-  scrollbar-width: none;
+  width: 100%;
+  height: clamp(320px, 50vw, 520px);
 }
-.thumbnail-scroll::-webkit-scrollbar {
-  display: none;
+.thumbnail-swiper .swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .thumbnail-arrow {
@@ -102,6 +103,15 @@
 .thumbnail-arrow:disabled {
   opacity: 0.35;
   cursor: default;
+}
+
+.main-image-carousel {
+  flex: 1;
+  max-width: clamp(320px, 50vw, 520px);
+}
+.main-image-carousel .swiper-slide {
+  display: flex;
+  justify-content: center;
 }
 
 .swiper-pagination-bullets {
