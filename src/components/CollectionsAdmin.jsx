@@ -7,6 +7,7 @@ import {
   updateCollection,
   deleteCollection,
   fetchProductById,
+  fetchProducts,
 } from "../api";
 
 const EMPTY_FORM = {
@@ -23,6 +24,9 @@ export default function CollectionsAdmin() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [products, setProducts] = useState([]);
   const [productIdInput, setProductIdInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const loadCollections = () => {
@@ -71,17 +75,22 @@ export default function CollectionsAdmin() {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleAddProductById = async () => {
-    const id = productIdInput.trim();
-    if (!id) return;
-    if (form.product_ids.includes(id)) {
+  const handleAddProduct = (product) => {
+    if (!product || !product.id) return;
+    if (form.product_ids.includes(product.id)) {
       alert("Товар уже добавлен");
       return;
     }
+    setForm(prev => ({ ...prev, product_ids: [...prev.product_ids, product.id] }));
+    setProducts(prev => [...prev, product]);
+  };
+
+  const handleAddProductById = async () => {
+    const id = productIdInput.trim();
+    if (!id) return;
     try {
       const product = await fetchProductById(id);
-      setForm(prev => ({ ...prev, product_ids: [...prev.product_ids, product.id] }));
-      setProducts(prev => [...prev, product]);
+      handleAddProduct(product);
       setProductIdInput("");
     } catch (err) {
       alert("Товар не найден: " + (err?.message || err));
@@ -148,6 +157,22 @@ export default function CollectionsAdmin() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    let cancelled = false;
+    setSearchLoading(true);
+    fetchProducts(searchTerm, 10, 0, "", "", "asc", "", "", "", "")
+      .then(res => {
+        if (!cancelled) setSearchResults(Array.isArray(res) ? res : []);
+      })
+      .catch(() => !cancelled && setSearchResults([]))
+      .finally(() => !cancelled && setSearchLoading(false));
+    return () => { cancelled = true; };
+  }, [searchTerm]);
 
   return (
     <div className="admin-root">
@@ -261,6 +286,38 @@ export default function CollectionsAdmin() {
               />
               <button onClick={handleAddProductById}>Добавить</button>
             </div>
+            <h4 style={{ marginTop: 12 }}>Или поиск по названию</h4>
+            <input
+              type="text"
+              placeholder="Введите часть названия"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <div style={{ border: "1px solid #eee", maxHeight: 180, overflow: "auto", marginTop: 8 }}>
+                {searchLoading && <div style={{ padding: 6 }}>Поиск…</div>}
+                {!searchLoading && searchResults.length === 0 && (
+                  <div style={{ padding: 6, fontSize: 12 }}>Ничего не найдено</div>
+                )}
+                {searchResults.map(item => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      padding: "4px 6px",
+                      borderBottom: "1px solid #f3f3f3",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 500 }}>{item.sitename || item.name}</div>
+                      <div style={{ fontSize: 12, color: "#666" }}>{item.id}</div>
+                    </div>
+                    <button onClick={() => handleAddProduct(item)}>Добавить</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
