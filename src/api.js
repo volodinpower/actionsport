@@ -200,6 +200,59 @@ export async function fetchPopularBrands(limit = 18) {
   return await json(res); // [{brand, count}]
 }
 
+// ========= COLLECTIONS =========
+export async function fetchCollections({ featured } = {}) {
+  const params = new URLSearchParams();
+  if (typeof featured === "boolean") params.append("featured", String(featured));
+  const res = await fetchWithTimeout(apiUrl(`/collections?${params}`), { credentials: "include" });
+  ok(res);
+  return await json(res);
+}
+
+export async function fetchCollection(id) {
+  const res = await fetchWithTimeout(apiUrl(`/collections/${id}`), { credentials: "include" });
+  ok(res);
+  return await json(res);
+}
+
+export async function fetchFeaturedCollection() {
+  const res = await fetchWithTimeout(apiUrl(`/collections/featured`), { credentials: "include" });
+  if (res.status === 404) return null;
+  ok(res);
+  return await json(res);
+}
+
+export async function createCollection(data) {
+  const res = await fetchWithTimeout(apiUrl(`/collections`), {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  ok(res);
+  return await json(res);
+}
+
+export async function updateCollection(id, data) {
+  const res = await fetchWithTimeout(apiUrl(`/collections/${id}`), {
+    method: "PATCH",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  ok(res);
+  return await json(res);
+}
+
+export async function deleteCollection(id) {
+  const res = await fetchWithTimeout(apiUrl(`/collections/${id}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+  ok(res);
+  return await json(res);
+}
+
 // ========= ADMIN (superuser) =========
 export async function uploadXlsx(file) {
   const formData = new FormData();
