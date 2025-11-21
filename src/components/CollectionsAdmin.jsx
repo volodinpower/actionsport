@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "../pages/RealAdmin.css";
 import {
   fetchCollections,
   fetchCollection,
@@ -149,6 +150,7 @@ export default function CollectionsAdmin() {
   };
 
   return (
+    <div className="admin-root">
     <section className="admin-section">
       <h3>Подборки товаров</h3>
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
@@ -263,5 +265,6 @@ export default function CollectionsAdmin() {
         </div>
       </div>
     </section>
+    </div>
   );
 }
