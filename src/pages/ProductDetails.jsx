@@ -171,14 +171,14 @@ export default function ProductDetails() {
   }, []);
 
   useLayoutEffect(() => {
-    if (isMobile || !brandInfo?.description) {
+    if (isMobile || !brandInfo?.description || !brandInfo?.name) {
       setBrandTextSize(14);
       return;
     }
     const container = brandTextRef.current;
     if (!container) return;
     const maxHeight = container.clientHeight || 0;
-    if (maxHeight === 0) return;
+    if (maxHeight <= 0) return;
     let size = 16;
     const minSize = 10;
     container.style.fontSize = `${size}px`;
@@ -533,16 +533,18 @@ export default function ProductDetails() {
           ) : null}
         </div>
         <div className="main-image-desktop-wrapper">
-          <img
-            src={rawImages[mainIndex]}
-            alt={`${displayName} ${mainIndex + 1}`}
-            className="main-image-square desktop"
-            draggable={false}
-            onClick={() => {
-              setModalIndex(mainIndex);
-              setShowModal(true);
-            }}
-          />
+          <div className="main-image-desktop-inner">
+            <img
+              src={rawImages[mainIndex]}
+              alt={`${displayName} ${mainIndex + 1}`}
+              className="main-image-square desktop"
+              draggable={false}
+              onClick={() => {
+                setModalIndex(mainIndex);
+                setShowModal(true);
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -710,17 +712,19 @@ export default function ProductDetails() {
         <div className="details-grey-section">
           <div className="brand-info-panel">
             {brandInfo?.image_url && (
-              <img
-                src={makeImageUrl(brandInfo.image_url)}
-                alt={brandInfo.name}
-                className="brand-info-logo clickable"
-                loading="lazy"
-                onClick={() =>
-                  navigate(
-                    `/?category=brands&brand=${encodeURIComponent(brandInfo.name)}`
-                  )
-                }
-              />
+              <div className="brand-info-logo-wrapper">
+                <img
+                  src={makeImageUrl(brandInfo.image_url)}
+                  alt={brandInfo.name}
+                  className="brand-info-logo clickable"
+                  loading="lazy"
+                  onClick={() =>
+                    navigate(
+                      `/?category=brands&brand=${encodeURIComponent(brandInfo.name)}`
+                    )
+                  }
+                />
+              </div>
             )}
             <div
               className="brand-info-text"
