@@ -46,7 +46,11 @@
   width: 70px;
   height: 70px;
   margin: 0;
-  border-color: transparent;
+  border-color: #d5d5d5;
+}
+
+.thumbnail-square.vertical.selected {
+  border-color: #222;
 }
 
 .desktop-gallery {
