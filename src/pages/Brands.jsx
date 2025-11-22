@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -15,18 +15,11 @@ function makeImageUrl(url) {
 
 export default function BrandsPage() {
   const [brands, setBrands] = useState([]);
-  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchBrands().then((data) => setBrands(Array.isArray(data) ? data : [])).catch(() => setBrands([]));
   }, []);
-
-  const filtered = useMemo(() => {
-    if (!search) return brands;
-    const term = search.toLowerCase();
-    return brands.filter((b) => (b.name || "").toLowerCase().includes(term));
-  }, [brands, search]);
 
   // ✅ обработчик кликов по меню (такой же, как в Home.jsx)
   const handleMenuCategoryClick = (catKey, catLabel, subKey = "") => {
@@ -53,16 +46,8 @@ export default function BrandsPage() {
 
       <div className="mx-auto max-w-5xl py-6 px-4">
         <h1 className="text-2xl font-bold mb-6 text-center">All Brands</h1>
-        <div className="max-w-md mx-auto mb-6">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск бренда"
-            className="w-full border border-neutral-300 rounded-lg px-3 py-2"
-          />
-        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-          {filtered.map((brand) => (
+          {brands.map((brand) => (
             <button
               key={brand.id}
               className="border border-neutral-300 rounded-xl p-4 hover:bg-neutral-100 text-sm font-semibold text-center transition flex flex-col items-center gap-3"
@@ -83,7 +68,7 @@ export default function BrandsPage() {
               <span className="text-base font-semibold">{brand.name}</span>
             </button>
           ))}
-          {filtered.length === 0 && (
+          {brands.length === 0 && (
             <p className="text-center text-neutral-500 col-span-full">Бренды не найдены</p>
           )}
         </div>

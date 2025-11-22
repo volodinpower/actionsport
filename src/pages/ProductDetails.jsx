@@ -2,7 +2,12 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
-import { fetchProductById, incrementProductView, fetchBrandInfoByName } from "../api";
+import {
+  fetchProductById,
+  incrementProductView,
+  fetchBrandInfoByName,
+  fetchBrands,
+} from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -124,21 +129,33 @@ export default function ProductDetails() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!product?.brand) {
-      setBrandInfo(null);
-      return undefined;
-    }
-    setBrandInfoLoading(true);
-    fetchBrandInfoByName(product.brand)
-      .then((data) => {
-        if (!cancelled) setBrandInfo(data);
-      })
-      .catch(() => {
+    async function loadBrand() {
+      if (!product?.brand) {
+        setBrandInfo(null);
+        return;
+      }
+      setBrandInfoLoading(true);
+      try {
+        let data = await fetchBrandInfoByName(product.brand);
+        if (!data) {
+          const list = await fetchBrands(product.brand);
+          const match = Array.isArray(list)
+            ? list.find(
+                (b) => b.name && b.name.toLowerCase() === product.brand.toLowerCase()
+              )
+            : null;
+          data = match || null;
+        }
+        if (!cancelled) {
+          setBrandInfo(data);
+        }
+      } catch {
         if (!cancelled) setBrandInfo(null);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setBrandInfoLoading(false);
-      });
+      }
+    }
+    loadBrand();
     return () => {
       cancelled = true;
     };
@@ -657,35 +674,43 @@ export default function ProductDetails() {
           </div>
         </div>
       </div>
-      {!isMobile && (
+      {!isMobile &&
+        brandInfo &&
+        brandInfo.image_url &&
+        brandInfo.name &&
+        brandInfo.description && (
         <div className="details-grey-section">
-          {brandInfo ? (
-            <div className="brand-info-panel">
-              {brandInfo.image_url && (
-                <img
-                  src={makeImageUrl(brandInfo.image_url)}
-                  alt={brandInfo.name}
-                  className="brand-info-logo"
-                  loading="lazy"
-                />
-              )}
-              <div className="brand-info-text">
-                <p className="brand-info-label">Brand spotlight</p>
-                <h3>{brandInfo.name}</h3>
-                <p className="brand-info-description">
-                  {brandInfo.description || "Описание бренда скоро появится."}
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="brand-info-panel placeholder">
+          <div className="brand-info-panel">
+            {brandInfo?.image_url && (
+              <img
+                src={makeImageUrl(brandInfo.image_url)}
+                alt={brandInfo.name}
+                className="brand-info-logo clickable"
+                loading="lazy"
+                onClick={() =>
+                  navigate(
+                    `/?category=brands&brand=${encodeURIComponent(brandInfo.name)}`
+                  )
+                }
+              />
+            )}
+            <div className="brand-info-text">
+              <p className="brand-info-label">Brand spotlight</p>
+              <h3
+                className="brand-info-name"
+                onClick={() =>
+                  navigate(
+                    `/?category=brands&brand=${encodeURIComponent(brandInfo.name)}`
+                  )
+                }
+              >
+                {brandInfo.name}
+              </h3>
               <p className="brand-info-description">
-                {brandInfoLoading
-                  ? "Загружаем данные о бренде..."
-                  : "Добавьте описание бренда в админке, чтобы рассказать о нем больше."}
+                {brandInfo.description}
               </p>
             </div>
-          )}
+          </div>
         </div>
       )}
       {modal}
