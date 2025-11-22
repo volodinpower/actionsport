@@ -124,8 +124,60 @@
 
 .details-grey-section {
   width: 100%;
-  height: 60px;
+  min-height: 300px;
   background: #f0f0f0;
+  margin-top: 32px;
+  padding: 32px 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brand-info-panel {
+  width: min(960px, 100%);
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.brand-info-panel.placeholder {
+  justify-content: center;
+  text-align: center;
+}
+
+.brand-info-logo {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.brand-info-text {
+  flex: 1;
+}
+
+.brand-info-label {
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.brand-info-text h3 {
+  font-size: 28px;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.05em;
+}
+
+.brand-info-description {
+  color: #464646;
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-line;
 }
 
 .swiper-pagination-bullets {

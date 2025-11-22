@@ -191,9 +191,44 @@ export async function fetchFilteredSizes({ categoryKey, subcategoryKey, brand, g
   return await json(res);
 }
 
-export async function fetchBrands() {
-  const res = await fetchWithTimeout(apiUrl("/brands"), { credentials: "include" });
+export async function fetchBrands(search = "") {
+  const qs = search ? `?search=${encodeURIComponent(search)}` : "";
+  const res = await fetchWithTimeout(apiUrl(`/brands${qs}`), { credentials: "include" });
   if (!res.ok) return [];
+  return await json(res);
+}
+
+export async function fetchBrandInfoByName(name) {
+  if (!name) return null;
+  const params = new URLSearchParams();
+  params.append("name", name);
+  const res = await fetchWithTimeout(apiUrl(`/brands/info?${params.toString()}`), {
+    credentials: "include",
+  });
+  if (!res.ok) return null;
+  return await json(res);
+}
+
+export async function updateBrand(brandId, payload) {
+  const res = await fetchWithTimeout(apiUrl(`/brands/${brandId}`), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+  ok(res);
+  return await json(res);
+}
+
+export async function uploadBrandLogo(brandId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetchWithTimeout(apiUrl(`/brands/${brandId}/logo`), {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+  });
+  ok(res);
   return await json(res);
 }
 

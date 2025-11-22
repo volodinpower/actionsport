@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import RealAdmin from "./RealAdmin";
 import BannerAdmin from "../components/BannerAdmin";
 import CollectionsAdmin from "../components/CollectionsAdmin";
+import BrandsAdmin from "../components/BrandsAdmin";
 import { logout, getMe } from "../api";
 
 export default function RealAdminTabs() {
@@ -71,6 +72,19 @@ export default function RealAdminTabs() {
         >
           Подборки
         </button>
+        <button
+          onClick={() => setActiveTab("brands")}
+          style={{
+            padding: "8px 16px",
+            cursor: "pointer",
+            borderBottom: activeTab === "brands" ? "3px solid #111" : "none",
+            fontWeight: activeTab === "brands" ? "bold" : "normal",
+            background: "none",
+            border: "none",
+          }}
+        >
+          Бренды
+        </button>
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
           {me?.email && <span style={{ color: "#666", fontSize: 14 }}>{me.email}</span>}
@@ -95,6 +109,7 @@ export default function RealAdminTabs() {
         {activeTab === "products" && <RealAdmin />}
         {activeTab === "banners" && <BannerAdmin />}
         {activeTab === "collections" && <CollectionsAdmin />}
+        {activeTab === "brands" && <BrandsAdmin />}
       </main>
     </div>
   );

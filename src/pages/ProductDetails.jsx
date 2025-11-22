@@ -2,7 +2,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
-import { fetchProductById, incrementProductView } from "../api";
+import { fetchProductById, incrementProductView, fetchBrandInfoByName } from "../api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
@@ -57,6 +57,8 @@ export default function ProductDetails() {
   const hoverDirectionRef = useRef(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
+  const [brandInfo, setBrandInfo] = useState(null);
+  const [brandInfoLoading, setBrandInfoLoading] = useState(false);
 
   useEffect(() => {
     fetchProductById(id)
@@ -119,6 +121,28 @@ export default function ProductDetails() {
   useEffect(() => {
     setMainIndex(0);
   }, [id, product?.image_url]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!product?.brand) {
+      setBrandInfo(null);
+      return undefined;
+    }
+    setBrandInfoLoading(true);
+    fetchBrandInfoByName(product.brand)
+      .then((data) => {
+        if (!cancelled) setBrandInfo(data);
+      })
+      .catch(() => {
+        if (!cancelled) setBrandInfo(null);
+      })
+      .finally(() => {
+        if (!cancelled) setBrandInfoLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [product?.brand]);
 
   useEffect(() => {
     return () => {
@@ -633,7 +657,37 @@ export default function ProductDetails() {
           </div>
         </div>
       </div>
-      {!isMobile && <div className="details-grey-section" />}
+      {!isMobile && (
+        <div className="details-grey-section">
+          {brandInfo ? (
+            <div className="brand-info-panel">
+              {brandInfo.image_url && (
+                <img
+                  src={makeImageUrl(brandInfo.image_url)}
+                  alt={brandInfo.name}
+                  className="brand-info-logo"
+                  loading="lazy"
+                />
+              )}
+              <div className="brand-info-text">
+                <p className="brand-info-label">Brand spotlight</p>
+                <h3>{brandInfo.name}</h3>
+                <p className="brand-info-description">
+                  {brandInfo.description || "Описание бренда скоро появится."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="brand-info-panel placeholder">
+              <p className="brand-info-description">
+                {brandInfoLoading
+                  ? "Загружаем данные о бренде..."
+                  : "Добавьте описание бренда в админке, чтобы рассказать о нем больше."}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
       {modal}
       <Footer />
     </div>
