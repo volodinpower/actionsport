@@ -416,47 +416,52 @@ export default function ProductDetails() {
       );
     }
 
+    const showThumbnails = rawImages.length > 1;
     return (
       <div className="desktop-gallery">
         <div className="thumbnail-column">
-          <button
-            type="button"
-            className="thumbnail-arrow thumb-arrow-up"
-            aria-label="Предыдущие изображения"
-            onClick={() => scrollThumbnails("up")}
-            onMouseEnter={() => canScrollUp && startHoverScroll("up")}
-            onMouseLeave={stopHoverScroll}
-            disabled={!canScrollUp}
-          >
-            ▲
-          </button>
-          <div className="thumbnail-scroll" ref={thumbnailScrollRef}>
-            {rawImages.map((imgUrl, idx) => (
-              <img
-                key={`thumb-${idx}`}
-                src={imgUrl}
-                alt={`Фото ${idx + 1}`}
-                data-thumb-index={idx}
-                className={
-                  "thumbnail-square vertical" + (idx === mainIndex ? " selected" : "")
-                }
-                draggable={false}
-                onMouseEnter={() => setMainIndex(idx)}
-                onClick={() => setMainIndex(idx)}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            className="thumbnail-arrow thumb-arrow-down"
-            aria-label="Следующие изображения"
-            onClick={() => scrollThumbnails("down")}
-            onMouseEnter={() => canScrollDown && startHoverScroll("down")}
-            onMouseLeave={stopHoverScroll}
-            disabled={!canScrollDown}
-          >
-            ▼
-          </button>
+          {showThumbnails ? (
+            <>
+              <button
+                type="button"
+                className="thumbnail-arrow thumb-arrow-up"
+                aria-label="Предыдущие изображения"
+                onClick={() => scrollThumbnails("up")}
+                onMouseEnter={() => canScrollUp && startHoverScroll("up")}
+                onMouseLeave={stopHoverScroll}
+                disabled={!canScrollUp}
+              >
+                ▲
+              </button>
+              <div className="thumbnail-scroll" ref={thumbnailScrollRef}>
+                {rawImages.map((imgUrl, idx) => (
+                  <img
+                    key={`thumb-${idx}`}
+                    src={imgUrl}
+                    alt={`Фото ${idx + 1}`}
+                    data-thumb-index={idx}
+                    className={
+                      "thumbnail-square vertical" + (idx === mainIndex ? " selected" : "")
+                    }
+                    draggable={false}
+                    onMouseEnter={() => setMainIndex(idx)}
+                    onClick={() => setMainIndex(idx)}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                className="thumbnail-arrow thumb-arrow-down"
+                aria-label="Следующие изображения"
+                onClick={() => scrollThumbnails("down")}
+                onMouseEnter={() => canScrollDown && startHoverScroll("down")}
+                onMouseLeave={stopHoverScroll}
+                disabled={!canScrollDown}
+              >
+                ▼
+              </button>
+            </>
+          ) : null}
         </div>
         <div className="main-image-desktop-wrapper">
           <img
