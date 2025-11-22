@@ -148,7 +148,7 @@
 }
 
 .brand-info-logo {
-  height: 140px;
+  width: 140px;
   object-fit: contain;
   background: transparent;
   border-radius: 0;
