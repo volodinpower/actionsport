@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import {
@@ -64,6 +64,9 @@ export default function ProductDetails() {
   const [canScrollDown, setCanScrollDown] = useState(false);
   const [brandInfo, setBrandInfo] = useState(null);
   const [brandInfoLoading, setBrandInfoLoading] = useState(false);
+  const brandTextRef = useRef(null);
+  const [brandTextSize, setBrandTextSize] = useState(14);
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
 
   useEffect(() => {
     fetchProductById(id)
@@ -160,6 +163,31 @@ export default function ProductDetails() {
       cancelled = true;
     };
   }, [product?.brand]);
+
+  useEffect(() => {
+    const handler = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (isMobile || !brandInfo?.description) {
+      setBrandTextSize(14);
+      return;
+    }
+    const container = brandTextRef.current;
+    if (!container) return;
+    const maxHeight = container.clientHeight || 0;
+    if (maxHeight === 0) return;
+    let size = 16;
+    const minSize = 10;
+    container.style.fontSize = `${size}px`;
+    while (container.scrollHeight > maxHeight && size > minSize) {
+      size -= 0.5;
+      container.style.fontSize = `${size}px`;
+    }
+    setBrandTextSize(size);
+  }, [brandInfo?.description, brandInfo?.name, viewportWidth, isMobile]);
 
   useEffect(() => {
     return () => {
@@ -694,7 +722,11 @@ export default function ProductDetails() {
                 }
               />
             )}
-            <div className="brand-info-text">
+            <div
+              className="brand-info-text"
+              ref={brandTextRef}
+              style={{ fontSize: `${brandTextSize}px` }}
+            >
               <p className="brand-info-label">Brand spotlight</p>
               <h3
                 className="brand-info-name"

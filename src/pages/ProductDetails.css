@@ -164,23 +164,25 @@
 
 .brand-info-text {
   flex: 1;
-  min-height: 140px;
+  height: 140px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  row-gap: 6px;
+  row-gap: 4px;
+  box-sizing: border-box;
+  font-size: 14px;
 }
 
 .brand-info-label {
   text-transform: uppercase;
-  font-size: clamp(10px, 0.9vw, 12px);
+  font-size: 0.75em;
   letter-spacing: 0.15em;
   color: #888;
   margin-bottom: 6px;
 }
 
 .brand-info-text h3 {
-  font-size: clamp(18px, 1.4vw, 24px);
+  font-size: 1.5em;
   margin: 0 0 8px 0;
   letter-spacing: 0.03em;
   cursor: pointer;
@@ -193,7 +195,7 @@
 
 .brand-info-description {
   color: #464646;
-  font-size: clamp(12px, 1vw, 16px);
+  font-size: 1em;
   line-height: 1.4;
   white-space: pre-line;
 }
