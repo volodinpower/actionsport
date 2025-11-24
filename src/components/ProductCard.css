@@ -56,21 +56,15 @@
   top: 10px;
   right: 10px;
   border: none;
-  background: rgba(255, 255, 255, 0.85);
+  background: transparent;
   color: rgba(0, 0, 0, 0.45);
   cursor: pointer;
   z-index: 2;
-  transition: transform 0.12s ease, color 0.12s ease, background 0.12s ease;
-  padding: 0;
-  border-radius: 50%;
-  width: 34px;
-  height: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: transform 0.12s ease, color 0.12s ease;
+  padding: 2px;
 }
 .favorite-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.05);
   color: rgba(0, 0, 0, 0.65);
 }
 .favorite-btn.active {
@@ -79,6 +73,7 @@
 .favorite-btn .favorite-heart {
   width: 18px;
   height: 18px;
+  display: block;
 }
 .favorite-btn .favorite-heart path {
   transition: fill 0.15s ease, stroke 0.15s ease;
