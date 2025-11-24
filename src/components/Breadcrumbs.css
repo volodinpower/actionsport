@@ -1,6 +1,8 @@
 .breadcrumbs-nav {
-  font-size: 14px;
-  padding: 8px 16px;
+  font-size: 13px;
+  padding: 12px 20px;
+  background: #dedede;
+  width: 100%;
 }
 
 .breadcrumb-link {
@@ -19,6 +21,5 @@
 }
 
 .breadcrumb-current {
-  color: #999;
+  color: #292929;
 }
-

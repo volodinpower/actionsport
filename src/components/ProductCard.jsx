@@ -2,11 +2,15 @@ import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "./ProductCard.css";
+import { useAuth } from "./AuthProvider";
+import { useToast } from "./ToastProvider";
 
 export default function ProductCard({ product, onClick }) {
   const [imgError, setImgError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
+  const { user, addFavorite, removeFavorite, isFavorite } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 900);
@@ -53,6 +57,28 @@ export default function ProductCard({ product, onClick }) {
     sizes = product.sizes.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
+  const favoriteName = product.name || product.sitename || "";
+  const favoriteColor = product.color || "";
+  const favoriteActive = !!user && isFavorite(favoriteName, favoriteColor);
+
+  const handleFavoriteClick = async (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    if (!user) return;
+    try {
+      if (favoriteActive) {
+        await removeFavorite(product);
+        showToast("Removed from favorites");
+      } else {
+        await addFavorite(product);
+        showToast("Added to favorites");
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("Favorite toggle failed", err);
+    }
+  };
+
   return (
     <div
       className="product-card"
@@ -93,6 +119,16 @@ export default function ProductCard({ product, onClick }) {
             />
           )}
         </div>
+        {user && (
+          <button
+            className={`favorite-btn ${favoriteActive ? "active" : ""}`}
+            onClick={handleFavoriteClick}
+            aria-label={favoriteActive ? "Remove from favorites" : "Add to favorites"}
+            title={favoriteActive ? "Remove from favorites" : "Add to favorites"}
+          >
+            {favoriteActive ? "♥" : "♡"}
+          </button>
+        )}
         <div className="product-content">
           <h2 className="product-card-title">{product.sitename}</h2>
           <div className="desc-group">

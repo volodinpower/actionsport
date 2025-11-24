@@ -24,6 +24,7 @@
   flex-direction: column;
   height: 100%;
   box-sizing: border-box;
+  position: relative;
 }
 
 .swiper-container,
@@ -48,6 +49,30 @@
   color: #aaa;
   text-align: center;
   user-select: none;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 16px;
+  line-height: 0.8;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.12s ease, color 0.12s ease;
+  padding: 2px;
+  transform: scale(1.15, 1);
+  transform-origin: center;
+}
+.favorite-btn:hover {
+  transform: scale(1.25, 1.05);
+  color: rgba(0, 0, 0, 0.6);
+}
+.favorite-btn.active {
+  color: #ff4d6d;
 }
 
 .no-image {

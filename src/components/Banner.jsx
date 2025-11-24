@@ -8,6 +8,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 const API_BANNERS = (import.meta.env.VITE_API_URL || "") + "/banners";
+const MAX_RETRIES = import.meta.env.DEV ? 0 : 3;
+const RETRY_DELAY_MS = import.meta.env.DEV ? 0 : 4000;
 
 // 1x1 PNG серого цвета — на крайний случай, если даже /no-image.jpg 404
 const DATA_FALLBACK =
@@ -28,10 +30,14 @@ export default function Banner() {
   const [banners, setBanners] = useState([]);
   const [fail, setFail] = useState([]);   // по индексу: true, если ошибка
   const [loadingList, setLoadingList] = useState(true);
+  const [retryAttempt, setRetryAttempt] = useState(0);
 
   useEffect(() => {
     let c = false;
-    (async () => {
+    let retryTimer = null;
+
+    async function loadBanners() {
+      if (!c) setLoadingList(true);
       try {
         const res = await fetch(API_BANNERS, { credentials: "include" });
         const data = await res.json();
@@ -39,19 +45,27 @@ export default function Banner() {
         if (!c) {
           setBanners(arr);
           setFail(arr.map(() => false));
+          setLoadingList(false);
         }
       } catch (e) {
-        if (!c) {
-          console.error("Failed to fetch /banners:", e);
-          setBanners([]);
-          setFail([]);
+        if (c) return;
+        console.error("Failed to fetch /banners:", e);
+        setBanners([]);
+        setFail([]);
+        if (retryAttempt < MAX_RETRIES) {
+          retryTimer = setTimeout(() => setRetryAttempt((prev) => prev + 1), RETRY_DELAY_MS);
+        } else {
+          setLoadingList(false);
         }
-      } finally {
-        if (!c) setLoadingList(false);
       }
-    })();
-    return () => { c = true; };
-  }, []);
+    }
+
+    loadBanners();
+    return () => {
+      c = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [retryAttempt]);
 
   const slides = useMemo(() => {
     return banners.map((b) => {

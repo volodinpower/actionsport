@@ -32,6 +32,15 @@
   z-index: 101;
   padding: 0 20px;
 }
+.nav-secondary-bar {
+  position: relative;
+  background: #111;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
 
 /* ---------- Меню навигации (десктоп) ---------- */
 .nav-menu-wrap {
@@ -67,7 +76,8 @@
   display: flex;
   align-items: center;
   color: #fff;
-  padding: 8px;
+  padding: 0;
+  margin-right: 8px;
   font-size: 1.2rem;
   transition: color 0.2s;
 }
@@ -80,6 +90,137 @@
 .search-desktop-spacer {
   flex: 1 1 auto;
 }
+.auth-link-desktop {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 2px;
+  padding: 4px 12px 0;
+  border: none;
+  border-radius: 0;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  height: 54px;
+}
+.auth-link-desktop:hover,
+.auth-link-desktop:focus-visible {
+  color: #e6e6e6;
+}
+
+.user-menu {
+  position: relative;
+  margin-right: 0;
+}
+.user-menu::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: -12px;
+  right: -12px;
+  height: 28px;
+  pointer-events: auto;
+}
+.user-menu-trigger {
+  border: none;
+  background: none;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  gap: 2px;
+  padding: 10px;
+}
+.user-menu-trigger:hover {
+  color: #e6e6e6;
+}
+.user-trigger-icon svg {
+  display: block;
+  width: 26px;
+  height: 26px;
+}
+
+.user-trigger-arrow {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+.user-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: auto;
+  width: auto;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  opacity: 0;
+  transform: translateY(0);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 90;
+}
+.user-menu-panel {
+  margin-top: 0;
+  background: #151515;
+  border: 1px solid #2c2c2c;
+  border-top: none;
+  width: 260px;
+}
+.user-menu:hover .user-menu-dropdown,
+.user-menu:focus-within .user-menu-dropdown {
+  opacity: 1;
+  pointer-events: all;
+}
+.user-menu.open .user-menu-dropdown {
+  opacity: 1;
+  pointer-events: all;
+}
+.user-menu-header {
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  padding: 14px 16px;
+  margin-bottom: 0;
+}
+.user-menu-name {
+  font-weight: 600;
+  color: #fff;
+}
+.user-menu-email {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.65);
+}
+.user-menu-link {
+  display: block;
+  text-decoration: none;
+  color: #f3f3f3;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.user-menu-link.logout-link {
+  width: 100%;
+  border: none;
+}
+.user-menu-link:last-child {
+  border-bottom: none;
+}
+.user-menu-link:hover {
+  background: #000;
+}
+.user-menu-link-disabled {
+  color: rgba(255,255,255,0.4);
+  cursor: default;
+}
+.user-menu-link-disabled:hover {
+  background: transparent;
+}
+.logout-link {
+  color: #f15a4a;
+}
 
 /* ---------- Мобилка ---------- */
 @media (max-width: 900px) {
@@ -87,6 +228,7 @@
   .nav-bar {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    justify-content: space-between;
   }
   .mobile-logo-center {
     flex: 1 1 auto;
@@ -114,6 +256,26 @@
     padding: 4px 0 4px 0;
   }
   .search-btn { color: #fff; }
+  .auth-link-mobile {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 2px;
+  padding: 4px 12px 0;
+  border: none;
+  border-radius: 0;
+  font-size: 0.95rem;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  height: 54px;
+  }
+  .mobile-user-menu {
+    margin-right: 8px;
+  }
+  .mobile-user-menu .user-menu-dropdown {
+    top: calc(100% + 4px);
+    right: 0;
+  }
 }
 
 /* --- Optionally, добавить плавное появление для header (если надо) --- */

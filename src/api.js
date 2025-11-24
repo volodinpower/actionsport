@@ -41,7 +41,32 @@ async function fetchWithTimeout(url, options = {}, ms = 15000) {
   }
 }
 
+async function extractError(res, fallback = "Request failed") {
+  try {
+    const payload = await res.json();
+    if (Array.isArray(payload?.detail)) {
+      return payload.detail.map((d) => d.msg || d.detail).filter(Boolean).join("; ") || fallback;
+    }
+    return payload?.detail || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // ========= AUTH (cookie-based) =========
+export async function register(email, password) {
+  const res = await fetchWithTimeout(apiUrl("/auth/register"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось зарегистрироваться"));
+  }
+  return await json(res);
+}
+
 export async function login(email, password) {
   const body = new URLSearchParams({ username: email, password });
   const res = await fetchWithTimeout(apiUrl("/auth/jwt/login"), {
@@ -72,6 +97,145 @@ export async function getMe() {
   const res = await fetchWithTimeout(apiUrl("/auth/me"), { credentials: "include" });
   if (!res.ok) return null;
   return await json(res);
+}
+
+export async function updateProfile(fields) {
+  const res = await fetchWithTimeout(apiUrl("/profile"), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fields),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось сохранить профиль"));
+  }
+  return await json(res);
+}
+
+export async function fetchAddresses() {
+  const res = await fetchWithTimeout(apiUrl("/profile/addresses"), { credentials: "include" });
+  ok(res);
+  return await json(res);
+}
+
+export async function createAddress(payload) {
+  const res = await fetchWithTimeout(apiUrl("/profile/addresses"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось добавить адрес"));
+  }
+  return await json(res);
+}
+
+export async function updateAddress(addressId, payload) {
+  const res = await fetchWithTimeout(apiUrl(`/profile/addresses/${addressId}`), {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось обновить адрес"));
+  }
+  return await json(res);
+}
+
+export async function deleteAddress(addressId) {
+  const res = await fetchWithTimeout(apiUrl(`/profile/addresses/${addressId}`), {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось удалить адрес"));
+  }
+  return await json(res);
+}
+
+export async function fetchFavorites() {
+  const res = await fetchWithTimeout(apiUrl("/favorites"), { credentials: "include" });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось получить список избранного"));
+  }
+  return await json(res);
+}
+
+export async function addFavorite(productId) {
+  const res = await fetchWithTimeout(apiUrl("/favorites"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ product_id: productId }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось добавить в избранное"));
+  }
+  return await json(res);
+}
+
+export async function removeFavorite(productId) {
+  const res = await fetchWithTimeout(apiUrl("/favorites"), {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ product_id: productId }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось удалить из избранного"));
+  }
+  return await json(res);
+}
+
+export async function requestVerify(email) {
+  const res = await fetchWithTimeout(apiUrl("/auth/request-verify-token"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось отправить письмо"));
+  }
+}
+
+export async function confirmEmail(token) {
+  const res = await fetchWithTimeout(apiUrl("/auth/verify"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось подтвердить e-mail"));
+  }
+  return await json(res);
+}
+
+export async function forgotPassword(email) {
+  const res = await fetchWithTimeout(apiUrl("/auth/forgot-password"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось отправить письмо"));
+  }
+}
+
+export async function resetPassword(token, password) {
+  const res = await fetchWithTimeout(apiUrl("/auth/reset-password"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось сменить пароль"));
+  }
 }
 
 // ========= PRODUCTS =========

@@ -69,7 +69,7 @@ export default function BrandsPage() {
             </button>
           ))}
           {brands.length === 0 && (
-            <p className="text-center text-neutral-500 col-span-full">Бренды не найдены</p>
+            <p className="text-center text-neutral-500 col-span-full">No brands found</p>
           )}
         </div>
       </div>

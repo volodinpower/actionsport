@@ -1,11 +1,15 @@
 import { Link } from "react-router-dom";
 import "./Breadcrumbs.css";
 
-export default function Breadcrumbs({ items, onBreadcrumbClick }) {
+export default function Breadcrumbs({ items, onBreadcrumbClick, marginBottom = 10 }) {
   if (!items || items.length < 2) return null;
 
   return (
-    <nav className="breadcrumbs-nav" aria-label="Breadcrumb">
+    <nav
+      className="breadcrumbs-nav"
+      aria-label="Breadcrumb"
+      style={{ marginBottom }}
+    >
       {items.map((item, idx) =>
         idx < items.length - 1 ? (
           <span key={`${item.label}-${idx}`}>

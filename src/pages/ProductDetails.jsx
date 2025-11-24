@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination } from "swiper/modules";
 import {
@@ -11,9 +11,20 @@ import {
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
+import { useAuth } from "../components/AuthProvider";
+import { useToast } from "../components/ToastProvider";
 import "./ProductDetails.css";
 import "swiper/css";
 import "swiper/css/pagination";
+
+const formatBreadcrumbLabel = (value) => {
+  if (!value) return "";
+  return value
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
 
 const THUMB_SCROLL_STEP = 78;
 const THUMB_HOVER_STEP = 8;
@@ -49,6 +60,8 @@ export default function ProductDetails() {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { user, isFavorite, addFavorite, removeFavorite } = useAuth();
+  const { showToast } = useToast();
 
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
@@ -75,7 +88,7 @@ export default function ProductDetails() {
         setError(null);
       })
       .catch((err) => {
-        setError(err.message || "Ошибка загрузки товара");
+        setError(err.message || "Failed to load product");
         setProduct(null);
       });
   }, [id]);
@@ -240,17 +253,84 @@ export default function ProductDetails() {
     }
   }, [mainIndex, isMobile, rawImages.length]);
 
+  const activeVariant = useMemo(() => {
+    if (!product) return null;
+    if (colorVariants.length > 0 && selectedColorId) {
+      const match = colorVariants.find(
+        (variant) => String(variant.id) === String(selectedColorId),
+      );
+      if (match) {
+        return {
+          ...match,
+          id: match.id || product.id,
+          name: match.name || product.name,
+          sitename: match.sitename || match.name || product.sitename || product.name,
+          color: match.color || product.color,
+          image_url: match.image_url || product.image_url,
+          price: match.price || product.price,
+          discount: match.discount ?? product.discount,
+          discount_price: match.discount_price ?? product.discount_price,
+          sizes: match.sizes || product.sizes,
+        };
+      }
+    }
+    return {
+      id: product.id,
+      name: product.name,
+      sitename: product.sitename || product.name,
+      color: product.color,
+      image_url: product.image_url,
+      price: product.price,
+      discount: product.discount,
+      discount_price: product.discount_price,
+      sizes: product.sizes,
+    };
+  }, [product, colorVariants, selectedColorId]);
+
+  const displayName = activeVariant?.sitename || product?.sitename || product?.name || "";
+  const currentColor = activeVariant?.color || product?.color || "";
+  const favoriteProductPayload = useMemo(() => {
+    if (!activeVariant) return null;
+    const normalize = (value) => {
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string") {
+        return value.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+      return [];
+    };
+    return {
+      ...activeVariant,
+      sizes: normalize(activeVariant.sizes),
+    };
+  }, [activeVariant]);
+
   if (error)
-    return <div style={{ padding: 32, textAlign: "center", color: "red" }}>Ошибка: {error}</div>;
+    return <div style={{ padding: 32, textAlign: "center", color: "red" }}>Error: {error}</div>;
   if (!product)
     return <div style={{ padding: 32, textAlign: "center" }}>Loading...</div>;
 
-  const displayName = product?.sitename || product?.name || "";
+  const normalizeSizes = (value) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+      return value.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+    return [];
+  };
+  const variantSizes = normalizeSizes(activeVariant?.sizes);
+  const fallbackSizes = normalizeSizes(product?.sizes);
+  const currentSizes = variantSizes.length ? variantSizes : fallbackSizes;
 
-  const breadcrumbs = [
-    { label: "Main", query: "" },
-    { label: displayName, query: "" },
-  ];
+  const favoriteActive = Boolean(
+    user &&
+      activeVariant &&
+      isFavorite(activeVariant.name || "", activeVariant.color || ""),
+  );
+
+  const categoryLabel = formatBreadcrumbLabel(product?.category || product?.category_key);
+  const subcategoryLabel = formatBreadcrumbLabel(product?.subcategory_key);
+  const breadcrumbs = [{ label: "Main", key: "home" }];
+  if (subcategoryLabel) breadcrumbs.push({ label: subcategoryLabel, key: "subcategory" });
+  breadcrumbs.push({ label: displayName, key: "product" });
 
   const handleHeaderSearch = (query) => {
     navigate(query ? "/?search=" + encodeURIComponent(query) : "/");
@@ -263,6 +343,22 @@ export default function ProductDetails() {
     navigate({ pathname: "/", search: params.toString() });
   };
 
+  const handleFavoriteToggle = async () => {
+    if (!favoriteProductPayload || !user) return;
+    try {
+      if (favoriteActive) {
+        await removeFavorite(favoriteProductPayload);
+        showToast("Removed from favorites");
+      } else {
+        await addFavorite(favoriteProductPayload);
+        showToast("Added to favorites");
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("Favorite toggle failed", err);
+    }
+  };
+
   const handleGoBack = () => {
     if (location.state?.from && location.state.from !== "/") {
       navigate(location.state.from);
@@ -270,6 +366,27 @@ export default function ProductDetails() {
       navigate(-1);
     } else {
       navigate("/", { replace: true });
+    }
+  };
+
+  const handleBreadcrumbClick = (idx) => {
+    const target = breadcrumbs[idx];
+    if (!target) return;
+    if (target.key === "home") {
+      handleGoBack();
+      return;
+    }
+  if (target.key === "category" && product?.category_key) {
+    const params = new URLSearchParams();
+    params.set("category", product.category_key);
+    navigate({ pathname: "/", search: params.toString() });
+    return;
+  }
+    if (target.key === "subcategory") {
+      const params = new URLSearchParams();
+      if (product?.category_key) params.set("category", product.category_key);
+      if (product?.subcategory_key) params.set("subcategory", product.subcategory_key);
+      navigate({ pathname: "/", search: params.toString() });
     }
   };
 
@@ -322,9 +439,11 @@ export default function ProductDetails() {
   };
 
   function renderPrice() {
-    const price = Number(product.price);
-    const discount = Number(product.discount);
-    let discountPrice = Number(product.discount_price);
+    const price = Number(activeVariant?.price ?? product.price);
+    const discount = Number(activeVariant?.discount ?? product.discount);
+    let discountPrice = Number(
+      activeVariant?.discount_price ?? product.discount_price,
+    );
     if (discount > 0 && (!discountPrice || discountPrice === 0)) {
       discountPrice = Math.round(price * (1 - discount / 100));
     }
@@ -365,13 +484,13 @@ export default function ProductDetails() {
   const colorBlock =
     colorVariants.length <= 1 ? (
       <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
-        <b>color:</b> {product.color}
+        <b>color:</b> {currentColor || "—"}
       </div>
     ) : (
       <div
         style={{ marginBottom: 4, color: "#666", fontSize: 14, gap: 10 }}
       >
-        <b>color:</b> {product.color}
+        <b>color:</b> {currentColor || "—"}
         <div
           style={{
             display: "flex",
@@ -449,8 +568,8 @@ export default function ProductDetails() {
   const sizeBlock = (
     <div style={{ marginBottom: 4, color: "#666", fontSize: 14 }}>
       <b>size:</b>{" "}
-      {Array.isArray(product.sizes) && product.sizes.length > 0
-        ? product.sizes.join(", ")
+      {Array.isArray(currentSizes) && currentSizes.length > 0
+        ? currentSizes.join(", ")
         : "—"}
     </div>
   );
@@ -459,28 +578,41 @@ export default function ProductDetails() {
     if (isMobile) {
       return (
         <div className="main-image-mobile-wrapper">
-          <Swiper
-            modules={[Pagination]}
-            pagination={{ clickable: true }}
-            onSlideChange={(swiper) => setMainIndex(swiper.activeIndex)}
-            initialSlide={mainIndex}
-            className="main-image-mobile"
-          >
-            {rawImages.map((imgUrl, idx) => (
-              <SwiperSlide key={`mobile-${idx}`}>
-                <img
-                  src={imgUrl}
-                  alt={`${displayName} ${idx + 1}`}
-                  className="main-image-square"
-                  draggable={false}
-                  onClick={() => {
-                    setModalIndex(idx);
-                    setShowModal(true);
-                  }}
-                />
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          <div style={{ position: "relative" }}>
+            {user && favoriteProductPayload && (
+              <button
+                className={`favorite-btn ${favoriteActive ? "active" : ""}`}
+                onClick={handleFavoriteToggle}
+                aria-label={favoriteActive ? "Remove from favorites" : "Add to favorites"}
+                title={favoriteActive ? "Remove from favorites" : "Add to favorites"}
+                style={{ position: "absolute", top: 12, right: 12, zIndex: 5 }}
+              >
+                {favoriteActive ? "♥" : "♡"}
+              </button>
+            )}
+            <Swiper
+              modules={[Pagination]}
+              pagination={{ clickable: true }}
+              onSlideChange={(swiper) => setMainIndex(swiper.activeIndex)}
+              initialSlide={mainIndex}
+              className="main-image-mobile"
+            >
+              {rawImages.map((imgUrl, idx) => (
+                <SwiperSlide key={`mobile-${idx}`}>
+                  <img
+                    src={imgUrl}
+                    alt={`${displayName} ${idx + 1}`}
+                    className="main-image-square"
+                    draggable={false}
+                    onClick={() => {
+                      setModalIndex(idx);
+                      setShowModal(true);
+                    }}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
         </div>
       );
     }
@@ -494,7 +626,7 @@ export default function ProductDetails() {
               <button
                 type="button"
                 className="thumbnail-arrow thumb-arrow-up"
-                aria-label="Предыдущие изображения"
+                aria-label="Previous images"
                 onClick={() => scrollThumbnails("up")}
                 onMouseEnter={() => canScrollUp && startHoverScroll("up")}
                 onMouseLeave={stopHoverScroll}
@@ -507,7 +639,7 @@ export default function ProductDetails() {
                   <img
                     key={`thumb-${idx}`}
                     src={imgUrl}
-                    alt={`Фото ${idx + 1}`}
+                    alt={`Photo ${idx + 1}`}
                     data-thumb-index={idx}
                     className={
                       "thumbnail-square vertical" + (idx === mainIndex ? " selected" : "")
@@ -521,7 +653,7 @@ export default function ProductDetails() {
               <button
                 type="button"
                 className="thumbnail-arrow thumb-arrow-down"
-                aria-label="Следующие изображения"
+                aria-label="Next images"
                 onClick={() => scrollThumbnails("down")}
                 onMouseEnter={() => canScrollDown && startHoverScroll("down")}
                 onMouseLeave={stopHoverScroll}
@@ -533,7 +665,18 @@ export default function ProductDetails() {
           ) : null}
         </div>
         <div className="main-image-desktop-wrapper">
-          <div className="main-image-desktop-inner">
+          <div className="main-image-desktop-inner" style={{ position: "relative" }}>
+            {user && favoriteProductPayload && (
+              <button
+                className={`favorite-btn ${favoriteActive ? "active" : ""}`}
+                onClick={handleFavoriteToggle}
+                aria-label={favoriteActive ? "Remove from favorites" : "Add to favorites"}
+                title={favoriteActive ? "Remove from favorites" : "Add to favorites"}
+                style={{ position: "absolute", top: 12, right: 12, zIndex: 5 }}
+              >
+                {favoriteActive ? "♥" : "♡"}
+              </button>
+            )}
             <img
               src={rawImages[mainIndex]}
               alt={`${displayName} ${mainIndex + 1}`}
@@ -560,9 +703,9 @@ export default function ProductDetails() {
             e.stopPropagation();
             setShowModal(false);
           }}
-        >
-          ×
-        </button>
+          >
+            ×
+          </button>
         {rawImages.length > 1 && (
           <>
             <button
@@ -589,7 +732,7 @@ export default function ProductDetails() {
         )}
         <img
           src={rawImages[modalIndex]}
-          alt={`${displayName} фото ${modalIndex + 1}`}
+          alt={`${displayName} photo ${modalIndex + 1}`}
           className="modal-image"
           onClick={(e) => e.stopPropagation()}
         />
@@ -599,7 +742,7 @@ export default function ProductDetails() {
               <img
                 key={idx}
                 src={imgUrl}
-                alt={`миниатюра ${idx + 1}`}
+                alt={`thumbnail ${idx + 1}`}
                 className={
                   "modal-thumbnail" + (idx === modalIndex ? " selected" : "")
                 }
@@ -629,13 +772,12 @@ export default function ProductDetails() {
         breadcrumbs={breadcrumbs}
         isHome={false}
       />
-      <div style={{ width: "100%", margin: "auto", paddingTop: 8 }}>
-        <Breadcrumbs
-          items={breadcrumbs}
-          onBreadcrumbClick={(idx) => {
-            if (idx === 0) handleGoBack();
-          }}
-        />
+      <Breadcrumbs
+        items={breadcrumbs}
+        onBreadcrumbClick={handleBreadcrumbClick}
+        marginBottom={0}
+      />
+      <div style={{ width: "100%", margin: "auto" }}>
         <div
           style={{
             backgroundColor: "white",
@@ -644,7 +786,7 @@ export default function ProductDetails() {
             display: "flex",
             flexDirection: isMobile ? "column" : "row",
             gap: isMobile ? 0 : 16,
-            marginTop: 8,
+            marginTop: 0,
             width: "100%",
             alignItems: isMobile ? "stretch" : "flex-start",
           }}
@@ -704,12 +846,8 @@ export default function ProductDetails() {
           </div>
         </div>
       </div>
-      {!isMobile &&
-        brandInfo &&
-        brandInfo.image_url &&
-        brandInfo.name &&
-        brandInfo.description && (
-        <div className="details-grey-section">
+      {!isMobile && brandInfo?.image_url && brandInfo?.name && brandInfo?.description ? (
+        <div className="details-grey-section" style={{ background: "#dedede" }}>
           <div className="brand-info-panel">
             {brandInfo?.image_url && (
               <div className="brand-info-logo-wrapper">
@@ -748,6 +886,8 @@ export default function ProductDetails() {
             </div>
           </div>
         </div>
+      ) : (
+        <div style={{ background: "#dedede", height: 42 }} />
       )}
       {modal}
       <Footer />

@@ -1,10 +1,20 @@
 import { Navigate } from "react-router-dom";
+import { useAuth } from "./AuthProvider";
 
-export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("admin_token");
-  if (!token) {
-    // Нет токена — редирект на логин
-    return <Navigate to="/admin" replace />;
+export default function ProtectedRoute({ children, requireSuperuser = false }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return null;
   }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (requireSuperuser && !user.is_superuser) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }

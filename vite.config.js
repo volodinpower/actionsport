@@ -13,7 +13,6 @@ export default defineConfig(({ mode }) => {
         '/popular-products': 'http://localhost:8000',
         '/random-products': 'http://localhost:8000',
         '/products': 'http://localhost:8000',
-        '/admin': 'http://localhost:8000',
         '/api': 'http://localhost:8000',
         '/brands': 'http://localhost:8000',
         '/banners': 'http://localhost:8000',

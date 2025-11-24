@@ -14,8 +14,8 @@ export default function ScrollTopButton({ show }) {
             transition={{ type: "spring", stiffness: 270, damping: 22 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="bg-neutral-900/95 hover:bg-neutral-800 text-white shadow-xl rounded-full w-12 h-12 flex items-center justify-center border border-transparent active:scale-95 transition-all pointer-events-auto"
-            aria-label="Наверх"
-            title="Наверх"
+            aria-label="Back to top"
+            title="Back to top"
           >
             <ArrowUp size={28} />
           </motion.button>
