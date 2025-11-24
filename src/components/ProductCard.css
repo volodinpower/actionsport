@@ -195,6 +195,14 @@
     flex: none;
     position: relative;
   }
+  .favorite-btn {
+    top: 4px;
+    right: 4px;
+  }
+  .favorite-btn .favorite-heart {
+    width: 20px;
+    height: 20px;
+  }
   .price-block {
     position: absolute;
     left: 0;
@@ -254,4 +262,12 @@
   .searchbar-modal-inner {
     padding: 7px 3vw 9px 3vw;
   }
+}
+.favorite-btn .favorite-heart {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.favorite-btn .favorite-heart path {
+  transition: fill 0.15s ease, stroke 0.15s ease;
 }
