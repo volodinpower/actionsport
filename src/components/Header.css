@@ -245,7 +245,7 @@
   }
   .mobile-right-slot {
     justify-content: flex-end;
-    gap: 10px;
+    gap: 6px;
   }
   .mobile-logo-center {
     flex: 0 0 auto;
@@ -275,20 +275,19 @@
   }
   .search-btn { color: #fff; }
   .auth-link-mobile {
-  color: #fff;
-  text-decoration: none;
-  margin-right: 2px;
-  padding: 4px 12px 0;
-  border: none;
-  border-radius: 0;
-  font-size: 0.95rem;
-  transition: color 0.2s ease;
-  display: flex;
-  align-items: center;
-  height: 54px;
+    color: #fff;
+    text-decoration: none;
+    padding: 4px 12px 0;
+    border: none;
+    border-radius: 0;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    height: 54px;
   }
   .mobile-user-menu {
-    margin-right: 8px;
+    margin-right: 0;
   }
   .mobile-user-menu .user-menu-dropdown {
     top: calc(100% + 4px);
