@@ -56,23 +56,32 @@
   top: 10px;
   right: 10px;
   border: none;
-  background: transparent;
-  color: rgba(0, 0, 0, 0.35);
-  font-size: 16px;
-  line-height: 0.8;
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(0, 0, 0, 0.45);
   cursor: pointer;
   z-index: 2;
-  transition: transform 0.12s ease, color 0.12s ease;
-  padding: 2px;
-  transform: scale(1.15, 1);
-  transform-origin: center;
+  transition: transform 0.12s ease, color 0.12s ease, background 0.12s ease;
+  padding: 0;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .favorite-btn:hover {
-  transform: scale(1.25, 1.05);
-  color: rgba(0, 0, 0, 0.6);
+  transform: scale(1.08);
+  color: rgba(0, 0, 0, 0.65);
 }
 .favorite-btn.active {
   color: #ff4d6d;
+}
+.favorite-btn .favorite-heart {
+  width: 18px;
+  height: 18px;
+}
+.favorite-btn .favorite-heart path {
+  transition: fill 0.15s ease, stroke 0.15s ease;
 }
 
 .no-image {

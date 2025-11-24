@@ -4,6 +4,7 @@ import "swiper/css";
 import "./ProductCard.css";
 import { useAuth } from "./AuthProvider";
 import { useToast } from "./ToastProvider";
+import FavoriteIcon from "./FavoriteIcon";
 
 export default function ProductCard({ product, onClick }) {
   const [imgError, setImgError] = useState(false);
@@ -126,7 +127,7 @@ export default function ProductCard({ product, onClick }) {
             aria-label={favoriteActive ? "Remove from favorites" : "Add to favorites"}
             title={favoriteActive ? "Remove from favorites" : "Add to favorites"}
           >
-            {favoriteActive ? "♥" : "♡"}
+            <FavoriteIcon active={favoriteActive} />
           </button>
         )}
         <div className="product-content">

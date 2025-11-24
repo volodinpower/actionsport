@@ -13,6 +13,7 @@ import Footer from "../components/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import { useAuth } from "../components/AuthProvider";
 import { useToast } from "../components/ToastProvider";
+import FavoriteIcon from "../components/FavoriteIcon";
 import "./ProductDetails.css";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -587,7 +588,7 @@ export default function ProductDetails() {
                 title={favoriteActive ? "Remove from favorites" : "Add to favorites"}
                 style={{ position: "absolute", top: 12, right: 12, zIndex: 5 }}
               >
-                {favoriteActive ? "♥" : "♡"}
+                <FavoriteIcon active={favoriteActive} />
               </button>
             )}
             <Swiper
@@ -674,7 +675,7 @@ export default function ProductDetails() {
                 title={favoriteActive ? "Remove from favorites" : "Add to favorites"}
                 style={{ position: "absolute", top: 12, right: 12, zIndex: 5 }}
               >
-                {favoriteActive ? "♥" : "♡"}
+                <FavoriteIcon active={favoriteActive} />
               </button>
             )}
             <img
