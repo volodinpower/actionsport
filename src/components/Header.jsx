@@ -54,67 +54,71 @@ export default function Header({
   if (isMobile) {
     return (
       <header className="main-header">
-        <div className="nav-bar">
-          <button
-            aria-label="Open menu"
-            onClick={() => setMobileMenuOpen(true)}
-            className="burger-btn"
-          >
-            &#9776;
-          </button>
-        <div className="mobile-logo-center">
-          <a href="/">
-            <img src="/logo.png" alt="Logo" className="logo-mobile" />
-          </a>
-        </div>
-        {user ? (
-          <div className={`user-menu mobile-user-menu${mobileUserMenuOpen ? " open" : ""}`}>
+        <div className="nav-bar nav-bar-mobile">
+          <div className="mobile-left-slot">
             <button
-              className="user-menu-trigger"
-              aria-haspopup="true"
-              onClick={() => setMobileUserMenuOpen((prev) => !prev)}
+              aria-label="Open menu"
+              onClick={() => setMobileMenuOpen(true)}
+              className="burger-btn"
             >
-              <span className="user-trigger-icon" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Z" />
-                  <path d="M5 21v-1a6.99 6.99 0 0 1 7-7 6.99 6.99 0 0 1 7 7v1" />
-                </svg>
-              </span>
-              <span className="user-trigger-arrow" aria-hidden="true">▾</span>
+              &#9776;
             </button>
-            <div className="user-menu-dropdown" style={{ display: mobileUserMenuOpen ? "block" : "none" }}>
-              <div className="user-menu-panel">
-                <div className="user-menu-header">
-                  <div className="user-menu-name">{[user.name, user.surname].filter(Boolean).join(" ") || user.email}</div>
-                  <div className="user-menu-email">{user.email}</div>
-                </div>
-                <a onClick={() => setMobileUserMenuOpen(false)} href="/account" className="user-menu-link">Account</a>
-                <a onClick={() => setMobileUserMenuOpen(false)} href="/favorites" className="user-menu-link">Favorites</a>
-                <button type="button" className="user-menu-link logout-link" onClick={() => setShowLogoutConfirm(true)}>Log out</button>
-              </div>
-            </div>
           </div>
-        ) : (
-          <a className="auth-link-mobile" href="/auth">Sign in</a>
-        )}
-          <button
-            className="search-btn search-btn-mobile"
-            aria-label="Toggle search"
-            onClick={() => setShowSearch((prev) => !prev)}
-          >
-            <svg width="24" height="24" fill="none">
-              <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2" />
-              <line
-                x1="16"
-                y1="16"
-                x2="22"
-                y2="22"
-                stroke="#fff"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
+          <div className="mobile-logo-center">
+            <a href="/">
+              <img src="/logo.png" alt="Logo" className="logo-mobile" />
+            </a>
+          </div>
+          <div className="mobile-right-slot">
+            {user ? (
+              <div className={`user-menu mobile-user-menu${mobileUserMenuOpen ? " open" : ""}`}>
+                <button
+                  className="user-menu-trigger"
+                  aria-haspopup="true"
+                  onClick={() => setMobileUserMenuOpen((prev) => !prev)}
+                >
+                  <span className="user-trigger-icon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Z" />
+                      <path d="M5 21v-1a6.99 6.99 0 0 1 7-7 6.99 6.99 0 0 1 7 7v1" />
+                    </svg>
+                  </span>
+                  <span className="user-trigger-arrow" aria-hidden="true">▾</span>
+                </button>
+                <div className="user-menu-dropdown" style={{ display: mobileUserMenuOpen ? "block" : "none" }}>
+                  <div className="user-menu-panel">
+                    <div className="user-menu-header">
+                      <div className="user-menu-name">{[user.name, user.surname].filter(Boolean).join(" ") || user.email}</div>
+                      <div className="user-menu-email">{user.email}</div>
+                    </div>
+                    <a onClick={() => setMobileUserMenuOpen(false)} href="/account" className="user-menu-link">Account</a>
+                    <a onClick={() => setMobileUserMenuOpen(false)} href="/favorites" className="user-menu-link">Favorites</a>
+                    <button type="button" className="user-menu-link logout-link" onClick={() => setShowLogoutConfirm(true)}>Log out</button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <a className="auth-link-mobile" href="/auth">Sign in</a>
+            )}
+            <button
+              className="search-btn search-btn-mobile"
+              aria-label="Toggle search"
+              onClick={() => setShowSearch((prev) => !prev)}
+            >
+              <svg width="24" height="24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="#fff" strokeWidth="2" />
+                <line
+                  x1="16"
+                  y1="16"
+                  x2="22"
+                  y2="22"
+                  stroke="#fff"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
         {mobileMenuOpen && (
           <NavMenu

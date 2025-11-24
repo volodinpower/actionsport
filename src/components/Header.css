@@ -230,8 +230,26 @@
     padding-right: 0 !important;
     justify-content: space-between;
   }
+  .nav-bar-mobile {
+    display: flex;
+    align-items: center;
+  }
+  .mobile-left-slot,
+  .mobile-right-slot {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+  }
+  .mobile-left-slot {
+    justify-content: flex-start;
+  }
+  .mobile-right-slot {
+    justify-content: flex-end;
+    gap: 10px;
+  }
   .mobile-logo-center {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+    min-width: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
