@@ -32,7 +32,7 @@ export default function AuthPage() {
         navigate("/");
       } else {
         await register(email, password);
-        showToast("Account registered. Please verify via email.", 3500);
+        showToast("Account registered", 3500);
         navigate("/");
       }
     } catch (err) {
