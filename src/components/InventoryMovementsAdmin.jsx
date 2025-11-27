@@ -10,6 +10,14 @@ function formatDate(value) {
   }
 }
 
+function formatDocDate(value) {
+  if (!value) return "—";
+  const safe = value.replace("Z", "");
+  const [datePart, timePart] = safe.split("T");
+  if (!timePart) return datePart || safe;
+  return `${datePart} ${timePart.slice(0, 8)}`;
+}
+
 export default function InventoryMovementsAdmin() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -105,7 +113,7 @@ export default function InventoryMovementsAdmin() {
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px solid #f2f2f2" }}>
                 <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>
-                  <div>{formatDate(item.doc_date)}</div>
+                  <div>{formatDocDate(item.doc_date)}</div>
                   <div style={{ color: "#999", fontSize: 12 }}>Синк: {formatDate(item.created_at)}</div>
                 </td>
                 <td style={{ padding: "8px 6px" }}>
