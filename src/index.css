@@ -168,11 +168,14 @@ body {
   gap: 16px;
 }
 .auth-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: block;
   font-size: 0.9rem;
   position: relative;
+  margin-bottom: 8px;
+}
+.auth-form label span {
+  display: block;
+  margin-bottom: 6px;
 }
 .auth-form input {
   height: 46px;
@@ -183,14 +186,16 @@ body {
   background: #fff;
   color: #111;
   font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
 }
 .auth-eye {
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: none;
   background: transparent;

@@ -82,7 +82,7 @@ export default function AuthPage() {
             <input name="email" type="email" required autoComplete="username" />
           </label>
           <label style={{ position: "relative" }}>
-            Password
+            <span>Password</span>
             <input
               name="password"
               type={showPassword ? "text" : "password"}
@@ -103,7 +103,7 @@ export default function AuthPage() {
           </label>
           {mode === "register" && (
             <label style={{ position: "relative" }}>
-              Confirm password
+              <span>Confirm password</span>
               <input
                 name="password_confirm"
                 type={showPasswordConfirm ? "text" : "password"}
