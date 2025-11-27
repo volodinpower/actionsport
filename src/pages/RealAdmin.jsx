@@ -298,15 +298,6 @@ export default function RealAdmin() {
   const displayProducts = onlyReserve ? products.filter((p) => !!p.reserved) : products;
   return (
     <div className="admin-root">
-      <div className="admin-logo-row">
-        <button
-          className="admin-logo-btn"
-          onClick={() => navigate("/")}
-          aria-label="Go to home"
-        >
-          <img src="/logo.png" alt="ActionSport" className="admin-logo-img" />
-        </button>
-      </div>
       <h2 className="admin-title">Админка: загрузка каталога и картинок товаров</h2>
 
       <div className="admin-info">
