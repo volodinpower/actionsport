@@ -18,6 +18,13 @@ function formatDocDate(value) {
   return `${datePart} ${timePart.slice(0, 8)}`;
 }
 
+function translateDocType(docType) {
+  if (!docType) return "—";
+  if (docType.toLowerCase() === "sale") return "Реализация";
+  if (docType.toLowerCase() === "return") return "Возврат";
+  return docType;
+}
+
 export default function InventoryMovementsAdmin() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -111,7 +118,7 @@ export default function InventoryMovementsAdmin() {
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px solid #f2f2f2" }}>
                 <td style={{ padding: "8px 6px", minWidth: 180 }}>
-                  <div style={{ fontWeight: 600 }}>{item.doc_type || "—"}</div>
+                  <div style={{ fontWeight: 600 }}>{translateDocType(item.doc_type)}</div>
                   <div>{formatDocDate(item.doc_date)}</div>
                   {item.doc_numbers?.length > 0 && (
                     <div style={{ color: "#555", fontSize: 12 }}>№ {item.doc_numbers.join(", ")}</div>
@@ -119,9 +126,6 @@ export default function InventoryMovementsAdmin() {
                   <div style={{ color: "#999", fontSize: 12 }}>
                     Синк: {formatDate(item.synced_at || item.created_at)}
                   </div>
-                  {item.doc_isn && (
-                    <div style={{ color: "#bbb", fontSize: 11 }}>ISN: {item.doc_isn}</div>
-                  )}
                   {item.status === "voided" && (
                     <div style={{ marginTop: 4, fontSize: 12, color: "#a00" }}>
                       Отменён {formatDate(item.voided_at)}
@@ -132,7 +136,10 @@ export default function InventoryMovementsAdmin() {
                   <div style={{ fontWeight: 600 }}>{item.product_name || item.product_id || "—"}</div>
                   <div style={{ color: "#888", fontSize: 12 }}>{item.barcode || item.item_code || "—"}</div>
                 </td>
-                <td style={{ padding: "8px 6px" }}>{item.product_color || "—"}</td>
+                <td style={{ padding: "8px 6px" }}>
+                  {item.product_color || "—"}
+                  {item.product_size ? ` / ${item.product_size}` : ""}
+                </td>
                 <td style={{ padding: "8px 6px", fontWeight: 600, color: item.quantity_delta < 0 ? "#d00" : "#0a0" }}>
                   {item.quantity_delta > 0 ? `+${item.quantity_delta}` : item.quantity_delta}
                 </td>

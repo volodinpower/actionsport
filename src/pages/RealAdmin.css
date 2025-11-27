@@ -72,19 +72,27 @@
   gap: 10px;
 }
 
+.admin-table-row > div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-imgs {
   display: flex;
   gap: 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   overflow: hidden;
+  max-width: 100%;
 }
 
 .admin-img {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   border-radius: 8px;
   border: 1px solid #ccc;
   object-fit: cover;
+  flex: 0 0 auto;
 }
 
 .admin-img-label {
