@@ -34,6 +34,14 @@ function translateDocType(docType) {
   return docType;
 }
 
+function dayRange(value) {
+  if (!value) return { start: "", end: "" };
+  return {
+    start: `${value}T00:00`,
+    end: `${value}T23:59:59`,
+  };
+}
+
 export default function InventoryMovementsAdmin() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -41,6 +49,7 @@ export default function InventoryMovementsAdmin() {
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [selectedDateOption, setSelectedDateOption] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -70,6 +79,17 @@ export default function InventoryMovementsAdmin() {
     return () => { cancelled = true; };
   }, [search, startDate, endDate]);
 
+  const availableDates = React.useMemo(() => {
+    const set = new Set();
+    items.forEach((i) => {
+      if (i.doc_date) {
+        const dateOnly = i.doc_date.split("T")[0];
+        set.add(dateOnly);
+      }
+    });
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [items]);
+
   function handleSubmit(e) {
     e.preventDefault();
     setSearch(searchInput.trim());
@@ -80,7 +100,10 @@ export default function InventoryMovementsAdmin() {
       <header style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: 20 }}>История продаж и возвратов</h2>
         <span style={{ color: "#999", fontSize: 13 }}>Всего записей: {total}</span>
-        <form onSubmit={handleSubmit} style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}
+        >
           <input
             type="text"
             placeholder="Поиск по товару, цвету, штрихкоду или документу"
@@ -93,16 +116,40 @@ export default function InventoryMovementsAdmin() {
               border: "1px solid #ddd",
             }}
           />
+          <select
+            value={selectedDateOption}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedDateOption(val);
+              const { start, end } = dayRange(val);
+              setStartDate(start);
+              setEndDate(end);
+            }}
+            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd", minWidth: 180 }}
+          >
+            <option value="">Все даты</option>
+            {availableDates.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
           <input
             type="datetime-local"
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={(e) => {
+              setSelectedDateOption("");
+              setStartDate(e.target.value);
+            }}
             style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd" }}
           />
           <input
             type="datetime-local"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={(e) => {
+              setSelectedDateOption("");
+              setEndDate(e.target.value);
+            }}
             style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd" }}
           />
           <button
