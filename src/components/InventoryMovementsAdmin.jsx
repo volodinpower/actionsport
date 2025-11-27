@@ -92,19 +92,18 @@ export default function InventoryMovementsAdmin() {
 
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-          <thead>
+         <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
               <th style={{ padding: "8px 6px" }}>Документ</th>
               <th style={{ padding: "8px 6px" }}>Товар</th>
               <th style={{ padding: "8px 6px" }}>Цвет/Размер</th>
               <th style={{ padding: "8px 6px" }}>Δ кол-во</th>
-              <th style={{ padding: "8px 6px" }}>Номера документов</th>
             </tr>
-          </thead>
+         </thead>
           <tbody>
             {items.length === 0 && !loading && (
               <tr>
-                <td colSpan={5} style={{ padding: 20, textAlign: "center", color: "#888" }}>
+                <td colSpan={4} style={{ padding: 20, textAlign: "center", color: "#888" }}>
                   Нет записей
                 </td>
               </tr>
@@ -114,6 +113,9 @@ export default function InventoryMovementsAdmin() {
                 <td style={{ padding: "8px 6px" }}>
                   <div style={{ fontWeight: 600 }}>{item.doc_type || "—"}</div>
                   <div>{formatDocDate(item.doc_date)}</div>
+                  {item.doc_numbers?.length > 0 && (
+                    <div style={{ color: "#555", fontSize: 12 }}>№ {item.doc_numbers.join(", ")}</div>
+                  )}
                   <div style={{ color: "#999", fontSize: 12 }}>Синк: {formatDate(item.created_at)}</div>
                 </td>
                 <td style={{ padding: "8px 6px" }}>
@@ -124,9 +126,7 @@ export default function InventoryMovementsAdmin() {
                 <td style={{ padding: "8px 6px", fontWeight: 600, color: item.quantity_delta < 0 ? "#d00" : "#0a0" }}>
                   {item.quantity_delta > 0 ? `+${item.quantity_delta}` : item.quantity_delta}
                 </td>
-                <td style={{ padding: "8px 6px" }}>
-                  {(item.doc_numbers || []).length > 0 ? item.doc_numbers.join(", ") : "—"}
-                </td>
+                {/* Пятый столбец убран */}
               </tr>
             ))}
           </tbody>
