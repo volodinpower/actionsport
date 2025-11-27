@@ -86,7 +86,7 @@ export default function InventoryMovementsAdmin() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
-              <th style={{ padding: "8px 6px" }}>Дата</th>
+              <th style={{ padding: "8px 6px" }}>Дата документа</th>
               <th style={{ padding: "8px 6px" }}>Товар</th>
               <th style={{ padding: "8px 6px" }}>Цвет/Размер</th>
               <th style={{ padding: "8px 6px" }}>Δ кол-во</th>
@@ -104,7 +104,10 @@ export default function InventoryMovementsAdmin() {
             )}
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px solid #f2f2f2" }}>
-                <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>{formatDate(item.created_at)}</td>
+                <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>
+                  <div>{formatDate(item.doc_date)}</div>
+                  <div style={{ color: "#999", fontSize: 12 }}>Синк: {formatDate(item.created_at)}</div>
+                </td>
                 <td style={{ padding: "8px 6px" }}>
                   <div style={{ fontWeight: 600 }}>{item.product_name || item.product_id || "—"}</div>
                   <div style={{ color: "#888", fontSize: 12 }}>{item.barcode || item.item_code || "—"}</div>
