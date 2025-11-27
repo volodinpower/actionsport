@@ -134,24 +134,6 @@ export default function InventoryMovementsAdmin() {
               </option>
             ))}
           </select>
-          <input
-            type="datetime-local"
-            value={startDate}
-            onChange={(e) => {
-              setSelectedDateOption("");
-              setStartDate(e.target.value);
-            }}
-            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd" }}
-          />
-          <input
-            type="datetime-local"
-            value={endDate}
-            onChange={(e) => {
-              setSelectedDateOption("");
-              setEndDate(e.target.value);
-            }}
-            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd" }}
-          />
           <button
             type="submit"
             style={{
