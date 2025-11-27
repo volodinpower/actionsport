@@ -192,18 +192,17 @@ body {
 .auth-eye {
   position: absolute;
   right: 12px;
-  top: 0;
-  bottom: 0;
-  margin: auto 0;
-  width: 28px;
-  height: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
   background: transparent;
   border-radius: 50%;
   cursor: pointer;
   color: #3a3a3a;
-  line-height: 1;
+  line-height: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
