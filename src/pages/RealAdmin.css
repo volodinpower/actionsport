@@ -7,6 +7,23 @@
   color-scheme: light;
 }
 
+.admin-logo-row {
+  display: flex;
+  justify-content: flex-start;
+  padding: 12px 0 4px;
+}
+.admin-logo-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.admin-logo-img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
 .admin-title {
   margin-bottom: 24px;
 }
