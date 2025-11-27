@@ -94,25 +94,25 @@ export default function InventoryMovementsAdmin() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
-              <th style={{ padding: "8px 6px" }}>Дата документа</th>
+              <th style={{ padding: "8px 6px" }}>Документ</th>
               <th style={{ padding: "8px 6px" }}>Товар</th>
               <th style={{ padding: "8px 6px" }}>Цвет/Размер</th>
               <th style={{ padding: "8px 6px" }}>Δ кол-во</th>
-              <th style={{ padding: "8px 6px" }}>Документы</th>
-              <th style={{ padding: "8px 6px" }}>Тип</th>
+              <th style={{ padding: "8px 6px" }}>Номера документов</th>
             </tr>
           </thead>
           <tbody>
             {items.length === 0 && !loading && (
               <tr>
-                <td colSpan={6} style={{ padding: 20, textAlign: "center", color: "#888" }}>
+                <td colSpan={5} style={{ padding: 20, textAlign: "center", color: "#888" }}>
                   Нет записей
                 </td>
               </tr>
             )}
             {items.map((item) => (
               <tr key={item.id} style={{ borderBottom: "1px solid #f2f2f2" }}>
-                <td style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>
+                <td style={{ padding: "8px 6px" }}>
+                  <div style={{ fontWeight: 600 }}>{item.doc_type || "—"}</div>
                   <div>{formatDocDate(item.doc_date)}</div>
                   <div style={{ color: "#999", fontSize: 12 }}>Синк: {formatDate(item.created_at)}</div>
                 </td>
@@ -126,12 +126,6 @@ export default function InventoryMovementsAdmin() {
                 </td>
                 <td style={{ padding: "8px 6px" }}>
                   {(item.doc_numbers || []).length > 0 ? item.doc_numbers.join(", ") : "—"}
-                </td>
-                <td style={{ padding: "8px 6px" }}>
-                  {item.doc_type || "—"}
-                  {item.doc_date && (
-                    <div style={{ color: "#888", fontSize: 12 }}>{formatDate(item.doc_date)}</div>
-                  )}
                 </td>
               </tr>
             ))}
