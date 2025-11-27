@@ -95,7 +95,10 @@ export default function AuthPage() {
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? "👁" : "👁"}
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5c-5 0-9 6-9 7s4 7 9 7 9-6 9-7-4-7-9-7z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
             </button>
           </label>
           {mode === "register" && (
@@ -113,7 +116,10 @@ export default function AuthPage() {
                 onClick={() => setShowPasswordConfirm((v) => !v)}
                 aria-label={showPasswordConfirm ? "Hide password" : "Show password"}
               >
-                {showPasswordConfirm ? "👁" : "👁"}
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 5c-5 0-9 6-9 7s4 7 9 7 9-6 9-7-4-7-9-7z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
               </button>
             </label>
           )}

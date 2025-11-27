@@ -186,24 +186,34 @@ body {
 .auth-eye {
   position: absolute;
   right: 10px;
-  top: 32px;
+  top: 50%;
+  transform: translateY(-50%);
   padding: 6px;
-  font-size: 0.9rem;
   border: none;
   background: rgba(0, 0, 0, 0.06);
   border-radius: 50%;
   cursor: pointer;
-  color: #333;
+  color: #3a3a3a;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
 }
 .auth-eye.active {
   background: rgba(0, 0, 0, 0.14);
   color: #000;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
 }
 .auth-eye:hover {
   background: rgba(0, 0, 0, 0.12);
+}
+.auth-eye svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
 }
 
 input,
