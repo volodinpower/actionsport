@@ -396,6 +396,20 @@ export async function uploadBrandLogo(brandId, file) {
   return await json(res);
 }
 
+export async function fetchInventoryMovements({ search = "", limit = 100, offset = 0 } = {}) {
+  const params = new URLSearchParams();
+  params.append("limit", limit);
+  params.append("offset", offset);
+  if (search) params.append("search", search);
+  const res = await fetchWithTimeout(apiUrl(`/admin/inventory_movements?${params}`), {
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось получить историю продаж"));
+  }
+  return await json(res);
+}
+
 export async function fetchCategories() {
   const res = await fetchWithTimeout(apiUrl("/categories"), { credentials: "include" });
   ok(res);

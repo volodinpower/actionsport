@@ -4,6 +4,7 @@ import BannerAdmin from "../components/BannerAdmin";
 import CollectionsAdmin from "../components/CollectionsAdmin";
 import BrandsAdmin from "../components/BrandsAdmin";
 import { logout, getMe } from "../api";
+import InventoryMovementsAdmin from "../components/InventoryMovementsAdmin";
 
 export default function RealAdminTabs() {
   const [activeTab, setActiveTab] = useState("products");
@@ -85,6 +86,19 @@ export default function RealAdminTabs() {
         >
           Бренды
         </button>
+        <button
+          onClick={() => setActiveTab("movements")}
+          style={{
+            padding: "8px 16px",
+            cursor: "pointer",
+            borderBottom: activeTab === "movements" ? "3px solid #111" : "none",
+            fontWeight: activeTab === "movements" ? "bold" : "normal",
+            background: "none",
+            border: "none",
+          }}
+        >
+          Продажи / возвраты
+        </button>
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
           {me?.email && <span style={{ color: "#666", fontSize: 14 }}>{me.email}</span>}
@@ -110,6 +124,7 @@ export default function RealAdminTabs() {
         {activeTab === "banners" && <BannerAdmin />}
         {activeTab === "collections" && <CollectionsAdmin />}
         {activeTab === "brands" && <BrandsAdmin />}
+        {activeTab === "movements" && <InventoryMovementsAdmin />}
       </main>
     </div>
   );
