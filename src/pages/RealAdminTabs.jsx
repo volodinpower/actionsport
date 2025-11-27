@@ -33,6 +33,16 @@ export default function RealAdminTabs() {
         boxSizing: "border-box",
       }}
     >
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+        <button
+          onClick={() => (window.location.href = "/")}
+          style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0 }}
+          aria-label="Go to home"
+        >
+          <img src="/logo.png" alt="ActionSport" style={{ height: 48, width: "auto", display: "block" }} />
+        </button>
+      </div>
+
       <nav style={{ marginBottom: 20, display: "flex", gap: 20, alignItems: "center" }}>
         <button
           onClick={() => setActiveTab("products")}
