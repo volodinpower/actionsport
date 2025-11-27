@@ -175,7 +175,8 @@ body {
   position: relative;
 }
 .auth-form input {
-  padding: 10px 44px 10px 14px;
+  height: 46px;
+  padding: 12px 44px 12px 14px;
   border-radius: 10px;
   border: 1px solid #cfd4e0;
   font-size: 1rem;
