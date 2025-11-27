@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { fetchInventoryMovements } from "../api";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+function getImageUrl(url) {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return API_BASE + url;
+  return url;
+}
+
 function formatDate(value) {
   if (!value) return "—";
   try {
@@ -30,6 +39,8 @@ export default function InventoryMovementsAdmin() {
   const [total, setTotal] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,7 +50,12 @@ export default function InventoryMovementsAdmin() {
       setLoading(true);
       setError("");
       try {
-        const data = await fetchInventoryMovements({ search, limit: 200 });
+        const data = await fetchInventoryMovements({
+          search,
+          limit: 200,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+        });
         if (!cancelled) {
           setItems(data.items || []);
           setTotal(data.total || 0);
@@ -52,7 +68,7 @@ export default function InventoryMovementsAdmin() {
     }
     load();
     return () => { cancelled = true; };
-  }, [search]);
+  }, [search, startDate, endDate]);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -64,7 +80,7 @@ export default function InventoryMovementsAdmin() {
       <header style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: 20 }}>История продаж и возвратов</h2>
         <span style={{ color: "#999", fontSize: 13 }}>Всего записей: {total}</span>
-        <form onSubmit={handleSubmit} style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+        <form onSubmit={handleSubmit} style={{ marginLeft: "auto", display: "flex", gap: 8, flexWrap: "wrap" }}>
           <input
             type="text"
             placeholder="Поиск по товару, цвету, штрихкоду или документу"
@@ -76,6 +92,18 @@ export default function InventoryMovementsAdmin() {
               borderRadius: 8,
               border: "1px solid #ddd",
             }}
+          />
+          <input
+            type="datetime-local"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd" }}
+          />
+          <input
+            type="datetime-local"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #ddd" }}
           />
           <button
             type="submit"
@@ -133,8 +161,19 @@ export default function InventoryMovementsAdmin() {
                   )}
                 </td>
                 <td style={{ padding: "8px 6px" }}>
-                  <div style={{ fontWeight: 600 }}>{item.product_name || item.product_id || "—"}</div>
-                  <div style={{ color: "#888", fontSize: 12 }}>{item.barcode || item.item_code || "—"}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {item.product_image && (
+                      <img
+                        src={getImageUrl(item.product_image)}
+                        alt=""
+                        style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6, border: "1px solid #ccc" }}
+                      />
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{item.product_name || item.product_id || "—"}</div>
+                      <div style={{ color: "#888", fontSize: 12 }}>{item.barcode || item.item_code || "—"}</div>
+                    </div>
+                  </div>
                 </td>
                 <td style={{ padding: "8px 6px" }}>
                   {item.product_color || "—"}

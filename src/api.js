@@ -396,11 +396,19 @@ export async function uploadBrandLogo(brandId, file) {
   return await json(res);
 }
 
-export async function fetchInventoryMovements({ search = "", limit = 100, offset = 0 } = {}) {
+export async function fetchInventoryMovements({
+  search = "",
+  limit = 100,
+  offset = 0,
+  startDate,
+  endDate,
+} = {}) {
   const params = new URLSearchParams();
   params.append("limit", limit);
   params.append("offset", offset);
   if (search) params.append("search", search);
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
   const res = await fetchWithTimeout(apiUrl(`/admin/inventory_movements?${params}`), {
     credentials: "include",
   });
