@@ -410,6 +410,19 @@ export async function fetchInventoryMovements({ search = "", limit = 100, offset
   return await json(res);
 }
 
+export async function voidInventoryDocument(docIsn, reason = "manual") {
+  const res = await fetchWithTimeout(apiUrl(`/admin/inventory_movements/${encodeURIComponent(docIsn)}/void`), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error(await extractError(res, "Не удалось отменить документ"));
+  }
+  return await json(res);
+}
+
 export async function fetchCategories() {
   const res = await fetchWithTimeout(apiUrl("/categories"), { credentials: "include" });
   ok(res);
