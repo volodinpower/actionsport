@@ -91,11 +91,11 @@ export default function AuthPage() {
             />
             <button
               type="button"
-              className="auth-eye"
+              className={`auth-eye${showPassword ? " active" : ""}`}
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? "Hide" : "Show"}
+              {showPassword ? "👁" : "👁"}
             </button>
           </label>
           {mode === "register" && (
@@ -109,11 +109,11 @@ export default function AuthPage() {
               />
               <button
                 type="button"
-                className="auth-eye"
+                className={`auth-eye${showPasswordConfirm ? " active" : ""}`}
                 onClick={() => setShowPasswordConfirm((v) => !v)}
                 aria-label={showPasswordConfirm ? "Hide password" : "Show password"}
               >
-                {showPasswordConfirm ? "Hide" : "Show"}
+                {showPasswordConfirm ? "👁" : "👁"}
               </button>
             </label>
           )}

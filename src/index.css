@@ -187,16 +187,23 @@ body {
   position: absolute;
   right: 10px;
   top: 32px;
-  padding: 4px 8px;
-  font-size: 0.8rem;
-  border: 1px solid #d0d0d0;
-  background: #f7f7f7;
-  border-radius: 6px;
+  padding: 6px;
+  font-size: 0.9rem;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 50%;
   cursor: pointer;
   color: #333;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+.auth-eye.active {
+  background: rgba(0, 0, 0, 0.14);
+  color: #000;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
 }
 .auth-eye:hover {
-  background: #eaeaea;
+  background: rgba(0, 0, 0, 0.12);
 }
 
 input,
