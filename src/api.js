@@ -54,11 +54,11 @@ async function extractError(res, fallback = "Request failed") {
 }
 
 // ========= AUTH (cookie-based) =========
-export async function register(email, password) {
+export async function register(email, password, passwordConfirm) {
   const res = await fetchWithTimeout(apiUrl("/auth/register"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, password_confirm: passwordConfirm }),
     credentials: "include",
   });
   if (!res.ok) {

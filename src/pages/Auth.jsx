@@ -9,6 +9,8 @@ export default function AuthPage() {
   const [mode, setMode] = useState("login");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const navigate = useNavigate();
 
   const toggleMode = () => {
@@ -21,8 +23,13 @@ export default function AuthPage() {
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") || "");
     const password = String(form.get("password") || "");
+    const passwordConfirm = String(form.get("password_confirm") || "");
     if (!email || !password) {
       setError("Please enter email and password");
+      return;
+    }
+    if (mode === "register" && password !== passwordConfirm) {
+      setError("Passwords do not match");
       return;
     }
     setLoading(true);
@@ -31,7 +38,7 @@ export default function AuthPage() {
         await login(email, password);
         navigate("/");
       } else {
-        await register(email, password);
+        await register(email, password, passwordConfirm);
         showToast("Account registered", 3500);
         navigate("/");
       }
@@ -74,10 +81,42 @@ export default function AuthPage() {
             Email
             <input name="email" type="email" required autoComplete="username" />
           </label>
-          <label>
+          <label style={{ position: "relative" }}>
             Password
-            <input name="password" type="password" required autoComplete={mode === "login" ? "current-password" : "new-password"} />
+            <input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+            />
+            <button
+              type="button"
+              className="auth-eye"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
           </label>
+          {mode === "register" && (
+            <label style={{ position: "relative" }}>
+              Confirm password
+              <input
+                name="password_confirm"
+                type={showPasswordConfirm ? "text" : "password"}
+                required
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="auth-eye"
+                onClick={() => setShowPasswordConfirm((v) => !v)}
+                aria-label={showPasswordConfirm ? "Hide password" : "Show password"}
+              >
+                {showPasswordConfirm ? "Hide" : "Show"}
+              </button>
+            </label>
+          )}
           {error && <div className="auth-error">{error}</div>}
         <button type="submit" className="auth-button" disabled={loading}>
           {loading ? "…" : mode === "login" ? "Sign in" : "Register"}

@@ -94,9 +94,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const register = useCallback(
-    async (email, password) => {
+    async (email, password, passwordConfirm) => {
       try {
-        await apiRegister(email, password);
+        await apiRegister(email, password, passwordConfirm);
         await apiLogin(email, password);
         await refresh();
       } catch (err) {

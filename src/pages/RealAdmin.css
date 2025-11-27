@@ -52,10 +52,11 @@
 
 .admin-table-header, .admin-table-row {
   display: grid;
-  grid-template-columns: 0.7fr 0.2fr 0.2fr 0.3fr 0.2fr 2fr 160px;
-  align-items: center;
+  grid-template-columns: 1.2fr 0.35fr 0.25fr 0.45fr 0.45fr 1.5fr 180px;
+  align-items: start;
   padding: 8px;
-  min-width: 900px;
+  min-width: 1040px;
+  column-gap: 12px;
 }
 
 .admin-table-header {
@@ -80,15 +81,15 @@
 
 .admin-imgs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: nowrap;
   overflow: hidden;
   max-width: 100%;
 }
 
 .admin-img {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 8px;
   border: 1px solid #ccc;
   object-fit: cover;
