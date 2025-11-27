@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchInventoryMovements, voidInventoryDocument } from "../api";
+import { fetchInventoryMovements } from "../api";
 
 function formatDate(value) {
   if (!value) return "—";
@@ -25,8 +25,6 @@ export default function InventoryMovementsAdmin() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [voiding, setVoiding] = useState({});
-  const [refreshToken, setRefreshToken] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,29 +45,11 @@ export default function InventoryMovementsAdmin() {
     }
     load();
     return () => { cancelled = true; };
-  }, [search, refreshToken]);
+  }, [search]);
 
   function handleSubmit(e) {
     e.preventDefault();
     setSearch(searchInput.trim());
-  }
-
-  async function handleVoid(docIsn) {
-    if (!docIsn) return;
-    if (!window.confirm("Отменить документ и вернуть остатки?")) return;
-    setVoiding((prev) => ({ ...prev, [docIsn]: true }));
-    try {
-      await voidInventoryDocument(docIsn, "manual");
-      setRefreshToken((token) => token + 1);
-    } catch (err) {
-      setError(err.message || "Не удалось отменить документ");
-    } finally {
-      setVoiding((prev) => {
-        const next = { ...prev };
-        delete next[docIsn];
-        return next;
-      });
-    }
   }
 
   return (
@@ -142,29 +122,11 @@ export default function InventoryMovementsAdmin() {
                   {item.doc_isn && (
                     <div style={{ color: "#bbb", fontSize: 11 }}>ISN: {item.doc_isn}</div>
                   )}
-                  <div style={{ marginTop: 4, display: "flex", gap: 6, alignItems: "center" }}>
-                    {item.status === "voided" ? (
-                      <span style={{ fontSize: 12, color: "#a00" }}>
-                        Отменён {formatDate(item.voided_at)}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleVoid(item.doc_isn)}
-                        disabled={!item.doc_isn || !!voiding[item.doc_isn]}
-                        style={{
-                          padding: "4px 10px",
-                          borderRadius: 6,
-                          border: "1px solid #ccc",
-                          background: "#fafafa",
-                          cursor: item.doc_isn && !voiding[item.doc_isn] ? "pointer" : "not-allowed",
-                          fontSize: 12,
-                        }}
-                      >
-                        {voiding[item.doc_isn] ? "..." : "Отменить"}
-                      </button>
-                    )}
-                  </div>
+                  {item.status === "voided" && (
+                    <div style={{ marginTop: 4, fontSize: 12, color: "#a00" }}>
+                      Отменён {formatDate(item.voided_at)}
+                    </div>
+                  )}
                 </td>
                 <td style={{ padding: "8px 6px" }}>
                   <div style={{ fontWeight: 600 }}>{item.product_name || item.product_id || "—"}</div>
